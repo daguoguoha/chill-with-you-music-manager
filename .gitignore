@@ -1,0 +1,10 @@
+*.exe
+*.zip
+*.sha256
+packages/
+.chill-music-manager*/
+**/account/
+**/library/
+tests/test-*/
+tests/failure-*/
+tests/recovery-result.json
