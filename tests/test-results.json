@@ -1,108 +1,113 @@
 {
-  "Version": "1.0.0",
-  "Passed": 20,
-  "Total": 20,
-  "Scope": "隔离文件系统和自行编译的测试进程，未验证真实游戏内登录或播放",
+  "Version": "1.1.0",
+  "Environment": "Windows x64, Windows PowerShell 5.1, .NET Framework",
   "Results": [
     {
-      "Name": "无需游戏即可校验六个平台",
+      "Name": "无需游戏即可校验六个平台和进度插件",
       "Passed": true,
-      "Seconds": 5.05
+      "Seconds": 5.84
     },
     {
       "Name": "六个平台全新安装共存及完整文件校验",
       "Passed": true,
-      "Seconds": 20.17
+      "Seconds": 23.77
     },
     {
       "Name": "六平台停用、启用、撤回及账号标记保留",
       "Passed": true,
-      "Seconds": 44.72
+      "Seconds": 50.7
+    },
+    {
+      "Name": "进度插件更新、停用、启用与撤回保留记录和配置",
+      "Passed": true,
+      "Seconds": 9.32
+    },
+    {
+      "Name": "进度插件可独立首次安装并撤回",
+      "Passed": true,
+      "Seconds": 4.19
     },
     {
       "Name": "重复安装可撤回且保留既有文件",
       "Passed": true,
-      "Seconds": 5.62
+      "Seconds": 5.86
     },
     {
       "Name": "停用状态安装后可撤回到停用状态",
       "Passed": true,
-      "Seconds": 10.37
+      "Seconds": 10.47
     },
     {
       "Name": "拒绝覆盖操作后手动更改的文件",
       "Passed": true,
-      "Seconds": 7.69
+      "Seconds": 7.58
     },
     {
       "Name": "修复缺少依赖且可撤回修复",
       "Passed": true,
-      "Seconds": 10.74
+      "Seconds": 10.86
     },
     {
       "Name": "完整 ChillPatcher 冲突时阻止安装但允许停用",
       "Passed": true,
-      "Seconds": 5.64
+      "Seconds": 5.54
     },
     {
       "Name": "非标准目录重复 DLL 检测",
       "Passed": true,
-      "Seconds": 0.9
+      "Seconds": 0.88
     },
     {
       "Name": "拒绝降级新版本",
       "Passed": true,
-      "Seconds": 1.68
+      "Seconds": 1.76
     },
     {
       "Name": "并发操作锁",
       "Passed": true,
-      "Seconds": 0.63
+      "Seconds": 0.65
     },
     {
       "Name": "拒绝不同加载器及缺失共享框架文件",
       "Passed": true,
-      "Seconds": 1.96
+      "Seconds": 1.92
     },
     {
       "Name": "损坏备份在撤回前被识别",
       "Passed": true,
-      "Seconds": 5.81
+      "Seconds": 5.75
     },
     {
       "Name": "初次安装撤回保留共享框架",
       "Passed": true,
-      "Seconds": 6.29
+      "Seconds": 6.15
     },
     {
       "Name": "损坏安装包在安装前被拒绝",
       "Passed": true,
-      "Seconds": 1.21
+      "Seconds": 1.97
     },
     {
       "Name": "目录链接和路径越界被拒绝",
       "Passed": true,
-      "Seconds": 0.66
+      "Seconds": 0.67
     },
     {
       "Name": "游戏运行时阻止改动",
       "Passed": true,
-      "Seconds": 0.96
+      "Seconds": 0.92
     },
     {
       "Name": "无效游戏目录无操作副作用",
       "Passed": true,
-      "Seconds": 0.66
+      "Seconds": 0.62
     },
     {
       "Name": "WinForms 界面真实渲染",
       "Passed": true,
-      "Seconds": 2.1
-    },
-    {
-      "Name": "安装中途写入失败后恢复此前改动",
-      "Passed": true,
-      "ErrorWasReported": true
+      "Seconds": 2.45
     }
-  ]
+  ],
+  "Passed": 21,
+  "Total": 21
 }

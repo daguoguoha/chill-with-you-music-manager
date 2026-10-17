@@ -1,6 +1,6 @@
 {
   "Schema": 1,
-  "ManagerVersion": "1.0.0",
+  "ManagerVersion": "1.1.0",
   "Plugins": [
     {
       "Id": "netease",
@@ -299,6 +299,36 @@
         {
           "Path": "offline-dependencies\\NAudio.Wasapi.nupkg",
           "Hash": "C8396B8DBAB86A2619EDFD9158BEAF18C21CB86677099B5594950FD8651B9D1A"
+        }
+      ]
+    },
+    {
+      "Id": "progress",
+      "Name": "音频进度保存",
+      "Version": "1.0.0",
+      "Folder": "packages\\progress",
+      "Primary": "BepInEx\\plugins\\ChillAudioProgress\\ChillAudioProgress.dll",
+      "Manifest": "ChillAudioProgressNative-install.json",
+      "Hotkey": "自动",
+      "Hint": "按音轨保存六个平台的进度，每 5 秒和暂停、切歌、退出时写入。再次点播相同音频时续播；不自动登录或开始播放。",
+      "Targets": [
+        {
+          "Path": "BepInEx\\plugins\\ChillAudioProgress\\ChillAudioProgress.dll",
+          "Hash": "852C306615325013E2DB2DEE8B4D4C40F459B6631BB41725356E87B8C5584CDD"
+        }
+      ],
+      "Files": [
+        {
+          "Path": "Install.ps1",
+          "Hash": "76A346F3D45683FEA6C460EC508705B28ED75B6A5A47CB98FF35C665EAA4F4DB"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillAudioProgress\\ChillAudioProgress.dll",
+          "Hash": "852C306615325013E2DB2DEE8B4D4C40F459B6631BB41725356E87B8C5584CDD"
+        },
+        {
+          "Path": "offline-dependencies\\BepInEx.zip",
+          "Hash": "82F9878551030F54657792C0740D9D51A09500EEAE1FBA21106B0C441E6732C4"
         }
       ]
     }

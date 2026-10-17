@@ -30,16 +30,16 @@ internal sealed class ManagerWindow : Form
     Dictionary<string,object> currentStatus;
     internal ManagerWindow(string initialPath, bool render)
     {
-        Text="Chill 音乐插件管理器"; ClientSize=new Size(1100,790); MinimumSize=new Size(1000,760);
+        Text="Chill 音乐插件管理器"; ClientSize=new Size(1100,820); MinimumSize=new Size(1000,790);
         StartPosition=FormStartPosition.CenterScreen; Font=new Font("Microsoft YaHei UI",9F); BackColor=paper; ForeColor=ink;
         AutoScaleMode=AutoScaleMode.Dpi;
         Panel header=new Panel {Dock=DockStyle.Top,Height=105,BackColor=ink}; Controls.Add(header);
         header.Controls.Add(new Label {Text="CHILL / MUSIC TOOLS",Location=new Point(26,15),Size=new Size(600,22),Font=new Font(Font.FontFamily,9F,FontStyle.Bold),ForeColor=Color.FromArgb(183,208,190)});
         header.Controls.Add(new Label {Text="音乐插件，一个地方管好",Location=new Point(24,39),Size=new Size(850,40),Font=new Font(Font.FontFamily,23F,FontStyle.Bold),ForeColor=Color.White});
-        Label badge=new Label {Text="v1.0.0  ·  离线安装",Location=new Point(865,47),Size=new Size(204,30),TextAlign=ContentAlignment.MiddleCenter,ForeColor=Color.White,BackColor=green}; header.Controls.Add(badge);
+        Label badge=new Label {Text="v1.1.0  ·  离线安装",Location=new Point(865,47),Size=new Size(204,30),TextAlign=ContentAlignment.MiddleCenter,ForeColor=Color.White,BackColor=green}; header.Controls.Add(badge);
         Panel content=new Panel {Dock=DockStyle.Fill,Padding=new Padding(24,14,24,16)}; Controls.Add(content); content.BringToFront();
         TableLayoutPanel layout=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=1,RowCount=7};
-        foreach(int height in new[]{62,36,225,43,120,112}) layout.RowStyles.Add(new RowStyle(SizeType.Absolute,height));
+        foreach(int height in new[]{62,36,255,43,120,112}) layout.RowStyles.Add(new RowStyle(SizeType.Absolute,height));
         layout.RowStyles.Add(new RowStyle(SizeType.Percent,100)); content.Controls.Add(layout);
         TableLayoutPanel directory=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=3,RowCount=2};
         directory.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));directory.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,104));directory.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,110));
@@ -106,7 +106,7 @@ internal sealed class ManagerWindow : Form
             output.Text=diagText.ToString();
             if(!string.IsNullOrEmpty(lastMessage))Log(lastMessage);
         }
-        summary.Text="6 个音乐平台  ·  "+active+" 个启用  ·  "+stopped+" 个停用"+(blocked?"  ·  请查看下方检查结果":"  ·  可以管理插件");
+        summary.Text=table.Rows.Count+" 个插件（含进度保存）  ·  "+active+" 个启用  ·  "+stopped+" 个停用"+(blocked?"  ·  请查看下方检查结果":"  ·  可以管理插件");
         foreach(DataGridViewRow row in table.Rows)if(Value((Dictionary<string,object>)row.Tag,"Id")==previousId){table.CurrentCell=row.Cells[0];break;}
         ShowSelected();
     }

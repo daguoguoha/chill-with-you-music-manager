@@ -1,4 +1,4 @@
-﻿param([string]$Package=(Join-Path $PSScriptRoot '..'))
+﻿param([string]$Package=(Join-Path $PSScriptRoot '..\..\outputs\ChillMusicManager-1.1.0'))
 $ErrorActionPreference='Stop'
 $Package=[IO.Path]::GetFullPath($Package)
 $sandbox=Join-Path $PSScriptRoot ('test-'+[Guid]::NewGuid().ToString('N'))
@@ -27,16 +27,16 @@ function Test([string]$Name,[scriptblock]$Body) {
     catch {$results.Add([pscustomobject]@{Name=$Name;Passed=$false;Error=$_.Exception.Message});Write-Output ('FAIL '+$Name+' '+$_.Exception.Message);throw}
 }
 try {
-    Test '无需游戏即可校验六个平台' {
+    Test '无需游戏即可校验六个平台和进度插件' {
         $status=Call Status '' ''
-        Assert ($status.Ok -and $status.Plugins.Count -eq 6) '平台数量不正确'
+        Assert ($status.Ok -and $status.Plugins.Count -eq 7) '插件数量不正确'
         foreach($p in $catalog.Plugins){$r=Call Verify '' $p.Id;Assert $r.Ok $r.Message}
     }
     $game=Game '六平台共存 中文路径'
     Test '六个平台全新安装共存及完整文件校验' {
         foreach($p in $catalog.Plugins){$r=Call Install $game $p.Id;Assert $r.Ok $r.Message;foreach($t in $p.Targets){Assert ((Hash (Join-Path $game $t.Path)) -eq $t.Hash) ('文件错误 '+$t.Path)}}
         $status=Call Status $game '';Assert ($status.Diagnostics.Blockers.Count -eq 0) ($status.Diagnostics.Blockers -join ';')
-        Assert (@($status.Plugins | Where-Object {$_.Enabled -and -not $_.NeedsRepair}).Count -eq 6) '共存状态错误'
+        Assert (@($status.Plugins | Where-Object {$_.Enabled -and -not $_.NeedsRepair}).Count -eq 7) '共存状态错误'
     }
     $sentinel=Join-Path $game 'BepInEx\plugins\ChillQQMusicPlaylist\account\fixture.txt'
     New-Item -ItemType Directory -Path (Split-Path -Parent $sentinel) -Force | Out-Null
@@ -54,6 +54,28 @@ try {
         Assert ((Hash $sentinel) -eq $sentinelHash) '账号标记被更改'
     }
     $qq=@($catalog.Plugins | Where-Object Id -eq qq)[0]
+    Test '进度插件更新、停用、启用与撤回保留记录和配置' {
+        $record=Join-Path $game 'BepInEx\config\ChillAudioProgress\progress.json'
+        $config=Join-Path $game 'BepInEx\config\local.chill.audioprogress.cfg'
+        New-Item -ItemType Directory -Path (Split-Path -Parent $record) -Force | Out-Null
+        [IO.File]::WriteAllText($record,'{"Schema":1,"Tracks":{"ximalaya:fixture":{"Seconds":123,"Duration":3600,"UpdatedUtc":1}}}')
+        [IO.File]::WriteAllText($config,"[Progress]`nEnabled = true`nResumeOnPlay = false")
+        $saved=Hash $record;$settings=Hash $config
+        foreach($action in @('Install','Undo','Disable','Enable','Undo','Enable')) {
+            $r=Call $action $game progress;Assert $r.Ok $r.Message
+            Assert ((Hash $record) -eq $saved -and (Hash $config) -eq $settings) ('进度数据被修改 '+$action)
+        }
+    }
+    Test '进度插件可独立首次安装并撤回' {
+        $fresh=Game '独立进度插件'
+        $r=Call Install $fresh progress;Assert $r.Ok $r.Message
+        $progress=@($catalog.Plugins | Where-Object Id -eq progress)[0]
+        Assert ((Hash (Join-Path $fresh $progress.Primary)) -eq $progress.Targets[0].Hash) '进度插件安装失败'
+        Assert (-not(Test-Path -LiteralPath (Join-Path $fresh 'BepInEx\plugins\ChillQQMusicPlaylist'))) '独立安装部署了其他平台'
+        $r=Call Undo $fresh progress;Assert $r.Ok $r.Message
+        Assert (-not(Test-Path -LiteralPath (Join-Path $fresh $progress.Primary))) '进度插件初装撤回失败'
+        Assert (Test-Path -LiteralPath (Join-Path $fresh 'BepInEx\core\BepInEx.dll')) '共享框架被删除'
+    }
     Test '重复安装可撤回且保留既有文件' {
         $before=Hash (Join-Path $game $qq.Primary)
         $r=Call Install $game qq;Assert $r.Ok $r.Message
@@ -166,7 +188,7 @@ try {
         Assert ($process.ExitCode -eq 0 -and (Test-Path -LiteralPath $image)) '界面渲染失败'
         $ui=Get-Content -LiteralPath ($image+'.json') -Raw -Encoding UTF8 | ConvertFrom-Json
         Assert ($ui.Status.Diagnostics.Blockers.Count -eq 0) ('界面后端扫描失败：'+($ui.Status.Diagnostics.Blockers -join ';'))
-        Assert (@($ui.Status.Plugins | Where-Object {$_.Enabled -and -not $_.NeedsRepair}).Count -eq 6) '图形界面未正确识别六平台'
+        Assert (@($ui.Status.Plugins | Where-Object {$_.Enabled -and -not $_.NeedsRepair}).Count -eq 7) '图形界面未正确识别七个插件'
         Assert ($ui.InstallEnabled -and $ui.DisableEnabled) '图形界面操作按钮状态错误'
     }
 } finally {

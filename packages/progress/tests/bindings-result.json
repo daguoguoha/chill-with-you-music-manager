@@ -1,0 +1,21 @@
+{
+  "Passed": true,
+  "GameAssemblySHA256": "2DAF4EB479A910D9BCB7A4A33C2AB7CDF8F6831D9841FBFE61CCFD9494FC9E7F",
+  "RequiredMethods": [
+    "PlayArugumentMusic",
+    "PlayMusicInPlaylist",
+    "PlayNextMusic",
+    "PlayBackMusic",
+    "Stop",
+    "Dispose",
+    "Pause",
+    "SetMusicProgress",
+    "set_PlayingMusic"
+  ],
+  "CompletionCallbacks": [
+    "<PlayNextMusic>b__70_0",
+    "<PlayArugumentMusic>b__72_0",
+    "<PlayMusicInPlaylist>b__73_0"
+  ],
+  "Scope": "Metadata inspection only; no Harmony or Unity runtime execution"
+}

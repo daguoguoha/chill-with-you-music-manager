@@ -255,7 +255,8 @@ try {
                     if($LASTEXITCODE -ne 0) {throw ('安装未完成：'+($installOutput -join [Environment]::NewLine))}
                     foreach($target in $package.Targets) {if((File-State $root $target.Path) -ne $target.Hash) {throw ('安装结果校验失败：'+$target.Path)}}
                     if(Test-Path -LiteralPath $inactive) {Move-Item -LiteralPath $inactive -Destination (Safe-Path $journalFolder 'previous-disabled.dll')}
-                    $message=$package.Name+' 已安装 / 修复至随包版本 '+$package.Version+'。进游戏后按 '+$package.Hotkey+'；登录和播放请自行在游戏中验证。'
+                    if($Id -eq 'progress') {$message='音频进度保存已安装。进入游戏后自动记录；再次点播同一音频时续播，仍需实际验证游戏内效果。'}
+                    else {$message=$package.Name+' 已安装 / 修复至随包版本 '+$package.Version+'。进游戏后按 '+$package.Hotkey+'；登录和播放请自行在游戏中验证。'}
                 } elseif($Action -eq 'Disable') {
                     if(Test-Path -LiteralPath $inactive) {Move-Item -LiteralPath $inactive -Destination (Safe-Path $journalFolder 'previous-disabled.dll')}
                     Move-Item -LiteralPath $active -Destination $inactive

@@ -1,10 +1,20 @@
-# Chill 音乐插件管理器 v1.0.0
-
-**[下载完整离线安装包](https://github.com/daguoguoha/chill-with-you-music-manager/releases/latest)**
-
-GitHub 自动生成的 Source code 压缩包仅用于查看管理器源码，不包含六个平台的二进制和离线依赖。普通使用请下载 Release 中的 `ChillMusicManager-1.0.0.zip`。开发时可先完整解压发行包，再使用本仓库源码重建管理器。
+# Chill 音乐插件管理器 v1.1.0
 
 在一个窗口里管理六款 Chill With You 音乐插件。完整解压压缩包，双击 **ChillMusicManager.exe**，选择游戏目录，再点击 **扫描 / 刷新**。
+
+下载请到 [GitHub Releases](https://github.com/daguoguoha/chill-with-you-music-manager/releases/latest)，选择 `ChillMusicManager-1.1.0.zip`。GitHub 自动生成的 Source code 压缩包仅包含源码，不含完整离线依赖。
+
+## 新增音频进度保存
+
+选择管理器中的 **音频进度保存** 一行，点击 **安装 / 修复至随包版本**。它与平台插件分别启用，安装后在游戏中自动工作。再次点播相同音频时，从上次位置继续。
+
+- 六个平台按音轨分别保存进度，正常每 5 秒写入；暂停、拖动、切歌、失去焦点和正常退出也会保存。
+- 重开游戏后，按平台原有流程打开专辑或歌单，再点击上次的音轨即可续播。不会自动登录、导入歌单或自动开始播放。
+- 播放不足 3 秒、剩余不超过 5 秒或已自然听完时，从头播放；音频时长明显变化时忽略旧位置。
+- 记录保存在本地 `BepInEx/config/ChillAudioProgress/progress.json`，不上传网络。最多保留 2000 条，使用原子替换及上一份备份。
+- 管理器的更新、停用和撤回保留进度记录。可在首次运行后生成的 `BepInEx/config/local.chill.audioprogress.cfg` 中单独关闭自动续播。
+
+进度插件已通过隔离测试和对游戏程序集的编译检查，尚未在真实游戏内完成播放、退出和重启验收。详细行为、配置和限制见 `packages/progress/README.md`。
 
 ## 可以做什么
 
@@ -23,6 +33,7 @@ GitHub 自动生成的 Source code 压缩包仅用于查看管理器源码，不
 | B站音频 | 1.0.0 | F11 |
 | 喜马拉雅 | 1.0.0 | F7 |
 | 椒盐 / 本地音乐 | 1.0.0 | F6 |
+| 音频进度保存 | 1.0.0 | 自动运行 |
 
 选中一行后操作。安装和修复使用压缩包内的版本，**不会查询线上更新，也不会覆盖安装记录中更新的版本**。如需新版本，应获取更新的管理器包或对应平台包。
 
@@ -69,6 +80,7 @@ Windows x64，Windows PowerShell 5.1 和 .NET Framework 4.5 或更新版本。�
 - `Manager.ps1`：扫描、校验、操作锁、部署和撤回逻辑。
 - `catalog.json`：随包版本、运行文件及安装目标的 SHA256。
 - `packages/`：六个现有发行包，保留源码、离线依赖与许可证。
+- `packages/progress/source/`：新增进度插件源码及测试。
 - `tests/Tests.ps1`：在独立临时目录运行安装生命周期与保护检查。
 
 运行 `Build.ps1` 可用 Windows 自带 .NET Framework C# 编译器重建管理器。测试可在 PowerShell 中调用 `tests/Tests.ps1 -Package <完整解压后的管理器目录>`。测试会在 tests 下建立独立目录，不修改真实游戏。

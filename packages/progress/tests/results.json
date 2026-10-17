@@ -1,0 +1,33 @@
+{
+  "Passed": 28,
+  "Tests": [
+    "six platforms and Unicode survive process reload",
+    "different episodes do not share progress",
+    "changed content duration rejects stale bookmark",
+    "hours-long episode can restore early seconds",
+    "near end restarts at beginning",
+    "seek to beginning clears bookmark",
+    "nonfinite negative and out of range times are ignored",
+    "vanilla and missing identifiers are ignored",
+    "corruption preserves original and restores last good backup",
+    "recovered document can be persisted",
+    "damaged file without backup is preserved before new records",
+    "unknown schema is never overwritten",
+    "failed atomic replacement retains previous document",
+    "write is retried after lock is released",
+    "failed and successful writes leave no partial temp files",
+    "history is bounded to 2000 tracks",
+    "native playback restores saved seconds after restart",
+    "pause saves current position immediately",
+    "switching audio saves outgoing track without leaking to next",
+    "manual seek saves actual source time",
+    "manual restart at zero clears prior position",
+    "stopped source zero does not erase last position",
+    "natural completion clears position before single-track repeat",
+    "restoration waits for matching audio source to become ready",
+    "canceled loading never seeks a different track",
+    "periodic tick writes progress at five-second intervals",
+    "resume can be disabled independently of saving",
+    "disabled plugin leaves records and playback untouched"
+  ]
+}
