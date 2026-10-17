@@ -1,4 +1,4 @@
-﻿param([string]$Package=(Join-Path $PSScriptRoot '..\..\outputs\ChillMusicManager-1.1.0'))
+﻿param([string]$Package=(Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference='Stop'
 $Package=[IO.Path]::GetFullPath($Package)
 $sandbox=Join-Path $PSScriptRoot ('test-'+[Guid]::NewGuid().ToString('N'))

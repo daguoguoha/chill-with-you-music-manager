@@ -1,0 +1,73 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Synthetic data and callbacks for visual layout review only.
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Drawing.Text;
+using System.IO;
+using System.Reflection;
+using UnityEngine;
+namespace @NAMESPACE@
+{
+    class Entry<T>{internal T Value;internal Entry(T v){Value=v;}}
+    class PreviewLog{internal void LogInfo(string m){}}
+    class PreviewConfig{internal void Save(){}}
+    public sealed partial class Plugin
+    {
+        Entry<bool> showLauncher=new Entry<bool>(true);
+        bool firstGui,visible=true,logged=true,ready=true,busy,paused,playing=true;
+        string nickname="本地预览",query="",playlistLink="",loginType="qq",status="界面渲染预览 · 合成歌单 · 未登录任何平台，未播放音频";
+        bool qrPolling;void ClearQr(){}
+        List<Playlist> playlists=new List<Playlist>();List<Song> songs=new List<Song>();
+        Song[] queue=new Song[0];int current=0;Vector2 playlistScroll,songScroll;
+        Texture2D qrImage;AudioSource audio;object request;
+        float nativeNoticeUntil;Rect panel=new Rect(0,0,1000,730);
+        PreviewLog Logger=new PreviewLog();PreviewConfig Config=new PreviewConfig();
+        T Instantiate<T>(T source)where T:UnityEngine.Object{return source is GUISkin?(T)(object)new GUISkin():source;}
+        void Destroy(UnityEngine.Object item){UnityEngine.Object.Destroy(item);}
+        void RefreshPlaylists(){}void Login(){}void OpenPlaylist(object id,string name){}void Play(Song[] list,int i,bool automatic){}
+        @SALT_IMPORT@
+        internal void Preview(string target,string state)
+        {
+            logged=state!="login";showImport=state=="import";
+            string[] names={"午后的雨声","窗边写作","深夜耳机","慢慢听完这一集","森林里的留白"};
+            for(int i=0;i<5;i++)
+            {
+                var p=new Playlist{name=names[i],songCount=i==0?8:24+i};
+                var f=typeof(Playlist).GetField("id");f.SetValue(p,f.FieldType==typeof(long)?(object)(long)(i+1):"preview-"+i);playlists.Add(p);
+            }
+            if(logged&&!showImport)
+            {
+                selectedPlaylistTitle="午后的雨声";
+                var field=typeof(Plugin).GetField("selectedPlaylistId",BindingFlags.Instance|BindingFlags.NonPublic);field.SetValue(this,typeof(Playlist).GetField("id").GetValue(playlists[0]));
+                for(int i=0;i<8;i++)
+                {
+                    var s=new Song{name=new[]{"窗外的雨声与慢节奏","一封还没有写完的信","留给自己的十分钟","远处的列车","把这一页慢慢写完","晚风经过窗台","咖啡放凉之前","安静地陪你一会儿"}[i],artists=new List<string>{"Preview / Lo-Fi"},duration=180+i*21};
+                    var f=typeof(Song).GetField("id");f.SetValue(s,f.FieldType==typeof(long)?(object)(long)(i+100):"track-"+i);songs.Add(s);
+                }
+                queue=songs.ToArray();
+            }
+            if(state=="error")status="请求未完成：平台暂时限制请求，请稍后重试。这里用于检查较长提示文字的换行与边界，不代表实际接口错误。";
+            using(var canvas=new Bitmap(1000,730))using(var g=Graphics.FromImage(canvas))
+            {
+                GUI.G=g;GUI.Controls.Clear();g.SmoothingMode=SmoothingMode.AntiAlias;g.TextRenderingHint=TextRenderingHint.AntiAliasGridFit;
+                using(var bg=new LinearGradientBrush(new Rectangle(0,0,1000,730),System.Drawing.Color.FromArgb(49,62,83),System.Drawing.Color.FromArgb(67,44,75),0f))g.FillRectangle(bg,0,0,1000,730);
+                EnsureUI();GUI.Box(new Rect(0,0,1000,730),"",windowStyle);DrawPanel(1);
+                canvas.Save(target,ImageFormat.Png);
+                if(GUI.Controls.Count<10)throw new Exception("Expected panel controls not rendered");
+                Console.WriteLine("PASS @NAMESPACE@ "+state+" ("+GUI.Controls.Count+" controls)");
+            }
+            DisposeUI();
+        }
+    }
+    class PreviewMain
+    {
+        static int Main(string[] args)
+        {
+            try{Directory.CreateDirectory(args[0]);foreach(string state in new[]{@STATES@})new Plugin().Preview(Path.Combine(args[0],state+".png"),state);return 0;}
+            catch(Exception e){Console.Error.WriteLine(e);return 1;}
+        }
+    }
+}

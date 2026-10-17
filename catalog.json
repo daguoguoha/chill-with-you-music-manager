@@ -1,11 +1,11 @@
 {
   "Schema": 1,
-  "ManagerVersion": "1.1.0",
+  "ManagerVersion": "1.2.0",
   "Plugins": [
     {
       "Id": "netease",
       "Name": "网易云音乐",
-      "Version": "1.2.2",
+      "Version": "1.2.3",
       "Folder": "packages\\netease",
       "Primary": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
       "Manifest": "ChillNeteaseNative-install.json",
@@ -14,7 +14,7 @@
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "1CB68B643EF7534B27F6A73F90B8F448FD9D8971871BBC298341AD9AB31516FE"
+          "Hash": "739077F67B6303542DF7733BDAEB95C5E2F3EAE34AB0540FAEBF92CA2594F9A8"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNetease.dll",
@@ -28,11 +28,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "FC7FB7EF392FC4643C37AD91E8A4EC6D85D9E013C3459FD939B4960AD6924903"
+          "Hash": "4852E773F7A612342578BEFD3002D6284D9C77F70BC43CF1320B689A732E301B"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "1CB68B643EF7534B27F6A73F90B8F448FD9D8971871BBC298341AD9AB31516FE"
+          "Hash": "739077F67B6303542DF7733BDAEB95C5E2F3EAE34AB0540FAEBF92CA2594F9A8"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -51,7 +51,7 @@
     {
       "Id": "qq",
       "Name": "QQ 音乐",
-      "Version": "1.0.2",
+      "Version": "1.0.3",
       "Folder": "packages\\qq",
       "Primary": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusicPlaylist.dll",
       "Manifest": "ChillQQMusicNative-install.json",
@@ -60,7 +60,7 @@
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusicPlaylist.dll",
-          "Hash": "060FE3A5C77EDD03CA5B324B87A368FB7ED46CB56E6F7A9C4B558D8B8EE99D7C"
+          "Hash": "C3032200EAC32EB38B48F0F19BA967C25FD352D83FBCE8716BBEF24285361E5D"
         },
         {
           "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusic.dll",
@@ -78,7 +78,7 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "8B877B9CEA4E54592093BEF41A2A084FCF12083349CF5354AD2267078B2BF824"
+          "Hash": "BE28DF817C2B48429606C6A526B319E6597CF55C3977B84576DDD688E50DC804"
         },
         {
           "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusic.dll",
@@ -86,7 +86,7 @@
         },
         {
           "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusicPlaylist.dll",
-          "Hash": "060FE3A5C77EDD03CA5B324B87A368FB7ED46CB56E6F7A9C4B558D8B8EE99D7C"
+          "Hash": "C3032200EAC32EB38B48F0F19BA967C25FD352D83FBCE8716BBEF24285361E5D"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -105,7 +105,7 @@
     {
       "Id": "kugou",
       "Name": "酷狗音乐",
-      "Version": "1.0.1",
+      "Version": "1.0.2",
       "Folder": "packages\\kugou",
       "Primary": "BepInEx\\plugins\\ChillKuGouPlaylist\\ChillKuGouPlaylist.dll",
       "Manifest": "ChillKuGouNative-install.json",
@@ -114,7 +114,7 @@
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\ChillKuGouPlaylist.dll",
-          "Hash": "4EE68D6F097B15FB6BC46DF37A6B76A0C7073223A461B1A2575947A4555D8C9D"
+          "Hash": "528F3C0FCF98EE52F49CF366CC4D286EF42C510A7C2143586B627053B3A1D94C"
         },
         {
           "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\NAudio.Core.dll",
@@ -128,11 +128,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "918A0CEFCC61B02BD8B189940FFDA670C68EF21546BE4AAB6CE15C118F6E3811"
+          "Hash": "B2EE912A5FE358578293D96692716EFD79A7DA2ED0EF6502CE020A087EB4AD29"
         },
         {
           "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\ChillKuGouPlaylist.dll",
-          "Hash": "4EE68D6F097B15FB6BC46DF37A6B76A0C7073223A461B1A2575947A4555D8C9D"
+          "Hash": "528F3C0FCF98EE52F49CF366CC4D286EF42C510A7C2143586B627053B3A1D94C"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -151,7 +151,7 @@
     {
       "Id": "bilibili",
       "Name": "B站音频",
-      "Version": "1.0.0",
+      "Version": "1.0.1",
       "Folder": "packages\\bilibili",
       "Primary": "BepInEx\\plugins\\ChillBilibiliPlaylist\\ChillBilibiliPlaylist.dll",
       "Manifest": "ChillBilibiliNative-install.json",
@@ -160,7 +160,7 @@
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\ChillBilibiliPlaylist.dll",
-          "Hash": "421EF6D38BBD888B5345C9A4D09B9C1FE0F2AD960505C0A3F4F021743848AF94"
+          "Hash": "B785AB5F4C91B737594E2DE4A91601C1F6DAC504BA6FE55DB0D2249B6E7C5ACC"
         },
         {
           "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\NAudio.Core.dll",
@@ -178,11 +178,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "8926F296CAB21C4EAA1F5B51499F639F8344FA2589DE081FF2EF4FE1BCFB8E80"
+          "Hash": "560950AAC823C57CF4FBF3D0603EC8ADEE004F7E35BF517114E47FE2D6FD1549"
         },
         {
           "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\ChillBilibiliPlaylist.dll",
-          "Hash": "421EF6D38BBD888B5345C9A4D09B9C1FE0F2AD960505C0A3F4F021743848AF94"
+          "Hash": "B785AB5F4C91B737594E2DE4A91601C1F6DAC504BA6FE55DB0D2249B6E7C5ACC"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -205,7 +205,7 @@
     {
       "Id": "ximalaya",
       "Name": "喜马拉雅",
-      "Version": "1.0.0",
+      "Version": "1.0.1",
       "Folder": "packages\\ximalaya",
       "Primary": "BepInEx\\plugins\\ChillXimalayaPlaylist\\ChillXimalayaPlaylist.dll",
       "Manifest": "ChillXimalayaNative-install.json",
@@ -214,7 +214,7 @@
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\ChillXimalayaPlaylist.dll",
-          "Hash": "F85B4F15227872B5F49F15E0CD12077CEA21E78DAC2EDB18EF108E1310E33159"
+          "Hash": "EABFAC77EA41BFE2A4097ED589FD7C707184EE366874BA4D841A2C1DBE02BAA3"
         },
         {
           "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\NAudio.Core.dll",
@@ -228,11 +228,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "559962F9C83E90FCF5BAA6D312475380B8D211991A1E86FFF0A7C50B3A317A17"
+          "Hash": "5374A2EAD75B51A7DDAC2F82E39B64516DE331714DEC24088E9D33FF041CC95E"
         },
         {
           "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\ChillXimalayaPlaylist.dll",
-          "Hash": "F85B4F15227872B5F49F15E0CD12077CEA21E78DAC2EDB18EF108E1310E33159"
+          "Hash": "EABFAC77EA41BFE2A4097ED589FD7C707184EE366874BA4D841A2C1DBE02BAA3"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -251,7 +251,7 @@
     {
       "Id": "saltplayer",
       "Name": "椒盐 / 本地音乐",
-      "Version": "1.0.0",
+      "Version": "1.0.1",
       "Folder": "packages\\saltplayer",
       "Primary": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerPlaylist.dll",
       "Manifest": "ChillSaltPlayerNative-install.json",
@@ -260,7 +260,7 @@
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerPlaylist.dll",
-          "Hash": "184BB1DD6818EE0070A5B70525A43765FC34FDB780E74F130B09AE3089A355A4"
+          "Hash": "714E624CF004108B4425E13CD15D4DFBCF83402CCBD6D32928B8D700FFA82269"
         },
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\NAudio.Core.dll",
@@ -272,21 +272,21 @@
         },
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerFilePicker.exe",
-          "Hash": "438F70397E876105A5E9545F1B4295E3DCC03BDC353BA041A1600F1CBDED5CE5"
+          "Hash": "C4D2D1B1C2A1C163F114DC2B042F209ADCB1DA0B061679AB67277242BEFCD8C1"
         }
       ],
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "C3368DEDFF7E81B3C11E3E7EF872B3119CB3686F86301DBC22D45F725A43B349"
+          "Hash": "A33CE4A597564B0A9EAC9B42BE359CD6D8BC41E3FAD7D07D7AB17966100DF647"
         },
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerFilePicker.exe",
-          "Hash": "438F70397E876105A5E9545F1B4295E3DCC03BDC353BA041A1600F1CBDED5CE5"
+          "Hash": "C4D2D1B1C2A1C163F114DC2B042F209ADCB1DA0B061679AB67277242BEFCD8C1"
         },
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerPlaylist.dll",
-          "Hash": "184BB1DD6818EE0070A5B70525A43765FC34FDB780E74F130B09AE3089A355A4"
+          "Hash": "714E624CF004108B4425E13CD15D4DFBCF83402CCBD6D32928B8D700FFA82269"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",

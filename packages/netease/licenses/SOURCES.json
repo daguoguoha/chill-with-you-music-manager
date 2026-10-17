@@ -1,0 +1,38 @@
+[
+  {
+    "file": "localereader-LICENSE.txt",
+    "source": "https://raw.githubusercontent.com/mattn/go-localereader/master/LICENSE",
+    "sha256": "dceede03550621e65ec7b79fcba87cf6dbb9d31132a8ae71a8fe8ceec0af7da3",
+    "first_line": "The MIT License (MIT)"
+  },
+  {
+    "file": "Go-LICENSE.txt",
+    "source": "https://raw.githubusercontent.com/golang/go/go1.25.5/LICENSE",
+    "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad",
+    "first_line": "Copyright 2009 The Go Authors."
+  },
+  {
+    "file": "UnityDoorstop-LICENSE.txt",
+    "source": "https://raw.githubusercontent.com/NeighTools/UnityDoorstop/v4.5.0/LICENSE",
+    "sha256": "20c17d8b8c48a600800dfd14f95d5cb9ff47066a9641ddeab48dc54aec96e331",
+    "first_line": "                  GNU LESSER GENERAL PUBLIC LICENSE"
+  },
+  {
+    "file": "Mono.Cecil-LICENSE.txt",
+    "source": "https://raw.githubusercontent.com/jbevain/cecil/0.10.4/LICENSE.txt",
+    "sha256": "13d58ecbed676511c0c4c4009bff107025e50007ff5e7901dc562700ec62509e",
+    "first_line": "Copyright (c) 2008 - 2015 Jb Evain"
+  },
+  {
+    "file": "MonoMod-LICENSE.txt",
+    "source": "https://raw.githubusercontent.com/MonoMod/MonoMod/v22.01.29.01/LICENSE",
+    "sha256": "0b64833222e3c6a426ad29362d26334619fe02eaf2b89ea9c37805521896c920",
+    "first_line": "The MIT License (MIT)"
+  },
+  {
+    "file": "Harmony-LICENSE.txt",
+    "source": "https://raw.githubusercontent.com/pardeike/Harmony/v2.0.0/LICENSE",
+    "sha256": "a5883d0c45eb7e176d3d1631220e7f96e958e37064773d40245ae6db560bbd6d",
+    "first_line": "MIT License"
+  }
+]

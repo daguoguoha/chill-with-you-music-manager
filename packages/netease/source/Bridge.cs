@@ -1,0 +1,57 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+
+namespace ChillNeteasePlaylist
+{
+    public static class Bridge
+    {
+        const string Dll = "ChillNetease.dll";
+        [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern IntPtr LoadLibraryEx(string path, IntPtr file, uint flags);
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] static extern int NeteaseInit(IntPtr directory);
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern int NeteaseIsLoggedIn();
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern int NeteaseRefreshLogin();
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern IntPtr NeteaseGetUserInfo();
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern IntPtr NeteaseQRGetKey();
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern IntPtr NeteaseQRCheckStatus();
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern void NeteaseQRCancelLogin();
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern IntPtr NeteaseGetUserPlaylists(int limit, int offset);
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern IntPtr NeteaseGetPlaylistSongs(long id, int all);
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern IntPtr NeteaseGetSongURL(long id, IntPtr quality);
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] static extern void NeteaseFreeString(IntPtr text);
+
+        static IntPtr Utf8(string value)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(value + "\0");
+            IntPtr p = Marshal.AllocHGlobal(bytes.Length);
+            Marshal.Copy(bytes, 0, p, bytes.Length);
+            return p;
+        }
+        public static int Init(string directory)
+        {
+            IntPtr p = Utf8(directory);
+            try { return NeteaseInit(p); } finally { Marshal.FreeHGlobal(p); }
+        }
+        public static string SongURL(long id)
+        {
+            IntPtr p = Utf8("standard");
+            try { return Take(NeteaseGetSongURL(id, p)); } finally { Marshal.FreeHGlobal(p); }
+        }
+        public static string Take(IntPtr p)
+        {
+            if (p == IntPtr.Zero) throw new InvalidOperationException("网易云请求失败，请检查网络、登录状态或歌曲权限。");
+            try
+            {
+                int length = 0;
+                while (length < 32 * 1024 * 1024 && Marshal.ReadByte(p, length) != 0) length++;
+                if (length == 32 * 1024 * 1024) throw new InvalidOperationException("网易云响应过大。");
+                byte[] bytes = new byte[length];
+                Marshal.Copy(p, bytes, 0, length);
+                return Encoding.UTF8.GetString(bytes);
+            }
+            finally { NeteaseFreeString(p); }
+        }
+    }
+}
