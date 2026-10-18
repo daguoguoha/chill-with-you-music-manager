@@ -1,0 +1,34 @@
+{
+  "Lyrics": {
+    "NoDecoration": true,
+    "DragAndPersistence": true,
+    "LongLineWrapVisual": true,
+    "Transparent": true,
+    "VToggle": true,
+    "ColorPreset": true
+  },
+  "OtherFiveRuntimeVerified": false,
+  "Provider": "netease",
+  "OtherFiveDisabledUnchanged": true,
+  "Date": "2026-10-18",
+  "GameEnabledProviders": [
+    "netease"
+  ],
+  "ResumePaused": {
+    "Paused": true,
+    "QueueCount": 17,
+    "AfterSeconds": 45.24795913696289,
+    "VerifiedOnLaterAudioFrames": true,
+    "SameTrack": true,
+    "BeforeSeconds": 45.11997604370117
+  },
+  "ResumePlaying": {
+    "SameTrack": true,
+    "Paused": false,
+    "ObservedSeconds": 109.14131164550781,
+    "QueueCount": 17,
+    "BeforeSeconds": 102.5706558227539,
+    "VerifiedOnLaterAudioFrames": true
+  },
+  "LyricsOnlyOverlay": true
+}

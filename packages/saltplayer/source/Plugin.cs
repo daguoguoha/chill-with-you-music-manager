@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillSaltPlayerPlaylist
 {
-    [BepInPlugin("local.chill.saltplayerplaylist", "椒盐音乐歌单", "1.0.1")]
+    [BepInPlugin("local.chill.saltplayerplaylist", "椒盐音乐歌单", "1.1.0")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -68,6 +68,8 @@ namespace ChillSaltPlayerPlaylist
                 foreach (ConstructorInfo ctor in type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                     harmony.Patch(ctor, postfix: new HarmonyMethod(typeof(Plugin), "CaptureService"));
                 SetupNative();
+                SetupLyrics();
+                SetupPlaybackSession();
                 string data = Path.Combine(dir, "library");
                 Run(delegate { return Bridge.Init(data); }, delegate(object result)
                 {
@@ -90,6 +92,8 @@ namespace ChillSaltPlayerPlaylist
         }
         internal void Tick()
         {
+            LyricsTickSafe();
+            PlaybackSessionTickSafe();
             try { NativeTick(); } catch (Exception ex) { nativeNextCheck = Time.realtimeSinceStartup + 10; Logger.LogWarning("原生歌单界面：" + ex); }
             if (firstTick) { firstTick = false; Logger.LogInfo("椒盐音乐运行对象 Update 已开始。"); }
             // Keep async completion working if the game uses only the new Input System.
@@ -170,8 +174,11 @@ namespace ChillSaltPlayerPlaylist
             }
             visible = false;
         }
+        void OnApplicationQuit() { ClosePlaybackSession(); }
         void OnDestroy()
         {
+            ClosePlaybackSession();
+            CloseLyrics();
             Logger.LogInfo("椒盐音乐插件对象已销毁。");
             destroying = true;
             FilePicker.Cancel();

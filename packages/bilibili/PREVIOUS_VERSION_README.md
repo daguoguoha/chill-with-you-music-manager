@@ -1,69 +1,30 @@
-> 以下内容属于历史版本，不能视作当前候选版已完成相同实测。当前验证见 TESTING.md。
+> 合集适配版：保留管理器 v1.2.0 的游戏风格界面，加入真实播放记录候选更新。验证范围以合集根目录 TESTING.md 为准。
 
-# Chill With You B站原生播放器 v1.0.1-rc.1
+# Chill With You · B站原生播放器 v1.1.0-rc.1
 
-> 候选版，待出错用户复测。稳定版仍可从 Releases 历史记录下载。
+将你的B站内容接入游戏原生曲目列表和底部播放器。本版增加真实播放记录上报，可在面板底部开关。
 
-## 本次处理范围
+[下载候选版](https://github.com/daguoguoha/chill-with-you-bilibili-native/releases/tag/v1.1.0-rc.1)。此版尚未验证账号时长入账，GitHub 的稳定版 Latest 保持不变。
 
-B站首次访问账号接口前，从官方设备接口补齐缺少的 buvid3 / buvid4，保留已有设备 Cookie，并沿用原有 DPAPI 账号加密格式。该改动针对缺少设备上下文的请求，不能保证解除平台对账号或网络的限制。
+## 安装和使用
 
-新增错误处理面板、固定反馈代码与 60 秒请求冷却；只有明确登录失效才提示重新扫码。复制或截图面板上的反馈代码即可，不需要额外诊断程序或发送账号文件。
+1. 正常退出游戏，将完整一键包解压到普通文件夹，保留 `offline-dependencies`。
+2. 运行 `ChillBilibiliSetup.exe`，选择包含 `Chill With You.exe` 的游戏目录并安装。安装离线，登录和播放需联网。
+3. 从 Steam 启动游戏，按 F11 打开面板，自己扫码登录并选择内容；也可导入B站收藏夹链接或视频 BV 号。
+4. 使用游戏原生播放器切歌、暂停、拖动进度或直接选曲。面板可隐藏游戏内入口，隐藏后仍可按 F11 打开。
 
-本次使用本地游戏程序集编译，离线请求分类、Cookie 规则和安装回归通过；未完成受影响用户的真实风控验证，新面板尚待游戏内复测。已有账号及歌单保留，更新前正常退出游戏。
+`停用插件.cmd` 可停用此音乐插件。安装时备份替换的文件，保留账号和游戏存档；如安装器提示游戏运行中，请先正常退出。完整 ChillPatcher 与本插件同时接管播放器会冲突，安装器会拦截该情形。
 
-官方固定依赖已内置，安装无需联网。来源与 SHA256 见 dependencies.json。
+## 播放记录
 
-## 原有功能与使用方式
+只统计音源实际推进的播放时间，暂停、缓冲、加载、跳过的进度和休眠间隔不计时。不生成虚构时长，不自动重试不确定的上报结果。配置项为 `Listening.ReportActualPlayback`，默认开启。
 
-将 B站视频的音频加入游戏原生曲目列表，使用底部播放器播放、暂停、切歌、拖动进度和调整音量。播放音频，不显示视频画面。
+不同平台支持范围和协议见 [PLAYBACK_REPORTING.md](PLAYBACK_REPORTING.md)。接口接受或 HTTP 成功不代表账号听歌时长、等级、音响力或年报已经更新，平台服务端决定统计结果。
 
-## 安装
+## 源码、许可与验证
 
-1. 下载 Release 中的 `ChillBilibiliNative-1.0.1-rc.1-OneClick.zip` 并完整解压，保留 offline-dependencies 文件夹。
-2. 保存并正常退出游戏，双击 `ChillBilibiliSetup.exe` 或 `双击安装.cmd`，选择包含 Chill With You.exe 的游戏目录，点击安装 / 更新。
-3. 从 Steam 启动游戏，按 **F11**。用自己的 B站手机 App 扫码并确认后，可读取自己创建的收藏夹。
-4. 选择收藏夹后，在游戏原生列表的下拉菜单中选择“B站 · 收藏夹名”，点击视频即可听音频。
+适配源码位于 `source/`，`Build.ps1 -GameDirectory <游戏目录>` 使用游戏安装目录的托管程序集编译，构建环境需要 Windows .NET Framework C# 编译器。网易云和 QQ 音乐另外提供原生桥接对应源码及 `BuildNative.ps1`；构建工具和版本见 `LISTENING_BUILDINFO.json`。
 
-支持与网易云 F8、QQ 音乐 F9、酷狗 F10 版共用 BepInEx。面板底部可隐藏游戏内入口，隐藏后仍能按 F11 打开，设置会保存。完整 ChillPatcher 需要先停用，以免重复接管播放器。
+项目采用 GPL-3.0-or-later，第三方组件保持各自许可证。来源、修改和条款见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)、`licenses/` 与 `native-source/`。账号凭据、游戏文件、用户音乐及原生游戏美术资源不随包分发。
 
-## 视频与收藏夹导入
-
-点击“导入歌单”，支持以下内容：
-
-- BV 号，例如 `BV1GJ411x7h7`。多 P 视频会将各 P 分别列出。
-- 完整视频链接；带 `?p=2` 时只导入指定分 P。
-- B站 b23.tv 分享短链接。
-- 收藏夹链接，例如 space.bilibili.com 的 favlist 页面带 `fid=收藏夹ID`、www.bilibili.com/list/ml收藏夹ID；也支持输入 `fav:收藏夹ID` 或纯数字收藏夹 ID。
-
-公开内容可直接导入，私有收藏夹和部分视频需要扫码登录并有原有访问权限。收藏夹分页读取，最多 10000 条；失效和接口未返回的条目不会加入列表，所以可播放列表数量可能少于收藏夹显示的总数。收藏夹内多 P 视频默认播放第一 P；如需全部分 P，请单独导入该视频 BV 号。
-
-此版只使用当前账号获准访问的普通 AAC 音轨，不处理 DRM 音轨、付费番剧、直播或 AU 音频区。服务端未提供音源的条目会提示或跳过。没有会员解锁功能。
-
-## 较长视频
-
-点播时先加载和解码该段音频。短视频使用内存音频；较长视频使用本地临时 PCM 文件按需读取，支持暂停、切歌和拖动进度。单段编码音频最大 64 MB，解码后最大 1 GB（48 kHz 立体声约 90 分钟）。超过限制时请选择较短分 P。长视频首次载入会比歌曲慢，并需要临时磁盘空间。
-
-最多缓存 4 个片段，其中长视频最多 2 个；切换超过缓存数量或正常退出时清理对应临时文件。软件异常退出可能遗留以 ChillBilibili- 开头的临时 PCM 文件，可在游戏关闭后通过系统临时文件清理移除。
-
-## 账号、更新与停用
-
-登录信息用 Windows 当前用户 DPAPI 加密，保存在 `BepInEx/plugins/ChillBilibiliPlaylist/account/session.dat`。换电脑或 Windows 用户后需重新扫码。安装包不含账号、Cookie、音乐文件或游戏存档，更新与停用也不清除这些数据。请勿分享自己运行后生成的 account 文件夹。
-
-退出游戏后双击 `停用插件.cmd`，只停用本插件，保留账号与共享 BepInEx 框架。
-
-## 离线安装与构建
-
-官方 BepInEx 5.4.23.5、NAudio.Core / Wasapi 2.2.1 和 QRCoder 1.4.3 已内置并校验固定 SHA256，安装无需联网。登录、读取视频列表和播放仍需联网。
-
-源码在 source/，安装器源码在 installer-source/。使用本地游戏程序集构建插件：
-
-```powershell
-.\Build.ps1 -GameDirectory '游戏目录' -DependencyDirectory '含 NAudio.Core.dll、NAudio.Wasapi.dll、QRCoder.dll 的目录'
-.\BuildLauncher.ps1
-.\UpdatePackageHashes.ps1
-```
-
-Windows x64，需要系统媒体功能。游戏更新或 B站接口变化后可能需要适配；具体错误会显示超时、DNS、代理、TLS、HTTP 状态或 B站接口错误码。
-
-许可证 GPL-3.0-or-later。开源来源与原始许可见 THIRD_PARTY_NOTICES.md 和 licenses/。本项目为非官方社区适配，与游戏或 B站没有官方合作关系。
+测试范围见 [TESTING.md](TESTING.md)，历史说明保存在 [PREVIOUS_VERSION_README.md](PREVIOUS_VERSION_README.md)。当前候选版完成编译、离线计时/协议验证与安装回归，尚未验证各平台真实账号统计入账。

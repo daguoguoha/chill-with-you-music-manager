@@ -132,6 +132,7 @@ namespace ChillQQMusicPlaylist
             {
                 GUI.skin = panelSkin; GUI.depth = -10000;
                 GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(scale, scale, 1));
+                RenderLyrics();
                 if (!visible)
                 {
                     if (showLauncher.Value && DrawLauncher(new Rect(202, Screen.height / scale - 165, 170, 42), "QQ 音乐  ·  F9")) visible = true;
@@ -146,9 +147,9 @@ namespace ChillQQMusicPlaylist
                 }
                 panel.x = Mathf.Clamp(panel.x, 0, Mathf.Max(0, Screen.width / scale - panel.width));
                 panel.y = Mathf.Clamp(panel.y, 0, Mathf.Max(0, Screen.height / scale - panel.height));
-                panel = GUI.Window(174939, panel, DrawPanel, "", windowStyle);
+                if (!lyricsSettingsOpen) panel = GUI.Window(174939, panel, DrawPanel, "", windowStyle);
             }
-            finally { GUI.skin = previousSkin; GUI.matrix = previousMatrix; GUI.depth = previousDepth; GUI.enabled = previousEnabled; }
+            finally { LyricsGuiFocus(); GUI.skin = previousSkin; GUI.matrix = previousMatrix; GUI.depth = previousDepth; GUI.enabled = previousEnabled; }
         }
         string Input(Rect rect, string value, string name, string placeholder)
         {
@@ -326,7 +327,8 @@ namespace ChillQQMusicPlaylist
         void DrawPlayer()
         {
             GUI.Box(new Rect(20, 583, 960, 87), "", cardStyle);
-            GUI.Label(new Rect(40, 598, 680, 29), "QQ 音乐歌曲已接入游戏原生播放器", bodyText);
+            if (GUI.Button(new Rect(654, 598, 76, 28), "歌词设置", quietButton)) lyricsSettingsOpen = true;
+            GUI.Label(new Rect(40, 598, 600, 29), "QQ 音乐歌曲已接入游戏原生播放器", bodyText);
             if (GUI.Button(new Rect(40, 631, 230, 30), showLauncher.Value ? "隐藏游戏内入口" : "显示游戏内入口", quietButton))
             {
                 showLauncher.Value = !showLauncher.Value;
@@ -338,6 +340,7 @@ namespace ChillQQMusicPlaylist
         }
         void DisposeUI()
         {
+            DisposeLyricsUI();
             if (panelSkin != null) Destroy(panelSkin);
             if (font != null) Destroy(font);
             foreach (Texture2D texture in uiTextures) if (texture != null) Destroy(texture);

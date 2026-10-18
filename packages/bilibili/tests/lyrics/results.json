@@ -1,0 +1,22 @@
+{
+  "LrcAndImport": 32,
+  "LyricIntegrationAndHotkey": 22,
+  "SessionStoreAndColor": 22,
+  "StartupSessionIntegration": 21,
+  "Total": 97,
+  "AllPassed": true,
+  "NetworkSamples": {
+    "netease": {
+      "Timed": true,
+      "Lines": 62
+    },
+    "qq": {
+      "Timed": true,
+      "Lines": 63
+    },
+    "kugou": {
+      "Verified": false,
+      "Reason": "empty public response"
+    }
+  }
+}

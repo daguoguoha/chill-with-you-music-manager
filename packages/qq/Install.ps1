@@ -65,7 +65,7 @@ function Get-Dependency($Dependency, [string]$Cache) {
     $bundled = Get-SafeChild (Join-Path $script:InstallRoot 'offline-dependencies') $Dependency.Name
     if (Test-Path -LiteralPath $bundled -PathType Leaf) {
         if ((Get-FileHash -LiteralPath $bundled -Algorithm SHA256).Hash -ne $Dependency.SHA256) {
-            throw ('内置依赖校验不通过：' + $Dependency.Name + '。请重新下载并完整解压 QQ 音乐 v1.1.0 一键安装包。')
+            throw ('内置依赖校验不通过：' + $Dependency.Name + '。请重新下载并完整解压 QQ 音乐 v1.2.0 一键安装包。')
         }
         Write-InstallLog ('使用已校验的内置依赖 ' + $Dependency.Name) | Out-Host
         return $bundled
@@ -75,7 +75,7 @@ function Get-Dependency($Dependency, [string]$Cache) {
         Write-InstallLog ('使用已校验的本地缓存 ' + $Dependency.Name) | Out-Host
         return $target
     }
-    throw ('缺少离线依赖：' + $Dependency.Name + '。请完整解压 Release 中的 ChillQQMusicNative-1.1.0-OneClick.zip；不要单独复制安装器。下载：https://github.com/daguoguoha/chill-with-you-qqmusic-native/releases/latest')
+    throw ('缺少离线依赖：' + $Dependency.Name + '。请完整解压 Release 中的 ChillQQMusicNative-1.2.0-OneClick.zip；不要单独复制安装器。下载：https://github.com/daguoguoha/chill-with-you-qqmusic-native/releases/latest')
 }
 function Expand-SafeZip([string]$Archive, [string]$Destination) {
     New-Item -ItemType Directory -Path $Destination -Force | Out-Null
@@ -103,8 +103,8 @@ function Invoke-Installation([string]$Path) {
     }
     if (Test-Path -LiteralPath (Get-SafeChild $root 'BepInEx\plugins\ChillPatcher\ChillPatcher.dll')) { throw '发现完整 ChillPatcher 插件。请先停用它，避免两个插件同时接管播放器。' }
     $payload = Join-Path $script:InstallRoot 'BepInEx\plugins\ChillQQMusicPlaylist\ChillQQMusicPlaylist.dll'
-    if (-not (Test-Path -LiteralPath $payload) -or (Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash -ne 'F3A4B4832E0ABCA4DA7A24F3E560B51EBCE88C034E01711BCCCD949A67DD3B8C') { throw '主插件文件缺失或校验失败，请重新解压原始安装包。' }
-    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillQQMusicNative-1.1.0-downloads'
+    if (-not (Test-Path -LiteralPath $payload) -or (Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash -ne '083795F4DA31538E167D7496810A292FE0E3CA0E26F7DD0BEC0053A970B461DD') { throw '主插件文件缺失或校验失败，请重新解压原始安装包。' }
+    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillQQMusicNative-1.2.0-downloads'
     New-Item -ItemType Directory -Path $cache -Force | Out-Null
     $stage = Join-Path $cache ([Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $stage | Out-Null
@@ -122,7 +122,7 @@ function Invoke-Installation([string]$Path) {
         foreach ($file in Get-ChildItem -LiteralPath (Join-Path $loader 'BepInEx\core') -File -Recurse) { $files += @{Path=$file.FullName.Substring($loader.Length+1); Source=$file.FullName; Loader=$true} }
     }
     $native = Join-Path $script:InstallRoot 'BepInEx\plugins\ChillQQMusicPlaylist\ChillQQMusic.dll'
-    if (-not (Test-Path -LiteralPath $native) -or (Get-FileHash -LiteralPath $native -Algorithm SHA256).Hash -ne '2F18E342BF859054276F6EF1D40C284A09C6AB26CC0E7065C3E3A1BE8EA75F8B') { throw 'QQ 音乐桥接文件缺失或校验失败，请下载 Release 中的 ChillQQMusicNative-1.1.0-OneClick.zip 并完整解压；Source code 包需自行编译桥接。' }
+    if (-not (Test-Path -LiteralPath $native) -or (Get-FileHash -LiteralPath $native -Algorithm SHA256).Hash -ne '2F18E342BF859054276F6EF1D40C284A09C6AB26CC0E7065C3E3A1BE8EA75F8B') { throw 'QQ 音乐桥接文件缺失或校验失败，请下载 Release 中的 ChillQQMusicNative-1.2.0-OneClick.zip 并完整解压；Source code 包需自行编译桥接。' }
     $pluginRelative = 'BepInEx\plugins\ChillQQMusicPlaylist\'
     $files += @{Path=($pluginRelative+'ChillQQMusic.dll'); Source=$native; Loader=$false}
     foreach ($dependency in $script:Dependencies[1..2]) {
@@ -162,8 +162,8 @@ function Invoke-Installation([string]$Path) {
         $manifest = Get-SafeChild $root 'ChillQQMusicNative-install.json'
         $history = @()
         if (Test-Path -LiteralPath $manifest) { $history += (Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json).History }
-        $history += [pscustomobject]@{Version='1.1.0'; Date=(Get-Date -Format o); Files=@($plan | Select-Object Path,Hash,Added,BackupPath)}
-        [pscustomobject]@{Version='1.1.0'; GameDirectory=$root; History=$history} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifest -Encoding UTF8
+        $history += [pscustomobject]@{Version='1.2.0'; Date=(Get-Date -Format o); Files=@($plan | Select-Object Path,Hash,Added,BackupPath)}
+        [pscustomobject]@{Version='1.2.0'; GameDirectory=$root; History=$history} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifest -Encoding UTF8
         Write-InstallLog '安装成功。请从 Steam 启动游戏，首次按 F9 扫码登录。'
         Write-InstallLog '打开原生播放列表，在上方下拉菜单选择“QQ 音乐 · 歌单名”。'
     } catch {
@@ -178,7 +178,7 @@ function Invoke-Installation([string]$Path) {
     }
 }
 if ($VerifyDownloadsOnly) {
-    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillQQMusicNative-1.1.0-downloads'
+    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillQQMusicNative-1.2.0-downloads'
     New-Item -ItemType Directory -Path $cache -Force | Out-Null
     foreach ($dependency in $script:Dependencies) { [void](Get-Dependency $dependency $cache) }
     Write-Output '三个内置依赖 SHA256 校验通过；无需联网安装。'

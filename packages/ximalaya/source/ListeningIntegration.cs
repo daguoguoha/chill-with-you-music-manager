@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -171,7 +171,7 @@ namespace ChillXimalayaPlaylist
         {
             ResetListening(listeningAllowed); listeningSwitchingAccount = true;
         }
-        void OnApplicationQuit() { CloseListening(); }
+        void OnApplicationQuit() { ClosePlaybackSession(); CloseListening(); }
         void CloseListening()
         {
             if (listeningClosed) return;

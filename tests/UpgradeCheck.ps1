@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$OldPackage,[Parameter(Mandatory=$true)][string]$Package)
+﻿param([Parameter(Mandatory=$true)][string]$OldPackage,[Parameter(Mandatory=$true)][string]$Package)
 $ErrorActionPreference='Stop'
 $sandbox=Join-Path ([IO.Path]::GetTempPath()) ('mmu-'+[Guid]::NewGuid().ToString('N').Substring(0,8))
 $game=Join-Path $sandbox '旧合集升级 中文路径'
@@ -20,13 +20,13 @@ $sentinels=@{}
 try {
     foreach($p in $oldCatalog.Plugins){$null=Call $OldPackage Install $p.Id}
     $null=Call $OldPackage Disable qq
-    foreach($relative in @('BepInEx\plugins\ChillNeteasePlaylist\account\fixture.txt','BepInEx\plugins\ChillQQMusicPlaylist\account\fixture.txt','BepInEx\config\local.chill.netease.cfg','BepInEx\config\ChillAudioProgress\progress.json')){
+    foreach($relative in @('BepInEx\plugins\ChillNeteasePlaylist\account\fixture.txt','BepInEx\plugins\ChillQQMusicPlaylist\account\fixture.txt','BepInEx\config\local.chill.netease.cfg','BepInEx\config\ChillAudioProgress\progress.json','BepInEx\config\ChillLyrics\netease\fixture.lrc')){
         $path=Join-Path $game $relative
         New-Item -ItemType Directory -Path (Split-Path $path -Parent) -Force | Out-Null
         [IO.File]::WriteAllText($path,'synthetic preservation marker; no credentials')
         $sentinels[$path]=Hash $path
     }
-    foreach($id in @('netease','qq','kugou','bilibili','ximalaya')){
+    foreach($id in @('netease','qq','kugou','bilibili','ximalaya','saltplayer')){
         $p=@($catalog.Plugins | Where-Object Id -eq $id)[0]
         $old=@($oldCatalog.Plugins | Where-Object Id -eq $id)[0]
         $before=@{}
@@ -52,7 +52,7 @@ try {
         $results.Add([pscustomobject]@{Provider=$id;Passed=$true;Upgrade=$p.Version;Restored=$old.Version;MarkersPreserved=$true;OtherDisabledProviderPreserved=$true})
         Write-Output ('PASS '+$id+' upgrade and undo')
     }
-    foreach($id in @('saltplayer','progress')){
+    foreach($id in @('progress')){
         $oldRoot=Join-Path $OldPackage ('packages\'+$id)
         $newRoot=Join-Path $Package ('packages\'+$id)
         foreach($f in Get-ChildItem -LiteralPath $oldRoot -File -Recurse){
@@ -61,5 +61,5 @@ try {
         }
     }
 } finally {
-    [pscustomobject]@{OldVersion=$oldCatalog.ManagerVersion;Version=$catalog.ManagerVersion;Sandbox=$sandbox;Results=$results.ToArray();Passed=$results.Count;Expected=5;SaltAndProgressUnchanged=($results.Count -eq 5)} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $PSScriptRoot 'upgrade-result.json') -Encoding UTF8
+    [pscustomobject]@{OldVersion=$oldCatalog.ManagerVersion;Version=$catalog.ManagerVersion;Sandbox=$sandbox;Results=$results.ToArray();Passed=$results.Count;Expected=6;ProgressUnchanged=($results.Count -eq 6)} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $PSScriptRoot 'upgrade-result.json') -Encoding UTF8
 }

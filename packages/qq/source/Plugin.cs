@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillQQMusicPlaylist
 {
-    [BepInPlugin("local.chill.qqmusicplaylist", "QQ 音乐歌单", "1.1.0")]
+    [BepInPlugin("local.chill.qqmusicplaylist", "QQ 音乐歌单", "1.2.0")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -72,6 +72,8 @@ namespace ChillQQMusicPlaylist
                 foreach (ConstructorInfo ctor in type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                     harmony.Patch(ctor, postfix: new HarmonyMethod(typeof(Plugin), "CaptureService"));
                 SetupNative();
+                SetupLyrics();
+                SetupPlaybackSession();
                 SetupListening();
                 string data = Path.Combine(dir, "account");
                 Run(delegate { return Bridge.Init(data); }, delegate(object result)
@@ -97,6 +99,8 @@ namespace ChillQQMusicPlaylist
         }
         internal void Tick()
         {
+            LyricsTickSafe();
+            PlaybackSessionTickSafe();
             ListeningTickSafe();
             try { NativeTick(); } catch (Exception ex) { nativeNextCheck = Time.realtimeSinceStartup + 10; Logger.LogWarning("原生歌单界面：" + ex); }
             if (firstTick) { firstTick = false; Logger.LogInfo("QQ 音乐运行对象 Update 已开始。"); }
@@ -157,6 +161,7 @@ namespace ChillQQMusicPlaylist
         void ClearQr() { if (qrImage != null) Destroy(qrImage); qrImage = null; }
         void Login()
         {
+            ResetPlaybackSessionAccount();
             ResetListeningAccount();
             qrPolling = false; ClearQr();
             Run(delegate { Bridge.QQMusicQRCancelLogin(); return Bridge.QrImage(loginType); }, delegate(object result)
@@ -220,6 +225,8 @@ namespace ChillQQMusicPlaylist
         }
         void OnDestroy()
         {
+            ClosePlaybackSession();
+            CloseLyrics();
             CloseListening();
             Logger.LogInfo("QQ 音乐插件对象已销毁。");
             destroying = true; qrPolling = false;

@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$GameDirectory)
+﻿param([Parameter(Mandatory=$true)][string]$GameDirectory)
 $ErrorActionPreference = 'Stop'
 $validationManaged = Join-Path $GameDirectory 'Chill With You_Data\Managed'
 $validationCore = Join-Path $GameDirectory 'BepInEx\core'

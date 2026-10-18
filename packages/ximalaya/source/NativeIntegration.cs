@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -364,6 +364,7 @@ namespace ChillXimalayaPlaylist
         }
         void NativePlayFromPanel(Song[] list, int index)
         {
+            SessionManualSelection();
             if (busy || index < 0 || index >= list.Length) return;
             if (songs.Count != list.Length || NativeService == null || !NativeService.AllMusicList.Any(IsCloud)) RegisterNativePlaylist();
             GameAudioInfo info = NativeService == null ? null : NativeService.AllMusicList.FirstOrDefault(a => a.UUID == CloudPrefix + list[index].id);

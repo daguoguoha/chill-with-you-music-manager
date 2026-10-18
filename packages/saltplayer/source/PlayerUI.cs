@@ -132,6 +132,7 @@ namespace ChillSaltPlayerPlaylist
             {
                 GUI.skin = panelSkin; GUI.depth = -10000;
                 GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(scale, scale, 1));
+                RenderLyrics();
                 if (!visible)
                 {
                     if (showLauncher.Value && DrawLauncher(new Rect(922, Screen.height / scale - 165, 170, 42), "椒盐音乐  ·  F6")) visible = true;
@@ -146,9 +147,9 @@ namespace ChillSaltPlayerPlaylist
                 }
                 panel.x = Mathf.Clamp(panel.x, 0, Mathf.Max(0, Screen.width / scale - panel.width));
                 panel.y = Mathf.Clamp(panel.y, 0, Mathf.Max(0, Screen.height / scale - panel.height));
-                panel = GUI.Window(174943, panel, DrawPanel, "", windowStyle);
+                if (!lyricsSettingsOpen) panel = GUI.Window(174943, panel, DrawPanel, "", windowStyle);
             }
-            finally { GUI.skin = previousSkin; GUI.matrix = previousMatrix; GUI.depth = previousDepth; GUI.enabled = previousEnabled; }
+            finally { LyricsGuiFocus(); GUI.skin = previousSkin; GUI.matrix = previousMatrix; GUI.depth = previousDepth; GUI.enabled = previousEnabled; }
         }
         string Input(Rect rect, string value, string name, string placeholder)
         {
@@ -291,12 +292,13 @@ namespace ChillSaltPlayerPlaylist
                 showLauncher.Value = !showLauncher.Value;
                 Config.Save();
             }
-            GUI.Label(new Rect(286, 636, 420, 24), "隐藏后仍可按 F6 打开面板", mutedText);
+            if (GUI.Button(new Rect(286, 631, 435, 30), "歌词与同步设置", quietButton)) lyricsSettingsOpen = true;
             if (GUI.Button(new Rect(750, 604, 210, 40), "收起并使用原生播放器", primaryButton)) visible = false;
             GUI.Label(new Rect(30,681,938,36),new GUIContent(status,status),statusText);
         }
         void DisposeUI()
         {
+            DisposeLyricsUI();
             if (panelSkin != null) Destroy(panelSkin);
             if (font != null) Destroy(font);
             foreach (Texture2D texture in uiTextures) if (texture != null) Destroy(texture);

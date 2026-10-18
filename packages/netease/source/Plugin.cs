@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,7 +16,7 @@ using UnityEngine.Networking;
 
 namespace ChillNeteasePlaylist
 {
-    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.3.0")]
+    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.4.0")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -72,6 +72,8 @@ namespace ChillNeteasePlaylist
                 foreach (ConstructorInfo ctor in type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                     harmony.Patch(ctor, postfix: new HarmonyMethod(typeof(Plugin), "CaptureService"));
                 SetupNative();
+                SetupLyrics();
+                SetupPlaybackSession();
                 SetupListening();
                 string data = Path.Combine(dir, "account");
                 Run(delegate { return Bridge.Init(data); }, delegate(object result)
@@ -80,7 +82,7 @@ namespace ChillNeteasePlaylist
                     Logger.LogInfo("网易云桥接初始化完成：" + ready);
                     if (!ready) { status = "初始化失败，请检查 Mod 目录写入权限。"; return; }
                     status = "点击扫码登录，读取你自己的网易云歌单。";
-                    Run(delegate { return Bridge.NeteaseIsLoggedIn() == 1 && Bridge.NeteaseRefreshLogin() == 1; }, delegate(object session)
+                    Run(delegate { return Bridge.NeteaseRefreshLogin() == 1; }, delegate(object session)
                     { logged = (bool)session; if (logged) LoadAccount(); });
                 });
                 Logger.LogInfo("网易云歌单 Mod 已初始化；F8 显示面板。");
@@ -97,6 +99,8 @@ namespace ChillNeteasePlaylist
         }
         internal void Tick()
         {
+            LyricsTickSafe();
+            PlaybackSessionTickSafe();
             ListeningTickSafe();
             try { NativeTick(); } catch (Exception ex) { nativeNextCheck = Time.realtimeSinceStartup + 10; Logger.LogWarning("原生歌单界面：" + ex); }
             if (firstTick) { firstTick = false; Logger.LogInfo("网易云运行对象 Update 已开始。"); }
@@ -156,6 +160,7 @@ namespace ChillNeteasePlaylist
         void ClearQr() { if (qrImage != null) Destroy(qrImage); qrImage = null; }
         void Login()
         {
+            ResetPlaybackSessionAccount();
             ResetListeningAccount();
             qrPolling = false; ClearQr();
             Run(delegate { return JsonConvert.DeserializeObject<QrState>(Bridge.Take(Bridge.NeteaseQRGetKey())); }, delegate(object result)
@@ -231,6 +236,8 @@ namespace ChillNeteasePlaylist
         }
         void OnDestroy()
         {
+            ClosePlaybackSession();
+            CloseLyrics();
             CloseListening();
             Logger.LogInfo("网易云插件对象已销毁。");
             destroying = true; qrPolling = false;
