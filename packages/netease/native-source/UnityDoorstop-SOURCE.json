@@ -1,0 +1,7 @@
+{
+  "version": "4.5.0",
+  "url": "https://codeload.github.com/NeighTools/UnityDoorstop/zip/refs/tags/v4.5.0",
+  "sha256": "7f0c963104aa08bf5fefef8ff85e7fecd8306838f5af3101487d9db4e9188d63",
+  "license": "LGPL-2.1-or-later",
+  "note": "Unmodified upstream winhttp.dll is inside offline-dependencies/BepInEx.zip. Full upstream source archive includes its original build instructions."
+}

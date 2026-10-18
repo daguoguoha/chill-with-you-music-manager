@@ -1,0 +1,13 @@
+# 用户登录和运行数据
+**/account/
+**/cookie
+**/cookies*
+**/*.log
+**/SaveData/
+**/*.es3*
+**/cache/
+**/db/
+**/test-account/
+work/
+.vs/
+obj/

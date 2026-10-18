@@ -6,7 +6,7 @@ using System.Text;
 using Newtonsoft.Json;
 namespace ChillQQMusicPlaylist
 {
-    public static class Bridge
+    public static partial class Bridge
     {
         const string Dll = "ChillQQMusic.dll";
         [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)] public static extern IntPtr LoadLibraryEx(string path, IntPtr file, uint flags);

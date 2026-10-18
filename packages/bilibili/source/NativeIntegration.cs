@@ -282,6 +282,7 @@ namespace ChillBilibiliPlaylist
             {
                 string id = CloudPrefix + song.id;
                 nativeSongs[id] = song;
+                listeningSources[id] = Convert.ToString(selectedPlaylistId);
                 GameAudioInfo info = nativeClips.Find(a => a.UUID == id);
                 if (info == null) info = GameAudioInfo.CreateNormal(null, CloudTag, song.name, Artists(song), id, false, "", "");
                 info.IsUnlocked = true;

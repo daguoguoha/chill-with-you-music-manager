@@ -1,0 +1,23 @@
+{
+  "BepInEx.zip": {
+    "version": "5.4.23.5",
+    "url": "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip",
+    "bundled": true,
+    "file": "offline-dependencies/BepInEx.zip",
+    "sha256": "82f9878551030f54657792c0740d9d51a09500eeae1fba21106b0c441e6732c4"
+  },
+  "NAudio.Core.nupkg": {
+    "version": "2.2.1",
+    "url": "https://api.nuget.org/v3-flatcontainer/naudio.core/2.2.1/naudio.core.2.2.1.nupkg",
+    "bundled": true,
+    "file": "offline-dependencies/NAudio.Core.nupkg",
+    "sha256": "794645dbfd30e4880663d52d9d9224d55c301fa54228ff623c95d572c7887347"
+  },
+  "NAudio.Wasapi.nupkg": {
+    "version": "2.2.1",
+    "url": "https://api.nuget.org/v3-flatcontainer/naudio.wasapi/2.2.1/naudio.wasapi.2.2.1.nupkg",
+    "bundled": true,
+    "file": "offline-dependencies/NAudio.Wasapi.nupkg",
+    "sha256": "c8396b8dbab86a2619edfd9158beaf18c21cb86677099b5594950fd8651b9d1a"
+  }
+}

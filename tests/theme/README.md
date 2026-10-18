@@ -1,3 +1,5 @@
+> 历史文件：以下适配器及三个 JSON 结果来自 v1.2.0，未为 v1.3.0 新增的播放记录和错误恢复控件更新。不能作为新版界面或网络功能的验证结果；本次结果以合集根目录 TESTING.md 为准。
+
 # 游戏风格界面预览与构建验证
 
 `PreviewUnity.cs` 提供 GDI 绘图适配器，`PreviewPlugin.cs.template` 提供合成账号、歌单和空回调。`RenderPanels.ps1 -Package <完整解压的管理器目录>` 编译并调用生产 `PlayerUI.cs`、`GameTheme.cs`、`Models.cs`，椒盐另外包含生产 `LocalImport.cs`。在 Windows .NET Framework 下执行，不需要游戏程序集或联网。

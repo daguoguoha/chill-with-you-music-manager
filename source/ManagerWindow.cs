@@ -45,7 +45,7 @@ internal sealed class ManagerWindow : Form
         Panel header=new NightHeader {Dock=DockStyle.Top,Height=112,BackColor=paper}; Controls.Add(header);
         header.Controls.Add(new Label {Text="CHILL WITH YOU  /  MUSIC",Location=new Point(108,20),Size=new Size(600,22),Font=new Font(Font.FontFamily,9F),ForeColor=muted,BackColor=Color.Transparent});
         header.Controls.Add(new Label {Text="放松时光 · 音乐插件",Location=new Point(104,42),Size=new Size(680,42),Font=new Font(Font.FontFamily,24F),ForeColor=ink,BackColor=Color.Transparent});
-        Label badge=new Label {Text="v1.2.0   /   离线安装",Location=new Point(865,42),Size=new Size(220,32),TextAlign=ContentAlignment.MiddleRight,ForeColor=muted,BackColor=Color.Transparent,Anchor=AnchorStyles.Top|AnchorStyles.Right}; header.Controls.Add(badge);
+        Label badge=new Label {Text="v1.3.0-rc.1 / 候选版",Location=new Point(865,42),Size=new Size(220,32),TextAlign=ContentAlignment.MiddleRight,ForeColor=muted,BackColor=Color.Transparent,Anchor=AnchorStyles.Top|AnchorStyles.Right}; header.Controls.Add(badge);
         Panel content=new Panel {Dock=DockStyle.Fill,Padding=new Padding(26,16,26,14),BackColor=paper}; Controls.Add(content); content.BringToFront();
         TableLayoutPanel layout=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=1,RowCount=7};
         foreach(int height in new[]{68,34,288,48,112,116}) layout.RowStyles.Add(new RowStyle(SizeType.Absolute,height));
@@ -76,7 +76,7 @@ internal sealed class ManagerWindow : Form
         detailTitle.Dock=DockStyle.Fill;detailTitle.Font=new Font(Font.FontFamily,11F);selectedPanel.Controls.Add(detailTitle,0,0);
         details.Dock=DockStyle.Fill;details.Multiline=true;details.ReadOnly=true;details.BorderStyle=BorderStyle.None;details.ScrollBars=ScrollBars.Vertical;details.BackColor=selectedPanel.BackColor;details.ForeColor=muted;selectedPanel.Controls.Add(details,0,1);layout.Controls.Add(selectedPanel,0,4);
         output.Dock=DockStyle.Fill;output.Multiline=true;output.ReadOnly=true;output.ScrollBars=ScrollBars.Vertical;output.BorderStyle=BorderStyle.None;output.BackColor=Color.FromArgb(30,30,48);output.ForeColor=muted;output.Margin=new Padding(0,12,0,0);layout.Controls.Add(output,0,5);
-        footer.Text="修改前请退出游戏。账号、歌单与存档保留。随包版本不代表线上最新版本。";footer.Dock=DockStyle.Fill;footer.ForeColor=muted;footer.TextAlign=ContentAlignment.MiddleLeft;layout.Controls.Add(footer,0,6);
+        footer.Text="修改前请退出游戏。候选版支持真实播放记录，平台时长入账需实测确认。账号、存档与本地进度保留。";footer.Dock=DockStyle.Fill;footer.ForeColor=muted;footer.TextAlign=ContentAlignment.MiddleLeft;layout.Controls.Add(footer,0,6);
         foreach(Control control in new Control[]{paths,details,output,table})control.HandleCreated+=delegate(object sender,EventArgs e){try{SetWindowTheme(((Control)sender).Handle,"DarkMode_Explorer",null);}catch(DllNotFoundException){}catch(EntryPointNotFoundException){}};
         foreach(string p in FindGames()) paths.Items.Add(p);
         if(!string.IsNullOrEmpty(initialPath)) paths.Text=initialPath; else if(paths.Items.Count==1) paths.SelectedIndex=0;

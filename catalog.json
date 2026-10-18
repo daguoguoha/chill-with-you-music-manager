@@ -1,24 +1,24 @@
-{
+﻿{
   "Schema": 1,
-  "ManagerVersion": "1.2.0",
+  "ManagerVersion": "1.3.0",
   "Plugins": [
     {
       "Id": "netease",
       "Name": "网易云音乐",
-      "Version": "1.2.3",
+      "Version": "1.3.0",
       "Folder": "packages\\netease",
       "Primary": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
       "Manifest": "ChillNeteaseNative-install.json",
       "Hotkey": "F8",
-      "Hint": "扫码登录后，在原生列表选择网易云歌单。",
+      "Hint": "扫码登录后，在原生列表选择网易云歌单。 本候选版新增真实播放记录开关；平台时长入账需实测确认。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "739077F67B6303542DF7733BDAEB95C5E2F3EAE34AB0540FAEBF92CA2594F9A8"
+          "Hash": "B1509C0F253AD75B5A2849A1B13CB0FF60315E27B16B830DBF288F46339EB558"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNetease.dll",
-          "Hash": "46E9FFB36F49FCFA7F5A29E653CE0330A3D90B42EC964029A68A7E66200BC0D6"
+          "Hash": "BD1AE13E58F415667A9BD03D6AD0C2EEB0DEFF68D023479C46A37BAB269DA67B"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\QRCoder.dll",
@@ -28,11 +28,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "4852E773F7A612342578BEFD3002D6284D9C77F70BC43CF1320B689A732E301B"
+          "Hash": "688D689C9A045B0BC25F00178484EE2C3CA2B19A5AC75F0398F74637EC768675"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "739077F67B6303542DF7733BDAEB95C5E2F3EAE34AB0540FAEBF92CA2594F9A8"
+          "Hash": "B1509C0F253AD75B5A2849A1B13CB0FF60315E27B16B830DBF288F46339EB558"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -40,7 +40,11 @@
         },
         {
           "Path": "offline-dependencies\\ChillNetease.dll",
-          "Hash": "46E9FFB36F49FCFA7F5A29E653CE0330A3D90B42EC964029A68A7E66200BC0D6"
+          "Hash": "BD1AE13E58F415667A9BD03D6AD0C2EEB0DEFF68D023479C46A37BAB269DA67B"
+        },
+        {
+          "Path": "offline-dependencies\\ChillNetease.h",
+          "Hash": "FC415F7117CBE7CAA5104631F7BCDB6A4D21E401EE7E532C70B4794E5050F243"
         },
         {
           "Path": "offline-dependencies\\QRCoder.nupkg",
@@ -51,20 +55,20 @@
     {
       "Id": "qq",
       "Name": "QQ 音乐",
-      "Version": "1.0.3",
+      "Version": "1.1.0",
       "Folder": "packages\\qq",
       "Primary": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusicPlaylist.dll",
       "Manifest": "ChillQQMusicNative-install.json",
       "Hotkey": "F9",
-      "Hint": "使用 QQ / 微信扫码登录，在原生列表选择歌单。",
+      "Hint": "使用 QQ / 微信扫码登录，在原生列表选择歌单。 本候选版新增真实播放记录开关；平台时长入账需实测确认。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusicPlaylist.dll",
-          "Hash": "C3032200EAC32EB38B48F0F19BA967C25FD352D83FBCE8716BBEF24285361E5D"
+          "Hash": "F3A4B4832E0ABCA4DA7A24F3E560B51EBCE88C034E01711BCCCD949A67DD3B8C"
         },
         {
           "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusic.dll",
-          "Hash": "3C555EFD43C4F3F03F97EDF22387017E34859D68784F0AE062E3B89260A13604"
+          "Hash": "2F18E342BF859054276F6EF1D40C284A09C6AB26CC0E7065C3E3A1BE8EA75F8B"
         },
         {
           "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\NAudio.Core.dll",
@@ -78,15 +82,19 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "BE28DF817C2B48429606C6A526B319E6597CF55C3977B84576DDD688E50DC804"
+          "Hash": "E70AF832CCF75B5499EE5C0FB86759D3B2ECC442AC92B87D33F5F64B1E0A4A0A"
         },
         {
           "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusic.dll",
-          "Hash": "3C555EFD43C4F3F03F97EDF22387017E34859D68784F0AE062E3B89260A13604"
+          "Hash": "2F18E342BF859054276F6EF1D40C284A09C6AB26CC0E7065C3E3A1BE8EA75F8B"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusic.h",
+          "Hash": "44C9923F9790DDFC464A701954522C5269D4E2C9F5036A0E1E537EDCD6056FCA"
         },
         {
           "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusicPlaylist.dll",
-          "Hash": "C3032200EAC32EB38B48F0F19BA967C25FD352D83FBCE8716BBEF24285361E5D"
+          "Hash": "F3A4B4832E0ABCA4DA7A24F3E560B51EBCE88C034E01711BCCCD949A67DD3B8C"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -105,16 +113,16 @@
     {
       "Id": "kugou",
       "Name": "酷狗音乐",
-      "Version": "1.0.2",
+      "Version": "1.1.0",
       "Folder": "packages\\kugou",
       "Primary": "BepInEx\\plugins\\ChillKuGouPlaylist\\ChillKuGouPlaylist.dll",
       "Manifest": "ChillKuGouNative-install.json",
       "Hotkey": "F10",
-      "Hint": "使用酷狗手机 App 扫码登录，读取歌单。",
+      "Hint": "使用酷狗手机 App 扫码登录，读取歌单。 本候选版新增真实播放记录开关；平台时长入账需实测确认。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\ChillKuGouPlaylist.dll",
-          "Hash": "528F3C0FCF98EE52F49CF366CC4D286EF42C510A7C2143586B627053B3A1D94C"
+          "Hash": "68FE2D4CC433EF41CAA44E5ECB5F293677797DEFE50BC67B0C8485680A6B0F40"
         },
         {
           "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\NAudio.Core.dll",
@@ -128,11 +136,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "B2EE912A5FE358578293D96692716EFD79A7DA2ED0EF6502CE020A087EB4AD29"
+          "Hash": "D1EA02DE769CF66344BDECEE1C758541B5EB6104283F61E330DECD8244B381FC"
         },
         {
           "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\ChillKuGouPlaylist.dll",
-          "Hash": "528F3C0FCF98EE52F49CF366CC4D286EF42C510A7C2143586B627053B3A1D94C"
+          "Hash": "68FE2D4CC433EF41CAA44E5ECB5F293677797DEFE50BC67B0C8485680A6B0F40"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -151,16 +159,16 @@
     {
       "Id": "bilibili",
       "Name": "B站音频",
-      "Version": "1.0.1",
+      "Version": "1.1.0",
       "Folder": "packages\\bilibili",
       "Primary": "BepInEx\\plugins\\ChillBilibiliPlaylist\\ChillBilibiliPlaylist.dll",
       "Manifest": "ChillBilibiliNative-install.json",
       "Hotkey": "F11",
-      "Hint": "扫码后导入收藏夹；播放视频音频，不显示视频画面。",
+      "Hint": "扫码后导入收藏夹；播放视频音频，不显示视频画面。 本候选版新增真实播放记录开关；平台时长入账需实测确认。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\ChillBilibiliPlaylist.dll",
-          "Hash": "B785AB5F4C91B737594E2DE4A91601C1F6DAC504BA6FE55DB0D2249B6E7C5ACC"
+          "Hash": "B8DBED835726B5FF0A6ACAE3043123316CFEF4258EEEBF98B8CB7D1A93E216AE"
         },
         {
           "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\NAudio.Core.dll",
@@ -178,11 +186,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "560950AAC823C57CF4FBF3D0603EC8ADEE004F7E35BF517114E47FE2D6FD1549"
+          "Hash": "69A22863D045B8B42F0956948698FB77C26D951745AA304C3F06BCC19BC3353F"
         },
         {
           "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\ChillBilibiliPlaylist.dll",
-          "Hash": "B785AB5F4C91B737594E2DE4A91601C1F6DAC504BA6FE55DB0D2249B6E7C5ACC"
+          "Hash": "B8DBED835726B5FF0A6ACAE3043123316CFEF4258EEEBF98B8CB7D1A93E216AE"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -205,16 +213,16 @@
     {
       "Id": "ximalaya",
       "Name": "喜马拉雅",
-      "Version": "1.0.1",
+      "Version": "1.1.0",
       "Folder": "packages\\ximalaya",
       "Primary": "BepInEx\\plugins\\ChillXimalayaPlaylist\\ChillXimalayaPlaylist.dll",
       "Manifest": "ChillXimalayaNative-install.json",
       "Hotkey": "F7",
-      "Hint": "导入专辑、播客和声音；登录后读取订阅及喜欢的声音。",
+      "Hint": "导入专辑、播客和声音；登录后读取订阅及喜欢的声音。 本候选版新增真实播放记录开关；平台时长入账需实测确认。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\ChillXimalayaPlaylist.dll",
-          "Hash": "EABFAC77EA41BFE2A4097ED589FD7C707184EE366874BA4D841A2C1DBE02BAA3"
+          "Hash": "E65BA0E97D0DB5163CE864D55587ECB8DD1FCB8B500007B4BE982E1644591718"
         },
         {
           "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\NAudio.Core.dll",
@@ -228,11 +236,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "5374A2EAD75B51A7DDAC2F82E39B64516DE331714DEC24088E9D33FF041CC95E"
+          "Hash": "8B9E5E1E3D099504981FF203E68C3CD75D26B579F8D78C2733D25226D47408CE"
         },
         {
           "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\ChillXimalayaPlaylist.dll",
-          "Hash": "EABFAC77EA41BFE2A4097ED589FD7C707184EE366874BA4D841A2C1DBE02BAA3"
+          "Hash": "E65BA0E97D0DB5163CE864D55587ECB8DD1FCB8B500007B4BE982E1644591718"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",

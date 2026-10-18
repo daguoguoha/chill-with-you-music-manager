@@ -15,7 +15,7 @@ using Newtonsoft.Json.Linq;
 
 namespace ChillXimalayaPlaylist
 {
-    public static class Bridge
+    public static partial class Bridge
     {
         public const string UserAgent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
         const string Origin="https://www.ximalaya.com";
@@ -220,6 +220,7 @@ namespace ChillXimalayaPlaylist
                     JObject info=r["trackInfo"] as JObject;
                     if(info==null)throw new InvalidOperationException("声音播放信息结构已变化。");
                     if(!Flag(info["isAuthorized"]))throw new InvalidOperationException("当前账号没有此声音的完整播放权限。");
+                    listeningAlbums[id]=Number(info["albumId"]);
                     JArray list=info["playUrlList"] as JArray;
                     if(list!=null)foreach(string quality in new[]{"M4A_128","MP3_64","MP3_32"})
                     {

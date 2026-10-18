@@ -65,7 +65,7 @@ function Get-Dependency($Dependency, [string]$Cache) {
     $bundled = Get-SafeChild (Join-Path $script:InstallRoot 'offline-dependencies') $Dependency.Name
     if (Test-Path -LiteralPath $bundled -PathType Leaf) {
         if ((Get-FileHash -LiteralPath $bundled -Algorithm SHA256).Hash -ne $Dependency.SHA256) {
-            throw ('内置依赖校验不通过：' + $Dependency.Name + '。请重新下载并完整解压 酷狗音乐 v1.0.2 一键安装包。')
+            throw ('内置依赖校验不通过：' + $Dependency.Name + '。请重新下载并完整解压 酷狗音乐 v1.1.0 一键安装包。')
         }
         Write-InstallLog ('使用已校验的内置依赖 ' + $Dependency.Name) | Out-Host
         return $bundled
@@ -75,7 +75,7 @@ function Get-Dependency($Dependency, [string]$Cache) {
         Write-InstallLog ('使用已校验的本地缓存 ' + $Dependency.Name) | Out-Host
         return $target
     }
-    throw ('缺少离线依赖：' + $Dependency.Name + '。请完整解压 Release 中的 ChillKuGouNative-1.0.2-OneClick.zip；不要单独复制安装器。下载：https://github.com/daguoguoha/chill-with-you-qqmusic-native/releases/latest')
+    throw ('缺少离线依赖：' + $Dependency.Name + '。请完整解压 Release 中的 ChillKuGouNative-1.1.0-OneClick.zip；不要单独复制安装器。下载：https://github.com/daguoguoha/chill-with-you-bilibili-native/releases/latest')
 }
 function Expand-SafeZip([string]$Archive, [string]$Destination) {
     New-Item -ItemType Directory -Path $Destination -Force | Out-Null
@@ -103,8 +103,8 @@ function Invoke-Installation([string]$Path) {
     }
     if (Test-Path -LiteralPath (Get-SafeChild $root 'BepInEx\plugins\ChillPatcher\ChillPatcher.dll')) { throw '发现完整 ChillPatcher 插件。请先停用它，避免两个插件同时接管播放器。' }
     $payload = Join-Path $script:InstallRoot 'BepInEx\plugins\ChillKuGouPlaylist\ChillKuGouPlaylist.dll'
-    if (-not (Test-Path -LiteralPath $payload) -or (Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash -ne '528F3C0FCF98EE52F49CF366CC4D286EF42C510A7C2143586B627053B3A1D94C') { throw '主插件文件缺失或校验失败，请重新解压原始安装包。' }
-    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillKuGouNative-1.0.2-downloads'
+    if (-not (Test-Path -LiteralPath $payload) -or (Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash -ne '68FE2D4CC433EF41CAA44E5ECB5F293677797DEFE50BC67B0C8485680A6B0F40') { throw '主插件文件缺失或校验失败，请重新解压原始安装包。' }
+    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillKuGouNative-1.1.0-downloads'
     New-Item -ItemType Directory -Path $cache -Force | Out-Null
     $stage = Join-Path $cache ([Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $stage | Out-Null
@@ -159,8 +159,8 @@ function Invoke-Installation([string]$Path) {
         $manifest = Get-SafeChild $root 'ChillKuGouNative-install.json'
         $history = @()
         if (Test-Path -LiteralPath $manifest) { $history += (Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json).History }
-        $history += [pscustomobject]@{Version='1.0.2'; Date=(Get-Date -Format o); Files=@($plan | Select-Object Path,Hash,Added,BackupPath)}
-        [pscustomobject]@{Version='1.0.2'; GameDirectory=$root; History=$history} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifest -Encoding UTF8
+        $history += [pscustomobject]@{Version='1.1.0'; Date=(Get-Date -Format o); Files=@($plan | Select-Object Path,Hash,Added,BackupPath)}
+        [pscustomobject]@{Version='1.1.0'; GameDirectory=$root; History=$history} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifest -Encoding UTF8
         Write-InstallLog '安装成功。请从 Steam 启动游戏，首次按 F10 扫码登录。'
         Write-InstallLog '打开原生播放列表，在上方下拉菜单选择“酷狗音乐 · 歌单名”。'
     } catch {
@@ -175,10 +175,10 @@ function Invoke-Installation([string]$Path) {
     }
 }
 if ($VerifyDownloadsOnly) {
-    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillKuGouNative-1.0.2-downloads'
+    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillKuGouNative-1.1.0-downloads'
     New-Item -ItemType Directory -Path $cache -Force | Out-Null
     foreach ($dependency in $script:Dependencies) { [void](Get-Dependency $dependency $cache) }
-    Write-Output '三个内置依赖 SHA256 校验通过；无需联网安装。'
+    Write-Output '三个内置依赖 SHA256 校验通过。'
     exit 0
 }
 if ($Headless) { Invoke-Installation $GameDirectory; exit 0 }
@@ -217,6 +217,6 @@ $install.Add_Click({
 if ($candidates.Count -eq 1) { Write-InstallLog '已自动找到游戏目录。请退出游戏后点击安装 / 更新。' | Out-Host }
 elseif ($candidates.Count -gt 1) { Write-InstallLog '发现多个游戏目录，请选择要安装的那一份。' | Out-Host }
 else { Write-InstallLog '未自动找到游戏，请点击“选择目录”。' | Out-Host }
-if (-not $Disable) { Write-InstallLog '已内置官方依赖，无需联网安装；校验 SHA256，并备份被更新的插件文件。' | Out-Host }
+if (-not $Disable) { Write-InstallLog '已内置官方依赖，无需联网安装；会校验 SHA256，并备份被更新的插件文件。' | Out-Host }
 [void]$form.ShowDialog()
 $form.Dispose()

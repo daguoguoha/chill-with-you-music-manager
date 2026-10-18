@@ -1,4 +1,4 @@
-﻿param([string]$Package=(Split-Path -Parent $PSScriptRoot))
+param([string]$Package=(Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference='Stop'
 $Package=[IO.Path]::GetFullPath($Package)
 $sandbox=Join-Path $PSScriptRoot ('test-'+[Guid]::NewGuid().ToString('N'))
@@ -34,7 +34,12 @@ try {
     }
     $game=Game '六平台共存 中文路径'
     Test '六个平台全新安装共存及完整文件校验' {
-        foreach($p in $catalog.Plugins){$r=Call Install $game $p.Id;Assert $r.Ok $r.Message;foreach($t in $p.Targets){Assert ((Hash (Join-Path $game $t.Path)) -eq $t.Hash) ('文件错误 '+$t.Path)}}
+        foreach($p in $catalog.Plugins){
+            $r=Call Install $game $p.Id;Assert $r.Ok $r.Message
+            foreach($t in $p.Targets){Assert ((Hash (Join-Path $game $t.Path)) -eq $t.Hash) ('文件错误 '+$t.Path)}
+            $record=Get-Content -LiteralPath (Join-Path $game $p.Manifest) -Raw -Encoding UTF8 | ConvertFrom-Json
+            Assert ($record.Version -eq $p.Version) ('安装记录版本错误 '+$p.Id)
+        }
         $status=Call Status $game '';Assert ($status.Diagnostics.Blockers.Count -eq 0) ($status.Diagnostics.Blockers -join ';')
         Assert (@($status.Plugins | Where-Object {$_.Enabled -and -not $_.NeedsRepair}).Count -eq 7) '共存状态错误'
     }

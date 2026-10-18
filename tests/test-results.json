@@ -1,111 +1,112 @@
 {
-  "Version": "1.2.0",
-  "Environment": "Windows x64, Windows PowerShell 5.1, .NET Framework",
+  "Package": "C:\\Users\\23924\\Documents\\Codex\\2026-10-14\\jia\\outputs\\ChillMusicManager-1.3.0",
+  "Fixture": "C:\\Users\\23924\\Documents\\Codex\\2026-10-14\\jia\\work\\manager-listening-update\\test-66c6614e63164423827111628cfc1f58\\六平台共存 中文路径",
+  "Sandbox": "C:\\Users\\23924\\Documents\\Codex\\2026-10-14\\jia\\work\\manager-listening-update\\test-66c6614e63164423827111628cfc1f58",
   "Results": [
     {
       "Name": "无需游戏即可校验六个平台和进度插件",
       "Passed": true,
-      "Seconds": 5.63
+      "Seconds": 5.72
     },
     {
       "Name": "六个平台全新安装共存及完整文件校验",
       "Passed": true,
-      "Seconds": 23.09
+      "Seconds": 23.02
     },
     {
       "Name": "六平台停用、启用、撤回及账号标记保留",
       "Passed": true,
-      "Seconds": 51.44
+      "Seconds": 52.69
     },
     {
       "Name": "进度插件更新、停用、启用与撤回保留记录和配置",
       "Passed": true,
-      "Seconds": 9.33
+      "Seconds": 9.74
     },
     {
       "Name": "进度插件可独立首次安装并撤回",
       "Passed": true,
-      "Seconds": 4.17
+      "Seconds": 4.35
     },
     {
       "Name": "重复安装可撤回且保留既有文件",
       "Passed": true,
-      "Seconds": 5.74
+      "Seconds": 5.85
     },
     {
       "Name": "停用状态安装后可撤回到停用状态",
       "Passed": true,
-      "Seconds": 10.35
+      "Seconds": 10.52
     },
     {
       "Name": "拒绝覆盖操作后手动更改的文件",
       "Passed": true,
-      "Seconds": 7.63
+      "Seconds": 7.72
     },
     {
       "Name": "修复缺少依赖且可撤回修复",
       "Passed": true,
-      "Seconds": 10.78
+      "Seconds": 11.21
     },
     {
       "Name": "完整 ChillPatcher 冲突时阻止安装但允许停用",
       "Passed": true,
-      "Seconds": 5.44
+      "Seconds": 5.61
     },
     {
       "Name": "非标准目录重复 DLL 检测",
       "Passed": true,
-      "Seconds": 0.88
+      "Seconds": 0.92
     },
     {
       "Name": "拒绝降级新版本",
       "Passed": true,
-      "Seconds": 1.73
+      "Seconds": 1.86
     },
     {
       "Name": "并发操作锁",
       "Passed": true,
-      "Seconds": 0.64
+      "Seconds": 0.62
     },
     {
       "Name": "拒绝不同加载器及缺失共享框架文件",
       "Passed": true,
-      "Seconds": 1.97
+      "Seconds": 1.95
     },
     {
       "Name": "损坏备份在撤回前被识别",
       "Passed": true,
-      "Seconds": 5.78
+      "Seconds": 5.77
     },
     {
       "Name": "初次安装撤回保留共享框架",
       "Passed": true,
-      "Seconds": 6.17
+      "Seconds": 6.26
     },
     {
       "Name": "损坏安装包在安装前被拒绝",
       "Passed": true,
-      "Seconds": 1.84
+      "Seconds": 1.34
     },
     {
       "Name": "目录链接和路径越界被拒绝",
       "Passed": true,
-      "Seconds": 0.67
+      "Seconds": 0.71
     },
     {
       "Name": "游戏运行时阻止改动",
       "Passed": true,
-      "Seconds": 0.87
+      "Seconds": 1.01
     },
     {
       "Name": "无效游戏目录无操作副作用",
       "Passed": true,
-      "Seconds": 0.59
+      "Seconds": 0.63
     },
     {
       "Name": "WinForms 界面真实渲染",
       "Passed": true,
-      "Seconds": 2.12
+      "Seconds": 2.23
     }
   ],
   "Passed": 21,

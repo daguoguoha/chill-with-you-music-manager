@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -319,12 +319,12 @@ namespace ChillNeteasePlaylist
         {
             GUI.Box(new Rect(20, 583, 960, 87), "", cardStyle);
             GUI.Label(new Rect(40, 598, 680, 29), "网易云歌曲已接入游戏原生播放器", bodyText);
-            if (GUI.Button(new Rect(40, 631, 230, 30), showLauncher.Value ? "隐藏游戏内入口" : "显示游戏内入口", quietButton))
+            if (GUI.Button(new Rect(40, 631, 230, 30), showLauncher.Value ? "隐藏游戏内入口（F8）" : "显示游戏内入口（F8）", quietButton))
             {
                 showLauncher.Value = !showLauncher.Value;
                 Config.Save();
             }
-            GUI.Label(new Rect(286, 636, 420, 24), "隐藏后仍可按 F8 打开面板", mutedText);
+            if (GUI.Button(new Rect(286, 631, 435, 30), new GUIContent("听歌记录：" + (reportListening.Value ? "已开启" : "已关闭") + " · " + listeningMessage, "按游戏内真实播放时长上报；是否计入账号统计由网易云决定。"), quietButton)) ToggleListening();
             if (GUI.Button(new Rect(750, 604, 210, 40), "收起并使用原生播放器", primaryButton)) visible = false;
             GUI.Label(new Rect(30,681,938,36),new GUIContent(status,status),statusText);
         }

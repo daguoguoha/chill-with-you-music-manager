@@ -15,7 +15,7 @@ using QRCoder;
 
 namespace ChillBilibiliPlaylist
 {
-    public static class Bridge
+    public static partial class Bridge
     {
         public const string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
         static string directory, qrKey;
@@ -23,6 +23,15 @@ namespace ChillBilibiliPlaylist
         static CookieContainer cookies = new CookieContainer(), qrCookies = new CookieContainer();
         static readonly string[] CookieNames = { "SESSDATA", "DedeUserID", "bili_jct", "buvid3", "buvid4" };
         static readonly Uri CookieOrigin = new Uri("https://www.bilibili.com/");
+        static DateTime restrictedUntil=DateTime.MinValue;
+        static bool devicePrepared;
+        static readonly object requestGate=new object();
+        static readonly System.Diagnostics.Stopwatch requestClock=System.Diagnostics.Stopwatch.StartNew();
+        static long nextRequestAt;
+        public static int RetryAfterSeconds {get{return Math.Max(0,(int)Math.Ceiling((restrictedUntil-DateTime.UtcNow).TotalSeconds));}}
+        static RequestIssue Fail(RequestIssue issue){if(issue.WaitSeconds>0)restrictedUntil=DateTime.UtcNow.AddSeconds(issue.WaitSeconds);return issue;}
+        static void Throttle()
+        {lock(requestGate){long wait=nextRequestAt-requestClock.ElapsedMilliseconds;if(wait>0)Thread.Sleep((int)Math.Min(wait,400));nextRequestAt=requestClock.ElapsedMilliseconds+400;}}
         static readonly Dictionary<string,Song> knownSongs = new Dictionary<string,Song>();
         public static string LastPlaylistTitle { get; private set; }
         static string Text(JToken t) { return t == null || t.Type == JTokenType.Null ? "" : t.ToString(); }
@@ -31,6 +40,7 @@ namespace ChillBilibiliPlaylist
         public static int Init(string path)
         {
             NetworkErrors.EnableModernTls();
+            restrictedUntil=DateTime.MinValue;devicePrepared=false;
             account=new JObject();
             directory=path; Directory.CreateDirectory(path);
             string file=Path.Combine(path,"session.dat");
@@ -48,11 +58,14 @@ namespace ChillBilibiliPlaylist
         {
             Uri uri=new Uri(url);
             if (uri.Scheme!="https" || (uri.Host!="api.bilibili.com" && uri.Host!="passport.bilibili.com")) throw new InvalidOperationException("接口地址无效。");
+            if(uri.Host=="api.bilibili.com" && RetryAfterSeconds>0)throw RequestIssue.Cooling(RetryAfterSeconds);
             for (int attempt=0; ; attempt++)
             {
+                Throttle();
                 HttpWebRequest req=(HttpWebRequest)WebRequest.Create(uri);
                 req.Method="GET"; req.Timeout=15000; req.ReadWriteTimeout=15000; req.AllowAutoRedirect=false;
                 req.CookieContainer=jar; req.UserAgent=UserAgent; req.Referer="https://www.bilibili.com/";
+                req.Accept="application/json, text/plain, */*";req.Headers["Accept-Language"]="zh-CN,zh;q=0.9";
                 req.AutomaticDecompression=DecompressionMethods.GZip|DecompressionMethods.Deflate;
                 try
                 {
@@ -70,27 +83,54 @@ namespace ChillBilibiliPlaylist
                         long code=Number(result["code"]);
                         if (code!=0)
                         {
-                            string hint=code==-101 ? "登录已过期，请重新扫码。" : code==-412 || code==-352 ? "请求暂被限制，请稍后再试或换网络。" : code==-403 || code==-404 || code==62002 ? "内容不可访问，请检查账号权限或视频是否失效。" : "请稍后重试或检查内容权限。";
-                            throw new InvalidOperationException("B站接口 "+code+"："+hint);
+                            throw Fail(RequestIssue.Api(code,uri.AbsolutePath,false,0));
                         }
                         return result;
                     }
                 }
                 catch (WebException error)
                 {
+                    HttpWebResponse failedResponse=error.Response as HttpWebResponse;
+                    if(failedResponse!=null && ((int)failedResponse.StatusCode==412 || (int)failedResponse.StatusCode==429))
+                    {int status=(int)failedResponse.StatusCode;failedResponse.Close();throw Fail(RequestIssue.Http(status,uri.AbsolutePath));}
                     bool retry=attempt==0 && NetworkErrors.CanRetry(error);
                     string message=NetworkErrors.Describe(error,uri.Host);
                     if (error.Response!=null) error.Response.Close();
                     if (retry) continue;
-                    throw new InvalidOperationException(message);
+                    throw RequestIssue.Network(message,uri.AbsolutePath);
                 }
             }
         }
-        static JObject Api(string path) { return Request("https://api.bilibili.com"+path,cookies); }
+        static void SaveAccount(JObject next)
+        {
+            byte[] encrypted=ProtectedData.Protect(Encoding.UTF8.GetBytes(next.ToString(Formatting.None)),Encoding.UTF8.GetBytes("ChillBilibili/1"),DataProtectionScope.CurrentUser);
+            string pending=Path.Combine(directory,"session.new"),target=Path.Combine(directory,"session.dat");
+            File.WriteAllBytes(pending,encrypted);
+            if(File.Exists(target))File.Replace(pending,target,null);else File.Move(pending,target);
+        }
+        static void PrepareDeviceCookies()
+        {
+            if(devicePrepared)return;devicePrepared=true;
+            if(DeviceCookies.Complete(cookies))return;
+            try
+            {
+                JObject data=Request("https://api.bilibili.com/x/frontend/finger/spi",cookies)["data"] as JObject;
+                if(DeviceCookies.Apply(cookies,data) && IsLoggedIn)
+                {
+                    JObject next=new JObject(account);
+                    foreach(string name in new[]{"buvid3","buvid4"}){Cookie item=cookies.GetCookies(CookieOrigin)[name];if(item!=null)next[name]=item.Value;}
+                    try{SaveAccount(next);account=next;}catch(IOException){}catch(UnauthorizedAccessException){}
+                }
+            }
+            catch(RequestIssue error){if(error.RequiresVerification){devicePrepared=false;throw;}}
+            catch(InvalidOperationException){}
+        }
+        static JObject Api(string path) { PrepareDeviceCookies();return Request("https://api.bilibili.com"+path,cookies); }
         public static void CancelQr() { qrKey=null; qrCookies=new CookieContainer(); }
         public static string QrImage(string ignored)
         {
             CancelQr();
+            DeviceCookies.Copy(cookies,qrCookies);
             JObject result=Request("https://passport.bilibili.com/x/passport-login/web/qrcode/generate",qrCookies);
             JObject data=result["data"] as JObject;
             string value=data==null ? "" : Text(data["url"]);
@@ -115,18 +155,15 @@ namespace ChillBilibiliPlaylist
                 CookieCollection available=qrCookies.GetCookies(CookieOrigin);
                 foreach (string name in CookieNames) { Cookie item=available[name]; if (item!=null && !item.Expired) next[name]=item.Value; }
                 if (Text(next["SESSDATA"]).Length==0 || Number(next["DedeUserID"])<=0) throw new InvalidOperationException("扫码未返回完整登录信息，请重新扫码。");
-                byte[] encrypted=ProtectedData.Protect(Encoding.UTF8.GetBytes(next.ToString(Formatting.None)),Encoding.UTF8.GetBytes("ChillBilibili/1"),DataProtectionScope.CurrentUser);
-                string pending=Path.Combine(directory,"session.new"),target=Path.Combine(directory,"session.dat");
-                File.WriteAllBytes(pending,encrypted);
-                if (File.Exists(target)) File.Replace(pending,target,null); else File.Move(pending,target);
-                account=next; cookies=qrCookies; qrKey=null;
+                SaveAccount(next);
+                account=next; cookies=qrCookies; qrKey=null;devicePrepared=false;
             }
             return JsonConvert.SerializeObject(new QrState { code=state==0 ? 0 : state==86101 ? 66 : state==86090 ? 67 : 65 });
         }
         public static string UserInfo()
         {
             JObject r=Api("/x/web-interface/nav");
-            if (r["data"]==null || r["data"]["isLogin"]==null || !(bool)r["data"]["isLogin"]) throw new InvalidOperationException("B站登录已过期，请重新扫码。");
+            if (r["data"]==null || r["data"]["isLogin"]==null || !(bool)r["data"]["isLogin"]) throw RequestIssue.Api(-101,"/x/web-interface/nav",false,0);
             return JsonConvert.SerializeObject(new User { nickname=Text(r["data"]["uname"]) });
         }
         public static string UserPlaylists()

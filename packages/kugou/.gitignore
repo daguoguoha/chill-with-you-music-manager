@@ -1,0 +1,7 @@
+**/account/
+**/*.log
+**/cache/
+**/installer-tests-*/
+**/test-account/
+
+**/*FlowTests.exe

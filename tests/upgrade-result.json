@@ -1,0 +1,50 @@
+{
+  "OldVersion": "1.2.0",
+  "Version": "1.3.0",
+  "Sandbox": "C:\\Users\\23924\\AppData\\Local\\Temp\\mmu-2bec0bce",
+  "Results": [
+    {
+      "Provider": "netease",
+      "Passed": true,
+      "Upgrade": "1.3.0",
+      "Restored": "1.2.3",
+      "MarkersPreserved": true,
+      "OtherDisabledProviderPreserved": true
+    },
+    {
+      "Provider": "qq",
+      "Passed": true,
+      "Upgrade": "1.1.0",
+      "Restored": "1.0.3",
+      "MarkersPreserved": true,
+      "OtherDisabledProviderPreserved": true
+    },
+    {
+      "Provider": "kugou",
+      "Passed": true,
+      "Upgrade": "1.1.0",
+      "Restored": "1.0.2",
+      "MarkersPreserved": true,
+      "OtherDisabledProviderPreserved": true
+    },
+    {
+      "Provider": "bilibili",
+      "Passed": true,
+      "Upgrade": "1.1.0",
+      "Restored": "1.0.1",
+      "MarkersPreserved": true,
+      "OtherDisabledProviderPreserved": true
+    },
+    {
+      "Provider": "ximalaya",
+      "Passed": true,
+      "Upgrade": "1.1.0",
+      "Restored": "1.0.1",
+      "MarkersPreserved": true,
+      "OtherDisabledProviderPreserved": true
+    }
+  ],
+  "Passed": 5,
+  "Expected": 5,
+  "SaltAndProgressUnchanged": true
+}

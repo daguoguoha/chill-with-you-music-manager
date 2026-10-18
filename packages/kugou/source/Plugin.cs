@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillKuGouPlaylist
 {
-    [BepInPlugin("local.chill.kugouplaylist", "酷狗音乐歌单", "1.0.2")]
+    [BepInPlugin("local.chill.kugouplaylist", "酷狗音乐歌单", "1.1.0")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -70,6 +70,7 @@ namespace ChillKuGouPlaylist
                 foreach (ConstructorInfo ctor in type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                     harmony.Patch(ctor, postfix: new HarmonyMethod(typeof(Plugin), "CaptureService"));
                 SetupNative();
+                SetupListening();
                 string data = Path.Combine(dir, "account");
                 Run(delegate { return Bridge.Init(data); }, delegate(object result)
                 {
@@ -94,6 +95,7 @@ namespace ChillKuGouPlaylist
         }
         internal void Tick()
         {
+            ListeningTickSafe();
             try { NativeTick(); } catch (Exception ex) { nativeNextCheck = Time.realtimeSinceStartup + 10; Logger.LogWarning("原生歌单界面：" + ex); }
             if (firstTick) { firstTick = false; Logger.LogInfo("酷狗音乐运行对象 Update 已开始。"); }
             // Keep async completion working if the game uses only the new Input System.
@@ -131,7 +133,7 @@ namespace ChillKuGouPlaylist
                 Task<object> finished = job; Action<object> done = onDone;
                 job = null; onDone = null; busy = false;
                 if (finished.IsFaulted)
-                { status = "请求未完成：" + finished.Exception.GetBaseException().Message; qrPolling = false; Logger.LogWarning("酷狗音乐请求失败：" + finished.Exception.GetBaseException().GetType().Name); }
+                { HandleRequestFailure(finished.Exception.GetBaseException()); }
                 else if (!finished.IsCanceled) { try { done(finished.Result); } catch (Exception ex) { status = "处理响应失败，请重试。"; Logger.LogWarning(ex.GetType().Name); } }
             }
             if (ready && qrPolling && !busy && Time.realtimeSinceStartup >= nextPoll)
@@ -141,7 +143,7 @@ namespace ChillKuGouPlaylist
                 {
                     QrState qr = (QrState)result;
                     if (qr.code == 0 && Bridge.IsLoggedIn)
-                    { qrPolling = false; logged = true; ClearQr(); LoadAccount(); }
+                    { qrPolling = false; logged = true; listeningSwitchingAccount = false; ClearQr(); LoadAccount(); }
                     else if (qr.code == 65) { qrPolling = false; status = "二维码已过期，请重新生成。"; ClearQr(); }
                     else if (qr.code != 66 && qr.code != 67) { qrPolling = false; status = "登录未完成，请重新扫码。"; ClearQr(); }
                     else status = qr.code == 67 ? "已扫码，请在手机上确认登录。" : "请使用酷狗音乐 App 扫一扫。";
@@ -153,7 +155,9 @@ namespace ChillKuGouPlaylist
         void ClearQr() { if (qrImage != null) Destroy(qrImage); qrImage = null; }
         void Login()
         {
-            qrPolling = false; ClearQr();
+            ResetListeningAccount();
+            requestIssue=null; qrPolling = false; ClearQr();
+            status = "正在获取登录二维码，连接失败时自动重试一次…";
             Run(delegate { Bridge.CancelQr(); return Bridge.QrImage(loginType); }, delegate(object result)
             {
                 byte[] png = Convert.FromBase64String((string)result);
@@ -215,6 +219,7 @@ namespace ChillKuGouPlaylist
         }
         void OnDestroy()
         {
+            CloseListening();
             Logger.LogInfo("酷狗音乐插件对象已销毁。");
             destroying = true; qrPolling = false;
             StopExternal(); ClearQr();

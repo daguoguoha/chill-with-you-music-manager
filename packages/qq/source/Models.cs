@@ -11,7 +11,7 @@ namespace ChillQQMusicPlaylist
     public class PlaylistDetail { public List<Song> songs; public int songCount; }
     public class Song
     {
-        [JsonProperty("mid")] public string id; public string name; public List<string> artists; public double duration;
+        [JsonProperty("mid")] public string id; [JsonProperty("id")] public long numericId; public string name; public List<string> artists; public double duration;
         public string Label { get { return name + "  /  " + (artists == null ? "" : string.Join("、", artists.ToArray())); } }
     }
     public class SongUrl { public string url; [JsonProperty("format")] public string type; public long size; }

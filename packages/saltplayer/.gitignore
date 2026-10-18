@@ -1,0 +1,9 @@
+**/library/
+**/account/
+**/*.log
+**/cache/
+**/test-account/
+**/*.es3*
+work/
+**/test-data/
+**/SaltPlayerImportTests.exe

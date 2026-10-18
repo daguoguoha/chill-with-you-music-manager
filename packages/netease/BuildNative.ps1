@@ -1,4 +1,4 @@
-﻿param(
+param(
     [Parameter(Mandatory=$true)][string]$OutputDirectory,
     [string]$GoExecutable = 'go',
     [string]$CCompiler = 'gcc'

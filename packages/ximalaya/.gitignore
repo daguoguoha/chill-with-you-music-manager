@@ -1,0 +1,9 @@
+**/account/
+**/*.log
+**/cache/
+**/test-account/
+**/*.es3*
+work/
+**/long-test-account/
+**/tests/*.exe
+**/tests/*.dll

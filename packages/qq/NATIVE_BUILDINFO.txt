@@ -1,0 +1,26 @@
+Native bridge build information
+Upstream: BeyondtheApex/ChillPatcher @ 4800dd2ac005c3c70e1bf1bc732e00f00556ec48
+Built with Go 1.24.6 and Zig 0.13.0 (zig cc -target x86_64-windows-gnu).
+Command: go build -trimpath -ldflags "-s -w" -buildmode=c-shared -o ChillQQMusic.dll .
+Source and dependency sources are included under native-source/.
+
+ChillQQMusic.dll: go1.24.6
+	path	qqmusic_bridge
+	mod	qqmusic_bridge	(devel)	
+	dep	github.com/go-resty/resty/v2	v2.16.2	h1:CpRqTjIzq/rweXUt9+GxzzQdlkqMdt8Lm/fuK/CAbAg=
+	dep	github.com/hajimehoshi/go-mp3	v0.3.4	h1:NUP7pBYH8OguP4diaTZ9wJbUbk3tC0KlfzsEpWmYj68=
+	dep	github.com/icza/bitio	v1.1.0	h1:ysX4vtldjdi3Ygai5m1cWy4oLkhWTAi+SyO6HC8L9T0=
+	dep	github.com/mewkiz/flac	v1.0.12	h1:5Y1BRlUebfiVXPmz7hDD7h3ceV2XNrGNMejNVjDpgPY=
+	dep	github.com/mewkiz/pkg	v0.0.0-20230226050401-4010bf0fec14	h1:tnAPMExbRERsyEYkmR1YjhTgDM0iqyiBYf8ojRXxdbA=
+	dep	github.com/youpy/go-riff	v0.1.0	h1:vZO/37nI4tIET8tQI0Qn0Y79qQh99aEpponTPiPut7k=
+	dep	github.com/youpy/go-wav	v0.3.2	h1:NLM8L/7yZ0Bntadw/0h95OyUsen+DQIVf9gay+SUsMU=
+	dep	github.com/zaf/g711	v0.0.0-20190814101024-76a4a538f52b	h1:QqixIpc5WFIqTLxB3Hq8qs0qImAgBdq0p6rq2Qdl634=
+	dep	golang.org/x/net	v0.27.0	h1:5K3Njcw06/l2y9vpGCSdcxWOYHOUk3dVNGDXN+FvAys=
+	build	-buildmode=c-shared
+	build	-compiler=gc
+	build	-trimpath=true
+	build	DefaultGODEBUG=asynctimerchan=1,gotestjsonbuildtext=1,gotypesalias=0,httplaxcontentlength=1,httpmuxgo121=1,httpservecontentkeepheaders=1,multipathtcp=0,randseednop=0,rsa1024min=0,tls10server=1,tls3des=1,tlsmlkem=0,tlsrsakex=1,tlsunsafeekm=1,winreadlinkvolume=0,winsymlink=0,x509keypairleaf=0,x509negativeserial=1,x509rsacrt=0,x509usepolicies=0
+	build	CGO_ENABLED=1
+	build	GOARCH=amd64
+	build	GOOS=windows
+	build	GOAMD64=v1

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 // Original procedural theme. No game artwork, fonts or sprites are redistributed.
 using UnityEngine;
 namespace ChillBilibiliPlaylist

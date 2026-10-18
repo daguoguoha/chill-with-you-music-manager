@@ -22,6 +22,8 @@ namespace ChillNeteasePlaylist
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern IntPtr NeteaseGetSongURL(long id, IntPtr quality);
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] static extern void NeteaseFreeString(IntPtr text);
 
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern int NeteaseReportPlayback(long id, long playlistId, long seconds, int kind);
+
         static IntPtr Utf8(string value)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(value + "\0");

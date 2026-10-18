@@ -16,7 +16,7 @@ using UnityEngine.Networking;
 
 namespace ChillNeteasePlaylist
 {
-    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.2.3")]
+    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.3.0")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -72,6 +72,7 @@ namespace ChillNeteasePlaylist
                 foreach (ConstructorInfo ctor in type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                     harmony.Patch(ctor, postfix: new HarmonyMethod(typeof(Plugin), "CaptureService"));
                 SetupNative();
+                SetupListening();
                 string data = Path.Combine(dir, "account");
                 Run(delegate { return Bridge.Init(data); }, delegate(object result)
                 {
@@ -96,6 +97,7 @@ namespace ChillNeteasePlaylist
         }
         internal void Tick()
         {
+            ListeningTickSafe();
             try { NativeTick(); } catch (Exception ex) { nativeNextCheck = Time.realtimeSinceStartup + 10; Logger.LogWarning("原生歌单界面：" + ex); }
             if (firstTick) { firstTick = false; Logger.LogInfo("网易云运行对象 Update 已开始。"); }
             // Keep async completion working if the game uses only the new Input System.
@@ -143,7 +145,7 @@ namespace ChillNeteasePlaylist
                 {
                     QrState qr = (QrState)result;
                     if (qr.statusCode == 803)
-                    { qrPolling = false; logged = true; ClearQr(); LoadAccount(); }
+                    { qrPolling = false; logged = true; listeningSwitchingAccount = false; ClearQr(); LoadAccount(); }
                     else if (qr.statusCode == 800) { qrPolling = false; status = "二维码已过期，请重新生成。"; ClearQr(); }
                     else status = qr.statusCode == 802 ? "已扫码，请在手机网易云确认登录。" : "请使用手机网易云扫一扫。";
                 });
@@ -154,6 +156,7 @@ namespace ChillNeteasePlaylist
         void ClearQr() { if (qrImage != null) Destroy(qrImage); qrImage = null; }
         void Login()
         {
+            ResetListeningAccount();
             qrPolling = false; ClearQr();
             Run(delegate { return JsonConvert.DeserializeObject<QrState>(Bridge.Take(Bridge.NeteaseQRGetKey())); }, delegate(object result)
             {
@@ -228,6 +231,7 @@ namespace ChillNeteasePlaylist
         }
         void OnDestroy()
         {
+            CloseListening();
             Logger.LogInfo("网易云插件对象已销毁。");
             destroying = true; qrPolling = false;
             StopExternal(); ClearQr();

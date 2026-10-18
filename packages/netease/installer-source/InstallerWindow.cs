@@ -51,7 +51,7 @@ internal sealed class InstallerWindow : Form
         };
         FormClosing += delegate(object sender,FormClosingEventArgs e) { if(worker.IsBusy) { e.Cancel = true; MessageBox.Show(this,"正在处理文件，请等操作完成后关闭。","网易云播放器"); } };
         Append(paths.Items.Count == 1 ? "已自动找到游戏目录。请退出游戏后点击安装 / 更新。" : paths.Items.Count > 1 ? "发现多个游戏目录，请从下拉列表中选择。" : "未自动找到游戏，请点击“选择目录”。");
-        if(!disable) Append("已内置官方依赖，无需联网安装；校验 SHA256，并备份被更新的插件文件。");
+        if(!disable) Append("已内置所需依赖，无需联网安装；校验 SHA256，并备份被更新的插件文件。");
     }
     void Append(string text)
     {

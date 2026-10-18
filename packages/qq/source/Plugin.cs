@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillQQMusicPlaylist
 {
-    [BepInPlugin("local.chill.qqmusicplaylist", "QQ 音乐歌单", "1.0.3")]
+    [BepInPlugin("local.chill.qqmusicplaylist", "QQ 音乐歌单", "1.1.0")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -72,6 +72,7 @@ namespace ChillQQMusicPlaylist
                 foreach (ConstructorInfo ctor in type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                     harmony.Patch(ctor, postfix: new HarmonyMethod(typeof(Plugin), "CaptureService"));
                 SetupNative();
+                SetupListening();
                 string data = Path.Combine(dir, "account");
                 Run(delegate { return Bridge.Init(data); }, delegate(object result)
                 {
@@ -96,6 +97,7 @@ namespace ChillQQMusicPlaylist
         }
         internal void Tick()
         {
+            ListeningTickSafe();
             try { NativeTick(); } catch (Exception ex) { nativeNextCheck = Time.realtimeSinceStartup + 10; Logger.LogWarning("原生歌单界面：" + ex); }
             if (firstTick) { firstTick = false; Logger.LogInfo("QQ 音乐运行对象 Update 已开始。"); }
             // Keep async completion working if the game uses only the new Input System.
@@ -143,7 +145,7 @@ namespace ChillQQMusicPlaylist
                 {
                     QrState qr = (QrState)result;
                     if (qr.code == 0 && Bridge.QQMusicIsLoggedIn() == 1)
-                    { qrPolling = false; logged = true; ClearQr(); LoadAccount(); }
+                    { qrPolling = false; logged = true; listeningSwitchingAccount = false; ClearQr(); LoadAccount(); }
                     else if (qr.code == 65) { qrPolling = false; status = "二维码已过期，请重新生成。"; ClearQr(); }
                     else if (qr.code != 66 && qr.code != 67) { qrPolling = false; status = "登录未完成，请重新扫码。"; ClearQr(); }
                     else status = qr.code == 67 ? "已扫码，请在手机上确认登录。" : (loginType == "wx" ? "请使用微信扫一扫。" : "请使用手机 QQ 扫一扫。");
@@ -155,6 +157,7 @@ namespace ChillQQMusicPlaylist
         void ClearQr() { if (qrImage != null) Destroy(qrImage); qrImage = null; }
         void Login()
         {
+            ResetListeningAccount();
             qrPolling = false; ClearQr();
             Run(delegate { Bridge.QQMusicQRCancelLogin(); return Bridge.QrImage(loginType); }, delegate(object result)
             {
@@ -217,6 +220,7 @@ namespace ChillQQMusicPlaylist
         }
         void OnDestroy()
         {
+            CloseListening();
             Logger.LogInfo("QQ 音乐插件对象已销毁。");
             destroying = true; qrPolling = false;
             StopExternal(); ClearQr();

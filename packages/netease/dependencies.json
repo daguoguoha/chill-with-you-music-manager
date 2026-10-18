@@ -1,0 +1,35 @@
+{
+  "ChillNetease": {
+    "bundled": true,
+    "release": "local-1.3.0",
+    "source_commit": "4800dd2ac005c3c70e1bf1bc732e00f00556ec48",
+    "download": null,
+    "sha256": "bd1ae13e58f415667a9bd03d6ad0c2eeb0deff68d023479c46a37bab269da67b",
+    "downloaded_by_installer": false,
+    "bundled_archive": "offline-dependencies/ChillNetease.dll",
+    "url": "local-source-build:ChillNetease.dll",
+    "corresponding_source": "native-source/ChillNetease-source.zip",
+    "source_sha256": "2b8f5b8383ac42a41eda74fccac145b959de716e5dfcd967df6a6e6adcc703f5",
+    "original_binary_url": "https://github.com/BeyondtheApex/ChillPatcher/releases/download/3.0.3/ChillNetease.dll",
+    "modified": true
+  },
+  "QRCoder": {
+    "bundled": true,
+    "version": "1.4.3",
+    "package": "https://www.nuget.org/packages/QRCoder/1.4.3",
+    "dll_path_in_package": "lib/net35/QRCoder.dll",
+    "downloaded_by_installer": false,
+    "bundled_archive": "offline-dependencies/QRCoder.nupkg",
+    "url": "https://api.nuget.org/v3-flatcontainer/qrcoder/1.4.3/qrcoder.1.4.3.nupkg",
+    "sha256": "8ade16246255ae99986fc60b9532de52b4db196f00166dab5ec916ecdbc2b4c2"
+  },
+  "BepInEx": {
+    "bundled": true,
+    "version": "5.4.23.5",
+    "download_page": "https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.5",
+    "downloaded_by_installer": false,
+    "bundled_archive": "offline-dependencies/BepInEx.zip",
+    "url": "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip",
+    "sha256": "82f9878551030f54657792c0740d9d51a09500eeae1fba21106b0c441e6732c4"
+  }
+}
