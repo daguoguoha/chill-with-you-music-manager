@@ -20,6 +20,7 @@ namespace ChillNeteasePlaylist
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern IntPtr NeteaseGetUserPlaylists(int limit, int offset);
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern IntPtr NeteaseGetPlaylistSongs(long id, int all);
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern IntPtr NeteaseGetSongURL(long id, IntPtr quality);
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] static extern IntPtr NeteaseGetLastError();
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] static extern void NeteaseFreeString(IntPtr text);
 
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern int NeteaseReportPlayback(long id, long playlistId, long seconds, int kind);
@@ -39,7 +40,18 @@ namespace ChillNeteasePlaylist
         public static string SongURL(long id)
         {
             IntPtr p = Utf8("standard");
-            try { return Take(NeteaseGetSongURL(id, p)); } finally { Marshal.FreeHGlobal(p); }
+            try
+            {
+                IntPtr response = NeteaseGetSongURL(id, p);
+                if (response == IntPtr.Zero)
+                {
+                    IntPtr error = NeteaseGetLastError();
+                    string reason = error == IntPtr.Zero ? null : Take(error);
+                    if (SongRequestPolicy.IsUnavailable(reason)) throw new SongUnavailableException();
+                }
+                return Take(response);
+            }
+            finally { Marshal.FreeHGlobal(p); }
         }
         public static string Take(IntPtr p)
         {

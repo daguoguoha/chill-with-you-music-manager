@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillBilibiliPlaylist
 {
-    [BepInPlugin("local.chill.bilibiliplaylist", "B站歌单", "1.2.0")]
+    [BepInPlugin("local.chill.bilibiliplaylist", "B站歌单", "1.2.1")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {

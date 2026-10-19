@@ -1,9 +1,17 @@
 {
-  "Version": "1.5.0-rc.1",
+  "Version": "1.5.1-rc.1",
   "Date": "2026-10-19",
-  "Base": "v1.4.0-rc.1",
-  "Added": "speed 1.0.0",
-  "ExistingProvidersUnchanged": false,
-  "PitchPreserving": false,
-  "NetEase": "1.4.1 (FLAC and high-bit-depth PCM decoding fix)"
+  "Base": "v1.5.0-rc.1",
+  "Providers": {
+    "netease": "1.4.2",
+    "qq": "1.2.1",
+    "kugou": "1.2.1",
+    "bilibili": "1.2.1",
+    "ximalaya": "1.2.1",
+    "saltplayer": "1.1.1"
+  },
+  "Speed": "1.0.0",
+  "Progress": "1.0.0",
+  "FiveProviderLiveAccountTests": "not performed",
+  "PitchPreserving": false
 }

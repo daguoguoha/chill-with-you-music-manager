@@ -1,8 +1,8 @@
-# Chill With You · 酷狗音乐 v1.2.0-rc.1
+# Chill With You · 酷狗音乐 v1.2.1-rc.1
 
 歌词与启动续播候选版，保留原生播放器、游戏风格面板、登录与播放记录功能。
 
-[下载完整一键包](https://github.com/daguoguoha/chill-with-you-kugou-native/releases/tag/v1.2.0-rc.1)，在 Assets 中选择 **ChillKuGouNative-1.2.0-OneClick.zip**。完整解压，退出游戏后双击安装器，不要只复制 EXE；Source code 压缩包不含完整离线运行依赖。
+[下载完整合集](https://github.com/daguoguoha/chill-with-you-music-manager/releases/tag/v1.5.1-rc.1)，选择 **ChillMusicManager-1.5.1.zip**，在管理器内安装此平台。完整解压，退出游戏后双击安装器，不要只复制 EXE；Source code 压缩包不含完整离线运行依赖。
 
 ## 底部歌词
 
@@ -31,3 +31,7 @@
 ## 开源与验证
 
 源码和构建脚本随包提供；原生桥接与依赖沿用此前版本。第三方项目与许可证见 `THIRD_PARTY_NOTICES.md`、`licenses/` 和 `LICENSE`。详细原使用说明保留在 `PREVIOUS_VERSION_README.md`。验证范围见 `TESTING.md`，其他平台运行结果不代表本平台真实账号验收。
+
+## 本次修复
+
+修正高位深与浮点音频转换、列表选歌失败后继续后续曲目，以及快速切歌时旧请求覆盖新曲的问题。本版仅完成编译、PCM 转换与安装检查，尚未逐一完成真实账号播放验证；以合集候选版提供。

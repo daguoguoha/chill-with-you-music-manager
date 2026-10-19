@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.IO;
 using NAudio.Wave;
@@ -74,11 +74,12 @@ namespace ChillXimalayaPlaylist
                 using (var reader = new MediaFoundationReader(inputPath))
                 using (var output = new FileStream(pcmPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 65536))
                 {
-                    channels = reader.WaveFormat.Channels; rate = reader.WaveFormat.SampleRate;
-                    if (channels < 1 || channels > 2 || rate < 8000 || rate > 192000 || reader.WaveFormat.BitsPerSample != 16 || reader.WaveFormat.Encoding != WaveFormatEncoding.Pcm)
+                    IWaveProvider normalized = AudioFormatNormalizer.Pcm16(reader);
+                    channels = normalized.WaveFormat.Channels; rate = normalized.WaveFormat.SampleRate;
+                    if (channels < 1 || channels > 2 || rate < 8000 || rate > 192000 || normalized.WaveFormat.BitsPerSample != 16 || normalized.WaveFormat.Encoding != WaveFormatEncoding.Pcm)
                         throw new InvalidOperationException("Windows 未返回可用的 PCM 音频格式。");
                     byte[] block = new byte[65536]; int count;
-                    while ((count = reader.Read(block, 0, block.Length)) > 0)
+                    while ((count = normalized.Read(block, 0, block.Length)) > 0)
                     {
                         if (canceled()) throw new OperationCanceledException();
                         if (total + count > PcmLimit) throw new InvalidOperationException("此音频过长，请选择较短节目（48 kHz 立体声约 90 分钟以内）。");

@@ -27,7 +27,10 @@ namespace ChillNeteasePlaylist
         MusicTagListUI nativeTagUI;
         int nativeMenuVersion = -1, nativeLoadVersion;
         bool nativeDelivering;
-        float nativeNextCheck;
+        float nativeNextCheck, nativeNoticeUntil;
+        string nativeNoticeMessage;
+        void NativeNotice(string message, float seconds)
+        { status = message; nativeNoticeMessage = message; nativeNoticeUntil = Time.realtimeSinceStartup + seconds; }
         static bool IsCloud(GameAudioInfo info) { return info != null && info.UUID != null && info.UUID.StartsWith(CloudPrefix, StringComparison.Ordinal); }
         MusicService NativeService { get { return MusicService as MusicService; } }
 
@@ -90,8 +93,34 @@ namespace ChillNeteasePlaylist
         static bool NativeGetClip(GameAudioInfo __instance, CancellationToken __0, ref UniTask<AudioClip> __result)
         {
             if (!IsCloud(__instance) || Instance == null) return true;
-            __result = Instance.BeginNativeLoad(__instance, __0);
+            var completion = new UniTaskCompletionSource<AudioClip>();
+            Instance.StartCoroutine(Instance.NativeQueueClip(__instance, __0, completion));
+            __result = completion.Task;
             return false;
+        }
+        IEnumerator NativeQueueClip(GameAudioInfo info, CancellationToken cancellation, UniTaskCompletionSource<AudioClip> completion)
+        {
+            var loading = BeginNativeLoad(info, cancellation);
+            int version = nativeLoadVersion;
+            while (loading.Status == UniTaskStatus.Pending) yield return null;
+            AudioClip clip = null;
+            try { clip = loading.GetAwaiter().GetResult(); }
+            catch (OperationCanceledException) { completion.TrySetCanceled(); yield break; }
+            catch (SongUnavailableException)
+            {
+                if (version == nativeLoadVersion) NativeNotice("已跳过「" + info.Title + "」：网易云暂无可用音源。", 8);
+                Logger.LogWarning("切歌跳过暂无音源的歌曲：" + info.Title);
+                // The native queue already searches at most CurrentPlayList.Count entries.
+                // Returning null lets that bounded loop continue in the requested direction.
+            }
+            catch (Exception error)
+            {
+                if (version == nativeLoadVersion) NativeNotice("已跳过「" + info.Title + "」：" + error.Message, 10);
+                Logger.LogWarning("切歌跳过加载失败歌曲：" + info.Title + " / " + error.GetType().Name);
+            }
+            if (!SongRequestPolicy.CanDeliver(version, nativeLoadVersion, destroying, cancellation.IsCancellationRequested))
+            { completion.TrySetCanceled(); yield break; }
+            completion.TrySetResult(clip);
         }
         static bool NativePlayArgument(MusicService __instance, GameAudioInfo __0, MusicChangeKind __1)
         {
@@ -123,7 +152,19 @@ namespace ChillNeteasePlaylist
             AudioClip result = null;
             try { result = loading.GetAwaiter().GetResult(); }
             catch (OperationCanceledException) { yield break; }
-            catch (Exception ex) { status = ex.Message; Logger.LogWarning("原生音源加载失败：" + ex.Message); yield break; }
+            catch (Exception ex)
+            {
+                if (version == nativeLoadVersion && !destroying)
+                {
+                    NativeNotice("已跳过「" + info.Title + "」：" + ex.Message, 10);
+                    Logger.LogWarning("原生音源加载失败并跳过：" + info.Title);
+                    var list = service.CurrentPlayList;
+                    int selected = list.IndexOf(info);
+                    if (selected >= 0 && list.Count > 1)
+                        service.PlayNextMusic(SongRequestPolicy.NextOffset(selected, list.IndexOf(service.PlayingMusic), list.Count), kind).Forget();
+                }
+                yield break;
+            }
             if (result == null || nativeLoadVersion != version || destroying) yield break;
             nativeDelivering = true;
             try { service.PlayArugumentMusic(info, kind); service.IsPause = false; }
@@ -143,7 +184,10 @@ namespace ChillNeteasePlaylist
             Song song;
             if (!nativeSongs.TryGetValue(info.UUID, out song)) { completion.TrySetException(new InvalidOperationException("歌单条目已过期。")); yield break; }
             status = "正在加载「" + song.name + "」…";
-            Task<SongUrl> urlTask = Task.Factory.StartNew(delegate { lock (nativeGate) { return JsonConvert.DeserializeObject<SongUrl>(Bridge.SongURL(song.id)); } });
+            Task<SongUrl> urlTask = Task.Factory.StartNew(delegate { return SongRequestPolicy.Resolve(
+                delegate { lock (nativeGate) { return JsonConvert.DeserializeObject<SongUrl>(Bridge.SongURL(song.id)); } },
+                delegate { return destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion; },
+                delegate { Thread.Sleep(500); }); });
             while (!urlTask.IsCompleted)
             {
                 if (destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion) { completion.TrySetCanceled(); yield break; }

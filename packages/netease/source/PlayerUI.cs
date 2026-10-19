@@ -136,6 +136,13 @@ namespace ChillNeteasePlaylist
                 if (!visible)
                 {
                     if (showLauncher.Value && DrawLauncher(new Rect(22, Screen.height / scale - 165, 170, 42), "网易云音乐  ·  F8")) visible = true;
+                    if (Time.realtimeSinceStartup < nativeNoticeUntil)
+                    {
+                        float width = Mathf.Min(720, Screen.width / scale - 40);
+                        Rect notice = new Rect((Screen.width / scale - width) / 2, Screen.height / scale - 220, width, 44);
+                        GUI.Box(notice, "", cardStyle);
+                        Label(new Rect(notice.x+14, notice.y+8, width-28, 28), Fit(nativeNoticeMessage, bodyText, width-28), bodyText);
+                    }
                     return;
                 }
                 panel.x = Mathf.Clamp(panel.x, 0, Mathf.Max(0, Screen.width / scale - panel.width));

@@ -116,6 +116,8 @@ namespace ChillXimalayaPlaylist
                     NativeNotice("已跳过「" + info.Title + "」：" + error.Message, 8);
                 Logger.LogWarning("原生切歌跳过不可用声音：" + info.Title);
             }
+            if (destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion)
+            { completion.TrySetCanceled(); yield break; }
             completion.TrySetResult(clip);
         }
         static bool NativePlayArgument(MusicService __instance, GameAudioInfo __0, MusicChangeKind __1)
@@ -150,9 +152,19 @@ namespace ChillXimalayaPlaylist
             catch (OperationCanceledException) { yield break; }
             catch (Exception ex)
             {
-                if (version == nativeLoadVersion)
-                    NativeNotice("无法播放「" + info.Title + "」：" + ex.Message, 10);
-                Logger.LogWarning("原生音源加载失败：" + info.Title + " · " + ex.Message);
+                if (version == nativeLoadVersion && !destroying)
+                {
+                    NativeNotice("已跳过「" + info.Title + "」：加载失败，正在尝试下一首。", 8);
+                    Logger.LogWarning("原生点播失败并跳过：" + info.Title + " / " + ex.GetType().Name);
+                    var list = service.CurrentPlayList;
+                    int selected = list.IndexOf(info);
+                    if (selected >= 0 && list.Count > 1)
+                    {
+                        int offset = (selected-list.IndexOf(service.PlayingMusic)+1)%list.Count;
+                        if (offset < 0) offset += list.Count;
+                        service.PlayNextMusic(offset,kind).Forget();
+                    }
+                }
                 yield break;
             }
             if (result == null || nativeLoadVersion != version || destroying) yield break;
@@ -256,6 +268,8 @@ namespace ChillXimalayaPlaylist
                 ReleaseNativeClip(old); nativeClips.RemoveAt(i);
             }
             NativeNotice("正在播放 · " + song.name, 4);
+            if (destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion)
+            { completion.TrySetCanceled(); yield break; }
             completion.TrySetResult(clip);
         }
         void ReleaseNativeClip(GameAudioInfo info)
