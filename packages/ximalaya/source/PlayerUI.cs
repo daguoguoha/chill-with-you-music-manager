@@ -267,9 +267,10 @@ namespace ChillXimalayaPlaylist
                 Rect row = new Rect(0, rowIndex * 50, 675, 46);
                 bool active = now != null && now.id == song.id && (playing || paused || request != null || busy);
                 if (active) GUI.Box(row, "", selectedStyle);
+                DrawHeart(new Rect(350, row.y+7, 38, 32), song);
                 if (GUI.Button(row, new GUIContent("", song.Label), rowStyle)) Play(songs.ToArray(), songIndex, false);
                 GUI.Label(new Rect(16, row.y + 9, 38, 28), active ? (paused ? "Ⅱ" : "♪") : (songIndex + 1).ToString("00"), active ? accentText : smallText);
-                Label(new Rect(59, row.y + 8, 322, 30), song.name, active ? accentText : bodyText);
+                Label(new Rect(59, row.y + 8, 284, 30), song.name, active ? accentText : bodyText);
                 Label(new Rect(399, row.y + 9, 220, 28), Artists(song), mutedText);
                 GUI.Label(new Rect(628, row.y + 9, 44, 28), song.duration > 0 ? TimeText(song.duration) : "—", smallText);
             }
@@ -326,6 +327,7 @@ namespace ChillXimalayaPlaylist
         void DrawPlayer()
         {
             GUI.Box(new Rect(20, 583, 960, 87), "", cardStyle);
+            DrawCurrentHeart();
             if (GUI.Button(new Rect(654, 598, 76, 28), "歌词设置", quietButton)) lyricsSettingsOpen = true;
             GUI.Label(new Rect(40, 598, 600, 29), "使用游戏原生播放器播放喜马拉雅声音", bodyText);
             if (GUI.Button(new Rect(40, 631, 230, 30), showLauncher.Value ? "隐藏游戏内入口" : "显示游戏内入口", quietButton))

@@ -54,8 +54,8 @@ namespace ChillKuGouPlaylist
             }
             return 0;
         }
-        static JObject Request(string path, Dictionary<string, string> extra, JObject body, string router, bool web, string host)
-        {return RequestCore(path,extra,body,router,web,host,true);}
+        static JObject Request(string path, Dictionary<string, string> extra, JObject body, string router, bool web, string host, bool post=false)
+        {return RequestCore(path,extra,body,router,web,host,true,post);}
         static string VerificationEvent(JObject result,HttpWebResponse response)
         {
             JObject data=result["data"] as JObject;
@@ -73,7 +73,7 @@ namespace ChillKuGouPlaylist
             }
             catch(InvalidOperationException){return 0;}catch(JsonException){return 0;}
         }
-        static JObject RequestCore(string path, Dictionary<string, string> extra, JObject body, string router, bool web, string host,bool readVerification)
+        static JObject RequestCore(string path, Dictionary<string, string> extra, JObject body, string router, bool web, string host,bool readVerification,bool post=false)
         {
             if(!web && path!="/verifyservice/v3/get_verify_info" && RetryAfterSeconds>0)throw RequestIssue.Cooling(RetryAfterSeconds);
             var p = Params("dfid", "-", "mid", mid, "uuid", "-", "appid", AppId, "clientver", ClientVersion,
@@ -88,7 +88,7 @@ namespace ChillKuGouPlaylist
             {
                 Throttle();
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(host + path + "?" + query);
-                req.Method = body == null ? "GET" : "POST"; req.Timeout = 15000; req.ReadWriteTimeout = 15000; req.AllowAutoRedirect = false;
+                req.Method = body == null && !post ? "GET" : "POST"; req.Timeout = 15000; req.ReadWriteTimeout = 15000; req.AllowAutoRedirect = false;
                 req.UserAgent = "Android15-1070-11083-46-0-DiscoveryDRADProtocol-wifi";
                 req.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
                 req.Headers["mid"] = mid; req.Headers["dfid"] = "-"; req.Headers["clienttime"] = p["clienttime"];
@@ -128,8 +128,8 @@ namespace ChillKuGouPlaylist
                 }
             }
         }
-        static JObject Api(string path, Dictionary<string, string> p, JObject data, string router)
-        { return Request(path, p, data, router, false, "https://gateway.kugou.com"); }
+        static JObject Api(string path, Dictionary<string, string> p, JObject data, string router,bool post=false)
+        { return Request(path, p, data, router, false, "https://gateway.kugou.com",post); }
         public static void CancelQr() { qrKey = null; }
         public static string QrImage(string ignored)
         {
@@ -219,6 +219,7 @@ namespace ChillKuGouPlaylist
                     if (artists.Count == 0 && dash > 0) artists.Add(filename.Substring(0, dash));
                     double seconds = Number(row["timelen"]) / 1000.0; if (seconds <= 0) seconds = Number(row["duration"]);
                     Song song = new Song { id = key, hash = hash.ToLowerInvariant(), albumId = album.Length == 0 ? "0" : album, albumAudioId = albumAudio, name = title, artists = artists, duration = seconds };
+                    song.fileId=Number(row["fileid"]);
                     if (seen.Add(key)) result.Add(song);
                 }
                 if ((total > 0 && received >= total) || rows.Count == 0 || (total <= 0 && rows.Count < 100))

@@ -5,9 +5,10 @@ using System.Text;
 
 namespace ChillNeteasePlaylist
 {
-    public static class Bridge
+    public static partial class Bridge
     {
         const string Dll = "ChillNetease.dll";
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] public static extern IntPtr NeteaseGetDailyRecommendSongs();
         [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern IntPtr LoadLibraryEx(string path, IntPtr file, uint flags);
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] static extern int NeteaseInit(IntPtr directory);

@@ -54,7 +54,7 @@ namespace ChillBilibiliPlaylist
             { string value=Text(account[name]); if (value.Length>0) cookies.Add(new Cookie(name,value,"/",".bilibili.com") { Secure=true }); }
             return 0;
         }
-        static JObject Request(string url, CookieContainer jar)
+        static JObject Request(string url, CookieContainer jar, string form=null)
         {
             Uri uri=new Uri(url);
             if (uri.Scheme!="https" || (uri.Host!="api.bilibili.com" && uri.Host!="passport.bilibili.com")) throw new InvalidOperationException("接口地址无效。");
@@ -63,12 +63,16 @@ namespace ChillBilibiliPlaylist
             {
                 Throttle();
                 HttpWebRequest req=(HttpWebRequest)WebRequest.Create(uri);
-                req.Method="GET"; req.Timeout=15000; req.ReadWriteTimeout=15000; req.AllowAutoRedirect=false;
+                req.Method=form==null?"GET":"POST"; req.Timeout=15000; req.ReadWriteTimeout=15000; req.AllowAutoRedirect=false;
                 req.CookieContainer=jar; req.UserAgent=UserAgent; req.Referer="https://www.bilibili.com/";
                 req.Accept="application/json, text/plain, */*";req.Headers["Accept-Language"]="zh-CN,zh;q=0.9";
                 req.AutomaticDecompression=DecompressionMethods.GZip|DecompressionMethods.Deflate;
                 try
                 {
+                    if(form!=null) {
+                        byte[] body=Encoding.UTF8.GetBytes(form);req.ContentType="application/x-www-form-urlencoded; charset=UTF-8";req.ContentLength=body.Length;req.Headers["Origin"]="https://www.bilibili.com";
+                        using(Stream output=req.GetRequestStream())output.Write(body,0,body.Length);
+                    }
                     using (HttpWebResponse response=(HttpWebResponse)req.GetResponse())
                     using (Stream input=response.GetResponseStream())
                     using (var buffer=new MemoryStream())
@@ -93,7 +97,7 @@ namespace ChillBilibiliPlaylist
                     HttpWebResponse failedResponse=error.Response as HttpWebResponse;
                     if(failedResponse!=null && ((int)failedResponse.StatusCode==412 || (int)failedResponse.StatusCode==429))
                     {int status=(int)failedResponse.StatusCode;failedResponse.Close();throw Fail(RequestIssue.Http(status,uri.AbsolutePath));}
-                    bool retry=attempt==0 && NetworkErrors.CanRetry(error);
+                    bool retry=form==null && attempt==0 && NetworkErrors.CanRetry(error);
                     string message=NetworkErrors.Describe(error,uri.Host);
                     if (error.Response!=null) error.Response.Close();
                     if (retry) continue;

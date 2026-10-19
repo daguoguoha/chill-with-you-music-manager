@@ -45,19 +45,23 @@ namespace ChillXimalayaPlaylist
         {
             return "喜马拉雅接口 "+code+"："+(code==401 || code==50 ? "登录已过期，请重新扫码。" : code==1001 || code==407 ? "请求暂被限制，请稍后重试。" : code==-3 || code==404 ? "内容已下架或不可访问。" : "请稍后重试或检查账号访问权限。");
         }
-        static JObject Request(string url,CookieContainer jar,bool signed,bool raw,bool ting)
+        static JObject Request(string url,CookieContainer jar,bool signed,bool raw,bool ting,string form=null)
         {
             Uri uri=new Uri(url);
             if(uri.Scheme!="https" || !uri.IsDefaultPort || !string.IsNullOrEmpty(uri.UserInfo) || !new[]{"www.ximalaya.com","m.ximalaya.com","mobile.ximalaya.com","passport.ximalaya.com"}.Contains(uri.Host))throw new InvalidOperationException("接口地址无效。");
             for(int attempt=0;;attempt++)
             {
                 var req=(HttpWebRequest)WebRequest.Create(uri);
-                req.Method="GET";req.Timeout=15000;req.ReadWriteTimeout=15000;req.AllowAutoRedirect=false;
+                req.Method=form==null?"GET":"POST";req.Timeout=15000;req.ReadWriteTimeout=15000;req.AllowAutoRedirect=false;
                 req.CookieContainer=jar;req.UserAgent=ting ? "ting_6.7.9(GM1900,Android29)" : UserAgent;req.Referer=Origin+"/";
                 req.AutomaticDecompression=DecompressionMethods.GZip|DecompressionMethods.Deflate;
                 if(signed)req.Headers["xm-sign"]=XmSign();
                 try
                 {
+                    if(form!=null) {
+                        byte[] body=Encoding.UTF8.GetBytes(form);req.ContentType="application/x-www-form-urlencoded;charset=UTF-8";req.ContentLength=body.Length;req.Headers["Origin"]=Origin;
+                        using(Stream output=req.GetRequestStream())output.Write(body,0,body.Length);
+                    }
                     using(var response=(HttpWebResponse)req.GetResponse())
                     using(var input=response.GetResponseStream())
                     using(var output=new MemoryStream())
@@ -67,13 +71,17 @@ namespace ChillXimalayaPlaylist
                         while((n=input.Read(block,0,block.Length))>0){output.Write(block,0,n);if(output.Length>16*1024*1024)throw new InvalidOperationException("接口响应过大。");}
                         JObject result;
                         try{result=JObject.Parse(Encoding.UTF8.GetString(output.ToArray()));}catch(JsonException){throw new InvalidOperationException("喜马拉雅接口响应无效，请稍后重试。");}
-                        if(!raw && result["ret"]!=null && Number(result["ret"])!=0 && Number(result["ret"])!=200)throw new InvalidOperationException(ApiError(Number(result["ret"])));
+                        if(!raw && result["ret"]!=null && Number(result["ret"])!=0 && Number(result["ret"])!=200) {
+                            var issue=new InvalidOperationException(ApiError(Number(result["ret"])));
+                            if(form!=null && Text(result["msg"]).Contains("拦截"))throw new InvalidOperationException("喜欢请求被平台拦截，请先在喜马拉雅官网确认账号状态，稍后重试。");
+                            throw issue;
+                        }
                         return result;
                     }
                 }
                 catch(WebException error)
                 {
-                    bool retry=attempt==0 && NetworkErrors.CanRetry(error);string message=NetworkErrors.Describe(error,uri.Host);
+                    bool retry=form==null && attempt==0 && NetworkErrors.CanRetry(error);string message=NetworkErrors.Describe(error,uri.Host);
                     if(error.Response!=null)error.Response.Close();if(retry)continue;throw new InvalidOperationException(message);
                 }
             }

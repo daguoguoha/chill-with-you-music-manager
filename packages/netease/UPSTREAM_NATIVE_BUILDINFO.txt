@@ -1,4 +1,4 @@
-外部依赖 ChillNetease.dll 的内嵌 Go 构建信息。该官方原版 DLL 包含在 offline-dependencies/ChillNetease.dll。
+外部依赖 ChillNetease.dll 的内嵌 Go 构建信息。本候选包的 DLL 为本地源码重建版，新增每日推荐与既有真实播放记录导出；对应源码见 native-source/ChillNetease-source.zip。以下保留原版上游依赖清单。
 此清单用于识别依赖版本，不代表逐项许可证审计结果。
 
 dep	github.com/adrg/xdg	v0.5.3

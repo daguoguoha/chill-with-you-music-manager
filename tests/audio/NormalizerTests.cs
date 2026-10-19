@@ -4,7 +4,7 @@ using NAudio.Wave;
 public static class NormalizerTests {
     public static string Run(){
         int count=0;
-        Func<IWaveProvider,IWaveProvider>[] converters={ChillQQMusicPlaylist.AudioFormatNormalizer.Pcm16,ChillKuGouPlaylist.AudioFormatNormalizer.Pcm16,ChillBilibiliPlaylist.AudioFormatNormalizer.Pcm16,ChillXimalayaPlaylist.AudioFormatNormalizer.Pcm16,ChillSaltPlayerPlaylist.AudioFormatNormalizer.Pcm16};
+        Func<IWaveProvider,IWaveProvider>[] converters={ChillKuGouPlaylist.AudioFormatNormalizer.Pcm16,ChillBilibiliPlaylist.AudioFormatNormalizer.Pcm16,ChillXimalayaPlaylist.AudioFormatNormalizer.Pcm16,ChillSaltPlayerPlaylist.AudioFormatNormalizer.Pcm16};
         foreach(var convert in converters) {
             foreach(int bits in new[]{16,24,32}) {
                 byte[] data=new byte[bits/8*4];for(int i=0;i<4;i++)data[(i+1)*(bits/8)-1]=0x40;

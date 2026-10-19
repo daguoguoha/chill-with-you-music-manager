@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillSaltPlayerPlaylist
 {
-    [BepInPlugin("local.chill.saltplayerplaylist", "椒盐音乐歌单", "1.1.1")]
+    [BepInPlugin("local.chill.saltplayerplaylist", "椒盐音乐歌单", "1.2.0")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -92,6 +92,9 @@ namespace ChillSaltPlayerPlaylist
         }
         internal void Tick()
         {
+            FavoritesTick();
+            LocalFavoriteListTick();
+            NativeFavoriteTick();
             LyricsTickSafe();
             PlaybackSessionTickSafe();
             try { NativeTick(); } catch (Exception ex) { nativeNextCheck = Time.realtimeSinceStartup + 10; Logger.LogWarning("原生歌单界面：" + ex); }
@@ -140,7 +143,7 @@ namespace ChillSaltPlayerPlaylist
         void RefreshPlaylists()
         {
             Run(delegate { return Bridge.Lists(); }, delegate(object result)
-            { playlists = (List<Playlist>)result; nativeMenuVersion = -1; status = "已保存 " + playlists.Count + " 个本地歌单；可导入歌单或音乐文件夹。"; });
+            { playlists = (List<Playlist>)result; RefreshFavorites(); nativeMenuVersion = -1; status = "已保存 " + playlists.Count + " 个本地歌单；可导入歌单或音乐文件夹。"; });
         }
         void OpenPlaylist(string id, string title)
         {
@@ -179,6 +182,7 @@ namespace ChillSaltPlayerPlaylist
         {
             ClosePlaybackSession();
             CloseLyrics();
+            CloseNativeFavorite();
             Logger.LogInfo("椒盐音乐插件对象已销毁。");
             destroying = true;
             FilePicker.Cancel();

@@ -185,7 +185,7 @@ namespace ChillKuGouPlaylist
             Song song;
             if (!nativeSongs.TryGetValue(info.UUID, out song)) { completion.TrySetException(new InvalidOperationException("歌单条目已过期。")); yield break; }
             NativeNotice("正在加载「" + song.name + "」…", 60);
-            Task<SongUrl> urlTask = Task.Factory.StartNew(delegate { lock (nativeGate) { return JsonConvert.DeserializeObject<SongUrl>(Bridge.SongURL(song.id)); } });
+            Task<SongUrl> urlTask = Task.Factory.StartNew(delegate { lock (nativeGate) { return JsonConvert.DeserializeObject<SongUrl>(Bridge.SongURL(song)); } });
             while (!urlTask.IsCompleted)
             {
                 if (destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion) { completion.TrySetCanceled(); yield break; }

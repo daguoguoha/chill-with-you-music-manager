@@ -1,24 +1,24 @@
 {
   "Schema": 1,
-  "ManagerVersion": "1.5.1",
+  "ManagerVersion": "1.6.0",
   "Plugins": [
     {
       "Id": "netease",
       "Name": "网易云音乐",
-      "Version": "1.4.2",
+      "Version": "1.5.0",
       "Folder": "packages\\netease",
       "Primary": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
       "Manifest": "ChillNeteaseNative-install.json",
       "Hotkey": "F8",
-      "Hint": "扫码登录后，在原生列表选择网易云歌单。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 修复官方 FLAC 音源被误判为不可播放；解码复用 Windows Media Foundation。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。",
+      "Hint": "扫码登录后，在原生列表选择网易云歌单。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 修复官方 FLAC 音源被误判为不可播放；解码复用 Windows Media Foundation。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 歌单顶部新增「每日推荐」，点击时读取最新推荐；当前播放不会自动切换。 新增底部账号红心，喜欢/取消与恢复均已用真实账号验证。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "D5B2E32360AA9B8CA01EBBBEA3B9399BFFAABBA0B5BC347AF260D067EFDF636D"
+          "Hash": "960A07504CB822E4EDE022DFBEB3DB8C81BFC8C41DC020F9A53E47547AB6862E"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNetease.dll",
-          "Hash": "BD1AE13E58F415667A9BD03D6AD0C2EEB0DEFF68D023479C46A37BAB269DA67B"
+          "Hash": "EAC98CD94D65BA5D11DDCC6DA0F227293C2C3474C3054D17C92BFDFD08CCA845"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\QRCoder.dll",
@@ -36,11 +36,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "551762C864D1B9F1E093A4C356B02E3FC761F5EDB9F1AF766A04A0E90036FEFC"
+          "Hash": "6E93DF0F3DC04A3F21ECD069C7FF1D105FAD96F5B581A745D1A83808C8A3F150"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "D5B2E32360AA9B8CA01EBBBEA3B9399BFFAABBA0B5BC347AF260D067EFDF636D"
+          "Hash": "960A07504CB822E4EDE022DFBEB3DB8C81BFC8C41DC020F9A53E47547AB6862E"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -48,11 +48,11 @@
         },
         {
           "Path": "offline-dependencies\\ChillNetease.dll",
-          "Hash": "BD1AE13E58F415667A9BD03D6AD0C2EEB0DEFF68D023479C46A37BAB269DA67B"
+          "Hash": "EAC98CD94D65BA5D11DDCC6DA0F227293C2C3474C3054D17C92BFDFD08CCA845"
         },
         {
           "Path": "offline-dependencies\\ChillNetease.h",
-          "Hash": "FC415F7117CBE7CAA5104631F7BCDB6A4D21E401EE7E532C70B4794E5050F243"
+          "Hash": "15335670E3F502A187D1316E59496755FC7CA564E9FF476E5FBCF3F85A0A88FD"
         },
         {
           "Path": "offline-dependencies\\QRCoder.nupkg",
@@ -69,76 +69,18 @@
       ]
     },
     {
-      "Id": "qq",
-      "Name": "QQ 音乐",
-      "Version": "1.2.1",
-      "Folder": "packages\\qq",
-      "Primary": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusicPlaylist.dll",
-      "Manifest": "ChillQQMusicNative-install.json",
-      "Hotkey": "F9",
-      "Hint": "使用 QQ / 微信扫码登录，在原生列表选择歌单。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。",
-      "Targets": [
-        {
-          "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusicPlaylist.dll",
-          "Hash": "05ED90A578B0CF5C759A76BD055A286F5C19990A2A9AD72FB23562A3C3DBCFAC"
-        },
-        {
-          "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusic.dll",
-          "Hash": "2F18E342BF859054276F6EF1D40C284A09C6AB26CC0E7065C3E3A1BE8EA75F8B"
-        },
-        {
-          "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\NAudio.Core.dll",
-          "Hash": "FCF493FC47A2F478A65303886B975FBDBF714CBB1F2D79F7FCE97E4BB16B01A8"
-        },
-        {
-          "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\NAudio.Wasapi.dll",
-          "Hash": "618EF0E49D64E7A66DFE64BBF6AE81705B9D9683D8A9F321E5C3024D666BDF82"
-        }
-      ],
-      "Files": [
-        {
-          "Path": "Install.ps1",
-          "Hash": "B27F8231567B760EB350B371106E3030F29A25C3DAAE70ED60879C12B018D501"
-        },
-        {
-          "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusic.dll",
-          "Hash": "2F18E342BF859054276F6EF1D40C284A09C6AB26CC0E7065C3E3A1BE8EA75F8B"
-        },
-        {
-          "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusic.h",
-          "Hash": "44C9923F9790DDFC464A701954522C5269D4E2C9F5036A0E1E537EDCD6056FCA"
-        },
-        {
-          "Path": "BepInEx\\plugins\\ChillQQMusicPlaylist\\ChillQQMusicPlaylist.dll",
-          "Hash": "05ED90A578B0CF5C759A76BD055A286F5C19990A2A9AD72FB23562A3C3DBCFAC"
-        },
-        {
-          "Path": "offline-dependencies\\BepInEx.zip",
-          "Hash": "82F9878551030F54657792C0740D9D51A09500EEAE1FBA21106B0C441E6732C4"
-        },
-        {
-          "Path": "offline-dependencies\\NAudio.Core.nupkg",
-          "Hash": "794645DBFD30E4880663D52D9D9224D55C301FA54228FF623C95D572C7887347"
-        },
-        {
-          "Path": "offline-dependencies\\NAudio.Wasapi.nupkg",
-          "Hash": "C8396B8DBAB86A2619EDFD9158BEAF18C21CB86677099B5594950FD8651B9D1A"
-        }
-      ]
-    },
-    {
       "Id": "kugou",
       "Name": "酷狗音乐",
-      "Version": "1.2.1",
+      "Version": "1.3.0",
       "Folder": "packages\\kugou",
       "Primary": "BepInEx\\plugins\\ChillKuGouPlaylist\\ChillKuGouPlaylist.dll",
       "Manifest": "ChillKuGouNative-install.json",
       "Hotkey": "F10",
-      "Hint": "使用酷狗手机 App 扫码登录，读取歌单。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。",
+      "Hint": "使用酷狗手机 App 扫码登录，读取歌单。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。 歌单顶部新增「每日推荐」，点击时读取最新推荐；当前播放不会自动切换。 本候选版新增底栏红心（酷狗我喜欢）；验收状态见 HEART_TESTING.md。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\ChillKuGouPlaylist.dll",
-          "Hash": "733EDBB08897B081B6E2F370DF3329F9600B5C749ECA340485090DBCC15AE514"
+          "Hash": "C8C34A5D1E70029471A69EC55E033BB4AAD3BB3AA0893986DF6E9379D31E1779"
         },
         {
           "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\NAudio.Core.dll",
@@ -152,11 +94,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "AF6A1D2ABDDE1B34A9CA0551E1455167741960D761161EDD9589D7931AC1A26C"
+          "Hash": "ADBF9B1A0E984C62F0C6190C88E5FFFFFCE5E1D7DB45CF82832EDB96FFF26E33"
         },
         {
           "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\ChillKuGouPlaylist.dll",
-          "Hash": "733EDBB08897B081B6E2F370DF3329F9600B5C749ECA340485090DBCC15AE514"
+          "Hash": "C8C34A5D1E70029471A69EC55E033BB4AAD3BB3AA0893986DF6E9379D31E1779"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -175,16 +117,16 @@
     {
       "Id": "bilibili",
       "Name": "B站音频",
-      "Version": "1.2.1",
+      "Version": "1.3.0",
       "Folder": "packages\\bilibili",
       "Primary": "BepInEx\\plugins\\ChillBilibiliPlaylist\\ChillBilibiliPlaylist.dll",
       "Manifest": "ChillBilibiliNative-install.json",
       "Hotkey": "F11",
-      "Hint": "扫码后导入收藏夹；播放视频音频，不显示视频画面。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。",
+      "Hint": "扫码后导入收藏夹；播放视频音频，不显示视频画面。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。 本候选版新增底栏红心（B站点赞）；验收状态见 HEART_TESTING.md。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\ChillBilibiliPlaylist.dll",
-          "Hash": "9C248B5CFC6E9E68D19629AA9CA806BF08B1DAF7C2A999873DFA2B88F6A2FB0F"
+          "Hash": "6C5C21A5ED62DAD96484999B2C078E3B0C405DB7F8C2EAA22F5B92AE10ABEA15"
         },
         {
           "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\NAudio.Core.dll",
@@ -202,11 +144,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "1C46DE1E25AF3F40925E4B6105C72099008AA9455C8B4D1F3C9FCF90A7CB7351"
+          "Hash": "A32507E40F1C8B0C8E87FFAF199536BEC1A9CE7598A237FA0ADC26372ABBEA6E"
         },
         {
           "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\ChillBilibiliPlaylist.dll",
-          "Hash": "9C248B5CFC6E9E68D19629AA9CA806BF08B1DAF7C2A999873DFA2B88F6A2FB0F"
+          "Hash": "6C5C21A5ED62DAD96484999B2C078E3B0C405DB7F8C2EAA22F5B92AE10ABEA15"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -229,16 +171,16 @@
     {
       "Id": "ximalaya",
       "Name": "喜马拉雅",
-      "Version": "1.2.1",
+      "Version": "1.3.0",
       "Folder": "packages\\ximalaya",
       "Primary": "BepInEx\\plugins\\ChillXimalayaPlaylist\\ChillXimalayaPlaylist.dll",
       "Manifest": "ChillXimalayaNative-install.json",
       "Hotkey": "F7",
-      "Hint": "导入专辑、播客和声音；登录后读取订阅及喜欢的声音。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。",
+      "Hint": "导入专辑、播客和声音；登录后读取订阅及喜欢的声音。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。 本候选版新增底栏红心（喜欢的声音）；验收状态见 HEART_TESTING.md。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\ChillXimalayaPlaylist.dll",
-          "Hash": "5B316D093FBEE238936F393AE7502188E81F6501C47407B4A7E0647D3A6F4451"
+          "Hash": "C18D1BF0EF0722D63A6D2C80C923DAA619DA9088DF9A2B5E6312EFFA385E8AB1"
         },
         {
           "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\NAudio.Core.dll",
@@ -252,11 +194,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "826E72B6588B1B9C490FDD1ECCD006B4D3B880E4FC6CBF67FADB6DAB742D9FD6"
+          "Hash": "55F104F2ECDE2C594EA35B50882D532A17A9F43C74D858DFDB7011B658D33B95"
         },
         {
           "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\ChillXimalayaPlaylist.dll",
-          "Hash": "5B316D093FBEE238936F393AE7502188E81F6501C47407B4A7E0647D3A6F4451"
+          "Hash": "C18D1BF0EF0722D63A6D2C80C923DAA619DA9088DF9A2B5E6312EFFA385E8AB1"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -275,16 +217,16 @@
     {
       "Id": "saltplayer",
       "Name": "椒盐 / 本地音乐",
-      "Version": "1.1.1",
+      "Version": "1.2.0",
       "Folder": "packages\\saltplayer",
       "Primary": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerPlaylist.dll",
       "Manifest": "ChillSaltPlayerNative-install.json",
       "Hotkey": "F6",
-      "Hint": "导入本地歌曲、音乐文件夹或椒盐导出的路径歌单，无需登录。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。",
+      "Hint": "导入本地歌曲、音乐文件夹或椒盐导出的路径歌单，无需登录。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。 本候选版新增底栏红心（本地我喜欢）；验收状态见 HEART_TESTING.md。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerPlaylist.dll",
-          "Hash": "A76D52DD610802759285794C266E42108DBBCBD226AAC5B2AF1F8B6C0713A222"
+          "Hash": "4D81E2A8547A96FDB569667E4161FE5AD6BDC57310BCDA75BE4A6661FD9460D3"
         },
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\NAudio.Core.dll",
@@ -302,7 +244,7 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "E51ABA3BF36EA8F333112B6134F6BD86036B8CB60D456F4B8667F1855BBD2038"
+          "Hash": "E3786E1919EEE113E05DC1E3E80DC5ACCB8687673F47D47C43A724CABA2B1A4C"
         },
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerFilePicker.exe",
@@ -310,7 +252,7 @@
         },
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerPlaylist.dll",
-          "Hash": "A76D52DD610802759285794C266E42108DBBCBD226AAC5B2AF1F8B6C0713A222"
+          "Hash": "4D81E2A8547A96FDB569667E4161FE5AD6BDC57310BCDA75BE4A6661FD9460D3"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",

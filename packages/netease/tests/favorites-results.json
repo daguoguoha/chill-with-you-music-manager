@@ -1,0 +1,16 @@
+{
+  "Date": "2026-10-19",
+  "Provider": "netease",
+  "Version": "1.5.0",
+  "LikeConfirmed": true,
+  "Restored": true,
+  "OriginalLikesRetained": true,
+  "ExactBaseline": true,
+  "NativeRecommendationPlayback": true,
+  "NativeNext": true,
+  "FavoriteUi": "visible in song rows and current-track panel",
+  "TemporaryAccountCopiesRemoved": true,
+  "QQ": "stopped; detected DLL not restored or distributed",
+  "KuGouFavorites": "secondary verification 20028; not write-tested",
+  "LikedRowsShowFilledHearts": true
+}

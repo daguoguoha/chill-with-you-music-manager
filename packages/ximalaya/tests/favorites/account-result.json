@@ -1,0 +1,8 @@
+﻿{
+    "BaselineUnliked":  true,
+    "LikeConfirmed":  false,
+    "Restored":  true,
+    "ReadError":  null,
+    "WriteError":  "InvalidOperationException: 喜马拉雅接口 500：请稍后重试或检查账号访问权限。 [请求拦截]",
+    "RestoreError":  null
+}

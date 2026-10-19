@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillBilibiliPlaylist
 {
-    [BepInPlugin("local.chill.bilibiliplaylist", "B站歌单", "1.2.1")]
+    [BepInPlugin("local.chill.bilibiliplaylist", "B站歌单", "1.3.0")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -97,6 +97,8 @@ namespace ChillBilibiliPlaylist
         }
         internal void Tick()
         {
+            FavoritesTick();
+            NativeFavoriteTick();
             LyricsTickSafe();
             PlaybackSessionTickSafe();
             ListeningTickSafe();
@@ -161,6 +163,7 @@ namespace ChillBilibiliPlaylist
         {
             ResetPlaybackSessionAccount();
             ResetListeningAccount();
+            ResetFavorites();
             requestIssue=null; qrPolling = false; ClearQr();
             status = "正在获取登录二维码，连接失败时自动重试一次…";
             Run(delegate { Bridge.CancelQr(); return Bridge.QrImage(loginType); }, delegate(object result)
@@ -188,7 +191,7 @@ namespace ChillBilibiliPlaylist
                 UserPlaylists page = JsonConvert.DeserializeObject<UserPlaylists>(Bridge.UserPlaylists());
                 return Rules.MergePlaylists(page);
             }, delegate(object result)
-            { playlists = (List<Playlist>)result; nativeMenuVersion = -1; status = "已读取 " + playlists.Count + " 个歌单，选择左侧歌单。"; });
+            { playlists = (List<Playlist>)result; RefreshFavorites(); nativeMenuVersion = -1; status = "已读取 " + playlists.Count + " 个歌单，选择左侧歌单。"; });
         }
         void OpenPlaylist(string id, string title)
         {
@@ -226,6 +229,7 @@ namespace ChillBilibiliPlaylist
         {
             ClosePlaybackSession();
             CloseLyrics();
+            CloseNativeFavorite();
             CloseListening();
             Logger.LogInfo("B站插件对象已销毁。");
             destroying = true; qrPolling = false;

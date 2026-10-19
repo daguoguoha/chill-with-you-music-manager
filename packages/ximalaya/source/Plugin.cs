@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillXimalayaPlaylist
 {
-    [BepInPlugin("local.chill.ximalayaplaylist", "喜马拉雅歌单", "1.2.1")]
+    [BepInPlugin("local.chill.ximalayaplaylist", "喜马拉雅歌单", "1.3.0")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -97,6 +97,8 @@ namespace ChillXimalayaPlaylist
         }
         internal void Tick()
         {
+            FavoritesTick();
+            NativeFavoriteTick();
             LyricsTickSafe();
             PlaybackSessionTickSafe();
             ListeningTickSafe();
@@ -161,6 +163,7 @@ namespace ChillXimalayaPlaylist
         {
             ResetPlaybackSessionAccount();
             ResetListeningAccount();
+            ResetFavorites();
             qrPolling = false; ClearQr();
             status = "正在获取登录二维码，连接失败时自动重试一次…";
             Run(delegate { Bridge.CancelQr(); return Bridge.QrImage(loginType); }, delegate(object result)
@@ -188,7 +191,7 @@ namespace ChillXimalayaPlaylist
                 UserPlaylists page = JsonConvert.DeserializeObject<UserPlaylists>(Bridge.UserPlaylists());
                 return Rules.MergePlaylists(page);
             }, delegate(object result)
-            { playlists = (List<Playlist>)result; nativeMenuVersion = -1; status = "已读取 " + playlists.Count + " 个歌单，选择左侧专辑。"; });
+            { playlists = (List<Playlist>)result; RefreshFavorites(); nativeMenuVersion = -1; status = "已读取 " + playlists.Count + " 个歌单，选择左侧专辑。"; });
         }
         void OpenPlaylist(string id, string title)
         {
@@ -226,6 +229,7 @@ namespace ChillXimalayaPlaylist
         {
             ClosePlaybackSession();
             CloseLyrics();
+            CloseNativeFavorite();
             CloseListening();
             Logger.LogInfo("喜马拉雅插件对象已销毁。");
             destroying = true; qrPolling = false;

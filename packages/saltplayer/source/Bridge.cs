@@ -9,7 +9,7 @@ using System.Text;
 using Newtonsoft.Json;
 namespace ChillSaltPlayerPlaylist
 {
-    public static class Bridge
+    public static partial class Bridge
     {
         static string directory;
         static Library library=new Library();
@@ -29,7 +29,7 @@ namespace ChillSaltPlayerPlaylist
                     if(item==null || string.IsNullOrEmpty(item.id) || item.songs==null || item.songs.Count>10000 || item.songs.Any(s=>s==null || string.IsNullOrEmpty(s.id) || Rules.LocalPath(s.path,null)==null || !Rules.IsAudio(s.path)))throw new InvalidOperationException("本地歌单索引含无效条目，请从原歌单重新导入。");
                 if(library.playlists.Count>0)LastRoot=library.playlists[library.playlists.Count-1].root ?? "";
             }
-            LastImportDetails="";return 0;
+            InitializeFavorites();LastImportDetails="";return 0;
         }
         static string Hash(string value){using(var sha=SHA256.Create())return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(value))).Replace("-","").ToLowerInvariant();}
         static void Save(Library next)
@@ -40,9 +40,10 @@ namespace ChillSaltPlayerPlaylist
             if(File.Exists(path))File.Replace(pending,path,Path.Combine(directory,"library.bak"));else File.Move(pending,path);
             library=next;
         }
-        public static List<Playlist> Lists(){return library.playlists.Select(p=>new Playlist{id=p.id,name=p.name,songCount=p.songs.Count,source=p.source,root=p.root}).ToList();}
+        public static List<Playlist> Lists(){var result=library.playlists.Select(p=>new Playlist{id=p.id,name=p.name,songCount=p.songs.Count,source=p.source,root=p.root}).ToList();result.Insert(0,new Playlist{id=FavoritesPlaylist,name="我喜欢（本地）",songCount=favorites.songs.Count});return result;}
         public static List<Song> Playlist(string id)
         {
+            if(id==FavoritesPlaylist)return favorites.songs.ToList();
             Playlist item=library.playlists.FirstOrDefault(p=>p.id==id);if(item==null)throw new InvalidOperationException("歌单不存在，请刷新或重新导入。");return item.songs.ToList();
         }
         static List<string> Scan(string root)

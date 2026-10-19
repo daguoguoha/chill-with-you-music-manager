@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -212,7 +212,7 @@ namespace ChillNeteasePlaylist
                 if (selected) GUI.Box(row, "", selectedStyle);
                 if (GUI.Button(row, new GUIContent("", playlist.name), rowStyle)) OpenPlaylist(playlist.id, playlist.name);
                 Label(new Rect(12, row.y + 5, 182, 24), playlist.name, selected ? accentText : bodyText);
-                GUI.Label(new Rect(12, row.y + 29, 180, 18), playlist.songCount + " 首歌曲", smallText);
+                GUI.Label(new Rect(12, row.y + 29, 180, 18), playlist.id == RecommendationId ? "点击获取最新推荐" : playlist.songCount + " 首歌曲", smallText);
             }
             GUI.enabled = true; GUI.EndScrollView();
             GUI.enabled = ready && !busy;
@@ -267,9 +267,10 @@ namespace ChillNeteasePlaylist
                 Rect row = new Rect(0, rowIndex * 50, 675, 46);
                 bool active = now != null && now.id == song.id && (playing || paused || request != null || busy);
                 if (active) GUI.Box(row, "", selectedStyle);
+                DrawHeart(new Rect(350, row.y+7, 38, 32), song);
                 if (GUI.Button(row, new GUIContent("", song.Label), rowStyle)) Play(songs.ToArray(), songIndex, false);
                 GUI.Label(new Rect(16, row.y + 9, 38, 28), active ? (paused ? "Ⅱ" : "♪") : (songIndex + 1).ToString("00"), active ? accentText : smallText);
-                Label(new Rect(59, row.y + 8, 322, 30), song.name, active ? accentText : bodyText);
+                Label(new Rect(59, row.y + 8, 284, 30), song.name, active ? accentText : bodyText);
                 Label(new Rect(399, row.y + 9, 220, 28), Artists(song), mutedText);
                 GUI.Label(new Rect(628, row.y + 9, 44, 28), song.duration > 0 ? TimeText(song.duration) : "—", smallText);
             }
@@ -326,8 +327,9 @@ namespace ChillNeteasePlaylist
         void DrawPlayer()
         {
             GUI.Box(new Rect(20, 583, 960, 87), "", cardStyle);
+            DrawCurrentHeart();
             if (GUI.Button(new Rect(654, 598, 76, 28), "歌词设置", quietButton)) lyricsSettingsOpen = true;
-            GUI.Label(new Rect(40, 598, 600, 29), "网易云歌曲已接入游戏原生播放器", bodyText);
+            GUI.Label(new Rect(40, 598, 550, 29), "网易云歌曲已接入游戏原生播放器", bodyText);
             if (GUI.Button(new Rect(40, 631, 230, 30), showLauncher.Value ? "隐藏游戏内入口（F8）" : "显示游戏内入口（F8）", quietButton))
             {
                 showLauncher.Value = !showLauncher.Value;

@@ -8,7 +8,7 @@ namespace ChillKuGouPlaylist
     public class UserPlaylists { public List<Playlist> created, collected; }
     public class Song
     {
-        public string id, name, hash, albumId; public long albumAudioId; public List<string> artists; public double duration;
+        public string id, name, hash, albumId; public long albumAudioId, fileId; public List<string> artists; public double duration;
         public string Label { get { return name + "  /  " + (artists == null ? "" : string.Join("、", artists.ToArray())); } }
     }
     public class SongUrl { public string url, type; public long size; }

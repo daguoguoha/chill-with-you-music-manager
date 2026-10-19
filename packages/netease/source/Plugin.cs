@@ -16,7 +16,7 @@ using UnityEngine.Networking;
 
 namespace ChillNeteasePlaylist
 {
-    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.4.2")]
+    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.5.0")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -99,6 +99,8 @@ namespace ChillNeteasePlaylist
         }
         internal void Tick()
         {
+            FavoritesTick();
+            NativeFavoriteTick();
             LyricsTickSafe();
             PlaybackSessionTickSafe();
             ListeningTickSafe();
@@ -160,6 +162,7 @@ namespace ChillNeteasePlaylist
         void ClearQr() { if (qrImage != null) Destroy(qrImage); qrImage = null; }
         void Login()
         {
+            ResetFavorites();
             ResetPlaybackSessionAccount();
             ResetListeningAccount();
             qrPolling = false; ClearQr();
@@ -201,10 +204,11 @@ namespace ChillNeteasePlaylist
                 }
                 return all;
             }, delegate(object result)
-            { playlists = (List<Playlist>)result; status = "已读取 " + playlists.Count + " 个歌单，选择左侧歌单。"; });
+            { playlists = (List<Playlist>)result; playlists.RemoveAll(p => p.id == RecommendationId); playlists.Insert(0, new Playlist { id = RecommendationId, name = RecommendationTitle }); RefreshFavorites(); nativeMenuVersion = -1; status = "已读取 " + playlists.Count + " 个歌单，选择左侧歌单。"; });
         }
         void OpenPlaylist(long id, string title)
         {
+            if (id == RecommendationId) { OpenRecommendations(); return; }
             status = "正在读取歌单「" + title + "」…";
             Run(delegate { return JsonConvert.DeserializeObject<List<Song>>(Bridge.Take(Bridge.NeteaseGetPlaylistSongs(id, 1))) ?? new List<Song>(); }, delegate(object result)
             { songs = (List<Song>)result; selectedPlaylistId = id; selectedPlaylistTitle = title; query = ""; songScroll = Vector2.zero; showImport = false; status = title + " · " + songs.Count + " 首。点击歌曲播放。"; RegisterNativePlaylist(); });
@@ -236,6 +240,7 @@ namespace ChillNeteasePlaylist
         }
         void OnDestroy()
         {
+            CloseNativeFavorite();
             ClosePlaybackSession();
             CloseLyrics();
             CloseListening();

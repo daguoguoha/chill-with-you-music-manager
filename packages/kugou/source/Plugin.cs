@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillKuGouPlaylist
 {
-    [BepInPlugin("local.chill.kugouplaylist", "酷狗音乐歌单", "1.2.1")]
+    [BepInPlugin("local.chill.kugouplaylist", "酷狗音乐歌单", "1.3.0")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -97,6 +97,8 @@ namespace ChillKuGouPlaylist
         }
         internal void Tick()
         {
+            FavoritesTick();
+            NativeFavoriteTick();
             LyricsTickSafe();
             PlaybackSessionTickSafe();
             ListeningTickSafe();
@@ -159,6 +161,7 @@ namespace ChillKuGouPlaylist
         void ClearQr() { if (qrImage != null) Destroy(qrImage); qrImage = null; }
         void Login()
         {
+            ResetFavorites();
             ResetPlaybackSessionAccount();
             ResetListeningAccount();
             requestIssue=null; qrPolling = false; ClearQr();
@@ -188,10 +191,11 @@ namespace ChillKuGouPlaylist
                 UserPlaylists page = JsonConvert.DeserializeObject<UserPlaylists>(Bridge.UserPlaylists());
                 return Rules.MergePlaylists(page);
             }, delegate(object result)
-            { playlists = (List<Playlist>)result; nativeMenuVersion = -1; status = "已读取 " + playlists.Count + " 个歌单，选择左侧歌单。"; });
+            { playlists = (List<Playlist>)result; playlists.RemoveAll(p => p.id == RecommendationId); playlists.Insert(0, new Playlist { id = RecommendationId, name = RecommendationTitle }); RefreshFavorites(); nativeMenuVersion = -1; nativeMenuVersion = -1; status = "已读取 " + playlists.Count + " 个歌单，选择左侧歌单。"; });
         }
         void OpenPlaylist(string id, string title)
         {
+            if (id == RecommendationId) { OpenRecommendations(); return; }
             status = "正在读取歌单「" + title + "」…";
             Run(delegate { return Bridge.Playlist(id); }, delegate(object result)
             { songs = Rules.UniqueSongs((List<Song>)result); selectedPlaylistId = id; selectedPlaylistTitle = title; query = ""; songScroll = Vector2.zero; showImport = false;
@@ -224,6 +228,7 @@ namespace ChillKuGouPlaylist
         }
         void OnDestroy()
         {
+            CloseNativeFavorite();
             ClosePlaybackSession();
             CloseLyrics();
             CloseListening();

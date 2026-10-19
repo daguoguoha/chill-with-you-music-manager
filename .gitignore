@@ -15,3 +15,8 @@
 **/logs/
 tests/test-*/
 tests/failure-*/
+
+# QQ is excluded from this candidate after an antivirus detection.
+/packages/qq/
+**/ChillQQMusic.dll
+**/ChillMusicConnectionCheck.exe

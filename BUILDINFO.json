@@ -1,17 +1,26 @@
 {
-  "Version": "1.5.1-rc.1",
-  "Date": "2026-10-19",
-  "Base": "v1.5.0-rc.1",
-  "Providers": {
-    "netease": "1.4.2",
-    "qq": "1.2.1",
-    "kugou": "1.2.1",
-    "bilibili": "1.2.1",
-    "ximalaya": "1.2.1",
-    "saltplayer": "1.1.1"
+  "Version": "1.6.0-rc.2",
+  "Base": "v1.5.1-rc.1",
+  "IncludedProviders": [
+    "netease",
+    "kugou",
+    "bilibili",
+    "ximalaya",
+    "saltplayer",
+    "progress",
+    "speed"
+  ],
+  "ExcludedProviders": {
+    "qq": "Kaspersky VHO:Backdoor.Win32.Androm.gen detection; no flagged DLL read, executed, rebuilt or packaged"
   },
-  "Speed": "1.0.0",
-  "Progress": "1.0.0",
-  "FiveProviderLiveAccountTests": "not performed",
-  "PitchPreserving": false
+  "OfflineFavoriteChecks": 30,
+  "IndependentInstallChecks": 20,
+  "ManagerRegression": {
+    "Passed": 21,
+    "Total": 21
+  },
+  "NoUserData": true,
+  "NoPrivatePlugins": true,
+  "Prerelease": true,
+  "RecommendationChecks": 20
 }
