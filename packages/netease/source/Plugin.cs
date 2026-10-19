@@ -16,7 +16,7 @@ using UnityEngine.Networking;
 
 namespace ChillNeteasePlaylist
 {
-    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.4.0")]
+    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.4.1")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -242,7 +242,7 @@ namespace ChillNeteasePlaylist
             Logger.LogInfo("网易云插件对象已销毁。");
             destroying = true; qrPolling = false;
             StopExternal(); ClearQr();
-            foreach (var item in nativeClips) if (item.AudioClip != null) Destroy(item.AudioClip);
+            foreach (var item in nativeClips) ReleaseNativeClip(item);
             foreach (var button in nativeButtons) if (button != null) Destroy(button);
             DisposeUI();
             if (harmony != null) harmony.UnpatchSelf();

@@ -31,5 +31,23 @@
     "bundled_archive": "offline-dependencies/BepInEx.zip",
     "url": "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip",
     "sha256": "82f9878551030f54657792c0740d9d51a09500eeae1fba21106b0c441e6732c4"
+  },
+  "NAudio.Core": {
+    "bundled": true,
+    "version": "2.2.1",
+    "license": "MIT",
+    "source": "https://github.com/naudio/NAudio",
+    "bundled_archive": "offline-dependencies/NAudio.Core.nupkg",
+    "sha256": "794645dbfd30e4880663d52d9d9224d55c301fa54228ff623c95d572c7887347",
+    "downloaded_by_installer": false
+  },
+  "NAudio.Wasapi": {
+    "bundled": true,
+    "version": "2.2.1",
+    "license": "MIT",
+    "source": "https://github.com/naudio/NAudio",
+    "bundled_archive": "offline-dependencies/NAudio.Wasapi.nupkg",
+    "sha256": "c8396b8dbab86a2619edfd9158beaf18c21cb86677099b5594950fd8651b9d1a",
+    "downloaded_by_installer": false
   }
 }

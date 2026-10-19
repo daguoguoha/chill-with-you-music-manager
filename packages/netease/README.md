@@ -1,8 +1,8 @@
-# Chill With You · 网易云音乐 v1.4.0-rc.1
+# Chill With You · 网易云音乐 v1.4.1 (合集内修正版)
 
 歌词与启动续播候选版，保留原生播放器、游戏风格面板、登录与播放记录功能。
 
-[下载完整一键包](https://github.com/daguoguoha/chill-with-you-netease-native/releases/tag/v1.4.0-rc.1)，在 Assets 中选择 **ChillNeteaseNative-1.4.0-OneClick.zip**。完整解压，退出游戏后双击安装器，不要只复制 EXE；Source code 压缩包不含完整离线运行依赖。
+本次修正版随 **ChillMusicManager-1.5.0.zip** 合集提供。完整解压，退出游戏后双击安装器，不要只复制 EXE；Source code 压缩包不含完整离线运行依赖。
 
 ## 底部歌词
 
@@ -31,3 +31,7 @@
 ## 开源与验证
 
 源码和构建脚本随包提供；原生桥接与依赖沿用此前版本。第三方项目与许可证见 `THIRD_PARTY_NOTICES.md`、`licenses/` 和 `LICENSE`。详细原使用说明保留在 `PREVIOUS_VERSION_README.md`。验证范围见 `TESTING.md`，其他平台运行结果不代表本平台真实账号验收。
+
+## FLAC 切歌修复
+
+官方接口即使请求 standard 音质也可能返回 FLAC。本版接受 MP3、FLAC、AAC 和 M4A，使用 NAudio 2.2.1（MIT）及 Windows 自带解码器，将高位深 PCM 转成 16 位 PCM 后交给游戏。原生上一首通常先回当前曲开头，快速再点一次回前一首。账号权限限制仍沿用官方返回。

@@ -1,0 +1,28 @@
+{
+  "Checks": [
+    "verify netease",
+    "verify qq",
+    "verify kugou",
+    "verify bilibili",
+    "verify ximalaya",
+    "verify saltplayer",
+    "verify progress",
+    "verify speed",
+    "fresh speed installation",
+    "installed DLL checksum",
+    "speed Disable",
+    "retain config after Disable",
+    "speed Enable",
+    "retain config after Enable",
+    "speed Install",
+    "retain config after Install",
+    "speed Undo",
+    "retain config after Undo",
+    "coexists with netease",
+    "only selected providers installed",
+    "eight-row manager preview rendered",
+    "manager recognizes eight plugins"
+  ],
+  "Passed": 22,
+  "AllPassed": true
+}

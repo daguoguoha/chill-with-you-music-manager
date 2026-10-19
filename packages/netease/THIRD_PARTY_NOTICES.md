@@ -24,3 +24,5 @@ UPSTREAM_NATIVE_BUILDINFO.txt 记录随包原生 DLL 的 Go 模块版本。1.3.0
 安装器新增功能包括 Steam 库发现、内置依赖 SHA256 校验、既有加载器检查、更新备份、安装失败回退及安全停用，采用 GPL-3.0-or-later。
 
 真实播放记录兼容性实现的协议来源见 PLAYBACK_REPORTING.md；没有复制或分发平台网页播放器的整份代码或美术资源。
+
+本版新增 NAudio 2.2.1（MIT），复用 Windows Media Foundation 解码 MP3/FLAC/AAC/M4A。源码 https://github.com/naudio/NAudio ，许可证见 licenses/NAudio-LICENSE.txt。

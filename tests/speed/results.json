@@ -1,0 +1,21 @@
+{
+  "Date": "2026-10-19",
+  "Provider": "netease 1.4.1",
+  "Plugin": "speed 1.0.0",
+  "ActualSourcePitchObserved": [
+    1.5,
+    1,
+    0.75,
+    1
+  ],
+  "RestartRetainedRate": 1.5,
+  "F5PanelRendered": true,
+  "ManagerLifecycleChecks": 22,
+  "ControllerAssertions": 20,
+  "DecoderAssertions": 6,
+  "GameNextFlac": "Payphone -> Walk Thru Fire",
+  "GamePrevious": "Walk Thru Fire -> Payphone (native double click)",
+  "GamePcmErrors": 0,
+  "OtherProvidersLiveTested": false,
+  "WallClockRateMeasurement": "Not used: snapshot interval and concurrent manual changes prevent a reliable measurement. Actual Unity AudioSource.pitch was logged instead."
+}

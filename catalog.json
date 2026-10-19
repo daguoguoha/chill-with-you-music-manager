@@ -1,20 +1,20 @@
 ﻿{
   "Schema": 1,
-  "ManagerVersion": "1.4.0",
+  "ManagerVersion": "1.5.0",
   "Plugins": [
     {
       "Id": "netease",
       "Name": "网易云音乐",
-      "Version": "1.4.0",
+      "Version": "1.4.1",
       "Folder": "packages\\netease",
       "Primary": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
       "Manifest": "ChillNeteaseNative-install.json",
       "Hotkey": "F8",
-      "Hint": "扫码登录后，在原生列表选择网易云歌单。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。",
+      "Hint": "扫码登录后，在原生列表选择网易云歌单。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 修复官方 FLAC 音源被误判为不可播放；解码复用 Windows Media Foundation。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "640ADED1848351B870108D939375B0A6A3B3A920D7A35B5CC82F8C508A1459BE"
+          "Hash": "2F175C7F3FF2052684AB418E1E6FC91F11761E775819D3250AED082B7DD3115C"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNetease.dll",
@@ -23,16 +23,24 @@
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\QRCoder.dll",
           "Hash": "52E2B84298EBDF48F7B58FC9C7A46FB383B1668C51D90D4AD0D7AB388ACC1E0C"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\NAudio.Core.dll",
+          "Hash": "FCF493FC47A2F478A65303886B975FBDBF714CBB1F2D79F7FCE97E4BB16B01A8"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\NAudio.Wasapi.dll",
+          "Hash": "618EF0E49D64E7A66DFE64BBF6AE81705B9D9683D8A9F321E5C3024D666BDF82"
         }
       ],
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "E9777E71BD8849E7790DC00E8A6AA42B6D88D42707E5812B2D5A03D0191A2153"
+          "Hash": "5A31249836B426C67390398E427CAECDC5E74A84B1C197F25F51BE380B2CB635"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "640ADED1848351B870108D939375B0A6A3B3A920D7A35B5CC82F8C508A1459BE"
+          "Hash": "2F175C7F3FF2052684AB418E1E6FC91F11761E775819D3250AED082B7DD3115C"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -49,6 +57,14 @@
         {
           "Path": "offline-dependencies\\QRCoder.nupkg",
           "Hash": "8ADE16246255AE99986FC60B9532DE52B4DB196F00166DAB5EC916ECDBC2B4C2"
+        },
+        {
+          "Path": "offline-dependencies\\NAudio.Core.nupkg",
+          "Hash": "794645DBFD30E4880663D52D9D9224D55C301FA54228FF623C95D572C7887347"
+        },
+        {
+          "Path": "offline-dependencies\\NAudio.Wasapi.nupkg",
+          "Hash": "C8396B8DBAB86A2619EDFD9158BEAF18C21CB86677099B5594950FD8651B9D1A"
         }
       ]
     },
@@ -333,6 +349,36 @@
         {
           "Path": "BepInEx\\plugins\\ChillAudioProgress\\ChillAudioProgress.dll",
           "Hash": "852C306615325013E2DB2DEE8B4D4C40F459B6631BB41725356E87B8C5584CDD"
+        },
+        {
+          "Path": "offline-dependencies\\BepInEx.zip",
+          "Hash": "82F9878551030F54657792C0740D9D51A09500EEAE1FBA21106B0C441E6732C4"
+        }
+      ]
+    },
+    {
+      "Id": "speed",
+      "Name": "播放倍速",
+      "Version": "1.0.0",
+      "Folder": "packages\\speed",
+      "Primary": "BepInEx\\plugins\\ChillPlaybackSpeed\\ChillPlaybackSpeed.dll",
+      "Manifest": "ChillPlaybackSpeedNative-install.json",
+      "Hotkey": "F5",
+      "Hint": "六平台通用，F5 设置 0.5×～2×，切歌和重启保留。仅调整歌曲，不改变游戏速度或角色声音；倍速会改变音调。",
+      "Targets": [
+        {
+          "Path": "BepInEx\\plugins\\ChillPlaybackSpeed\\ChillPlaybackSpeed.dll",
+          "Hash": "8F345F20E96E7636911BD62FFE59FB2CED2F42426DE8A35B17BCDD171AE0A6CC"
+        }
+      ],
+      "Files": [
+        {
+          "Path": "Install.ps1",
+          "Hash": "290618A70E96B40DC8B47038A7190994C12B1757EB9FAAAC9F87B076F09C9E2C"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillPlaybackSpeed\\ChillPlaybackSpeed.dll",
+          "Hash": "8F345F20E96E7636911BD62FFE59FB2CED2F42426DE8A35B17BCDD171AE0A6CC"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",

@@ -45,10 +45,10 @@ internal sealed class ManagerWindow : Form
         Panel header=new NightHeader {Dock=DockStyle.Top,Height=112,BackColor=paper}; Controls.Add(header);
         header.Controls.Add(new Label {Text="CHILL WITH YOU  /  MUSIC",Location=new Point(108,20),Size=new Size(600,22),Font=new Font(Font.FontFamily,9F),ForeColor=muted,BackColor=Color.Transparent});
         header.Controls.Add(new Label {Text="放松时光 · 音乐插件",Location=new Point(104,42),Size=new Size(680,42),Font=new Font(Font.FontFamily,24F),ForeColor=ink,BackColor=Color.Transparent});
-        Label badge=new Label {Text="v1.4.0-rc.1 / 同步歌词",Location=new Point(865,42),Size=new Size(220,32),TextAlign=ContentAlignment.MiddleRight,ForeColor=muted,BackColor=Color.Transparent,Anchor=AnchorStyles.Top|AnchorStyles.Right}; header.Controls.Add(badge);
+        Label badge=new Label {Text="v1.5.0-rc.1 / 播放倍速",Location=new Point(865,42),Size=new Size(220,32),TextAlign=ContentAlignment.MiddleRight,ForeColor=muted,BackColor=Color.Transparent,Anchor=AnchorStyles.Top|AnchorStyles.Right}; header.Controls.Add(badge);
         Panel content=new Panel {Dock=DockStyle.Fill,Padding=new Padding(26,16,26,14),BackColor=paper}; Controls.Add(content); content.BringToFront();
         TableLayoutPanel layout=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=1,RowCount=7};
-        foreach(int height in new[]{68,34,288,48,112,116}) layout.RowStyles.Add(new RowStyle(SizeType.Absolute,height));
+        foreach(int height in new[]{68,34,324,48,112,80}) layout.RowStyles.Add(new RowStyle(SizeType.Absolute,height));
         layout.RowStyles.Add(new RowStyle(SizeType.Percent,100)); content.Controls.Add(layout);
         TableLayoutPanel directory=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=3,RowCount=2};
         directory.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));directory.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,104));directory.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,110));
@@ -119,7 +119,7 @@ internal sealed class ManagerWindow : Form
             output.Text=diagText.ToString();
             if(!string.IsNullOrEmpty(lastMessage))Log(lastMessage);
         }
-        summary.Text=table.Rows.Count+" 个插件（含进度保存）  ·  "+active+" 个启用  ·  "+stopped+" 个停用"+(blocked?"  ·  请查看下方检查结果":"  ·  可以管理插件");
+        summary.Text=table.Rows.Count+" 个插件（含进度、倍速）  ·  "+active+" 个启用  ·  "+stopped+" 个停用"+(blocked?"  ·  请查看下方检查结果":"  ·  可以管理插件");
         foreach(DataGridViewRow row in table.Rows)if(Value((Dictionary<string,object>)row.Tag,"Id")==previousId){table.CurrentCell=row.Cells[0];break;}
         ShowSelected();
     }

@@ -1,16 +1,9 @@
 {
-  "version": "1.4.0-rc.1",
-  "date": "2026-10-18",
-  "base": "v1.3.0-rc.1",
-  "prerelease": true,
-  "lyrics": {
-    "background": "transparent",
-    "decoration_line": false,
-    "toggle": "V",
-    "drag_position": true,
-    "color": "preset or #RRGGBB"
-  },
-  "session_resume": true,
-  "native_bridges_changed": false,
-  "account_duration_credit_verified": false
+  "Version": "1.5.0-rc.1",
+  "Date": "2026-10-19",
+  "Base": "v1.4.0-rc.1",
+  "Added": "speed 1.0.0",
+  "ExistingProvidersUnchanged": false,
+  "PitchPreserving": false,
+  "NetEase": "1.4.1 (FLAC and high-bit-depth PCM decoding fix)"
 }

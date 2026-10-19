@@ -1,4 +1,4 @@
-param([string]$Package=(Split-Path -Parent $PSScriptRoot))
+﻿param([string]$Package=(Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference='Stop'
 $Package=[IO.Path]::GetFullPath($Package)
 $sandbox=Join-Path $PSScriptRoot ('test-'+[Guid]::NewGuid().ToString('N'))
@@ -27,9 +27,9 @@ function Test([string]$Name,[scriptblock]$Body) {
     catch {$results.Add([pscustomobject]@{Name=$Name;Passed=$false;Error=$_.Exception.Message});Write-Output ('FAIL '+$Name+' '+$_.Exception.Message);throw}
 }
 try {
-    Test '无需游戏即可校验六个平台和进度插件' {
+    Test '无需游戏即可校验六个平台、进度和倍速插件' {
         $status=Call Status '' ''
-        Assert ($status.Ok -and $status.Plugins.Count -eq 7) '插件数量不正确'
+        Assert ($status.Ok -and $status.Plugins.Count -eq $catalog.Plugins.Count) '插件数量不正确'
         foreach($p in $catalog.Plugins){$r=Call Verify '' $p.Id;Assert $r.Ok $r.Message}
     }
     $game=Game '六平台共存 中文路径'
@@ -41,7 +41,7 @@ try {
             Assert ($record.Version -eq $p.Version) ('安装记录版本错误 '+$p.Id)
         }
         $status=Call Status $game '';Assert ($status.Diagnostics.Blockers.Count -eq 0) ($status.Diagnostics.Blockers -join ';')
-        Assert (@($status.Plugins | Where-Object {$_.Enabled -and -not $_.NeedsRepair}).Count -eq 7) '共存状态错误'
+        Assert (@($status.Plugins | Where-Object {$_.Enabled -and -not $_.NeedsRepair}).Count -eq $catalog.Plugins.Count) '共存状态错误'
     }
     $sentinel=Join-Path $game 'BepInEx\plugins\ChillQQMusicPlaylist\account\fixture.txt'
     New-Item -ItemType Directory -Path (Split-Path -Parent $sentinel) -Force | Out-Null
@@ -193,7 +193,7 @@ try {
         Assert ($process.ExitCode -eq 0 -and (Test-Path -LiteralPath $image)) '界面渲染失败'
         $ui=Get-Content -LiteralPath ($image+'.json') -Raw -Encoding UTF8 | ConvertFrom-Json
         Assert ($ui.Status.Diagnostics.Blockers.Count -eq 0) ('界面后端扫描失败：'+($ui.Status.Diagnostics.Blockers -join ';'))
-        Assert (@($ui.Status.Plugins | Where-Object {$_.Enabled -and -not $_.NeedsRepair}).Count -eq 7) '图形界面未正确识别七个插件'
+        Assert (@($ui.Status.Plugins | Where-Object {$_.Enabled -and -not $_.NeedsRepair}).Count -eq $catalog.Plugins.Count) '图形界面未正确识别全部插件'
         Assert ($ui.InstallEnabled -and $ui.DisableEnabled) '图形界面操作按钮状态错误'
     }
 } finally {
