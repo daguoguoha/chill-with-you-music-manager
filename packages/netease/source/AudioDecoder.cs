@@ -55,7 +55,7 @@ namespace ChillNeteasePlaylist
     }
     public static class AudioDecoder
     {
-        const long InMemoryLimit = 128L * 1024 * 1024;
+        const long InMemoryLimit = 32L * 1024 * 1024;
         const long PcmLimit = 1024L * 1024 * 1024;
         sealed class StandardProvider : IWaveProvider
         {
@@ -68,6 +68,36 @@ namespace ChillNeteasePlaylist
         // before using the common bounded 16-bit PCM storage and Unity callbacks.
         internal static IWaveProvider Pcm16(IWaveProvider source)
         { return new StandardProvider(source).ToSampleProvider().ToWaveProvider16(); }
+        sealed class ManagedMp3 : ISampleProvider, IDisposable
+        {
+            readonly NLayer.MpegFile reader;
+            public WaveFormat WaveFormat { get; private set; }
+            public ManagedMp3(string path)
+            {
+                reader = new NLayer.MpegFile(path);
+                WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(reader.SampleRate, reader.Channels);
+            }
+            public int Read(float[] buffer, int offset, int count) { return reader.ReadSamples(buffer, offset, count); }
+            public void Dispose() { reader.Dispose(); }
+        }
+        sealed class Input : IDisposable
+        {
+            internal IWaveProvider Provider;
+            readonly IDisposable owner;
+            internal Input(IWaveProvider provider, IDisposable resource) { Provider = provider; owner = resource; }
+            public void Dispose() { owner.Dispose(); }
+        }
+        static Input Open(string path, string format)
+        {
+            // MP3 never calls Media Foundation/ACM or requires Windows media features.
+            if (format == "mp3")
+            {
+                var managed = new ManagedMp3(path);
+                return new Input(managed.ToWaveProvider(), managed);
+            }
+            var windows = new MediaFoundationReader(path);
+            return new Input(windows, windows);
+        }
         public static DecodedAudio Decode(byte[] bytes, string format, Func<bool> canceled)
         {
             if (bytes == null || bytes.Length == 0 || bytes.Length > 64 * 1024 * 1024) throw new InvalidOperationException("音频文件为空或超过 64 MB，请选较短曲目。");
@@ -81,11 +111,11 @@ namespace ChillNeteasePlaylist
                 File.WriteAllBytes(inputPath, bytes);
                 int channels, rate;
                 long total = 0;
-                // Keep Media Foundation and COM objects entirely on this worker thread.
-                using (var reader = new MediaFoundationReader(inputPath))
+                // Non-MP3 codecs and COM objects remain entirely on the worker thread.
+                using (var reader = Open(inputPath, format))
                 using (var output = new FileStream(pcmPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 65536))
                 {
-                    IWaveProvider normalized = Pcm16(reader);
+                    IWaveProvider normalized = Pcm16(reader.Provider);
                     channels = normalized.WaveFormat.Channels; rate = normalized.WaveFormat.SampleRate;
                     if (channels < 1 || channels > 2 || rate < 8000 || rate > 192000)
                         throw new InvalidOperationException("Windows 未返回可用的 PCM 音频格式。");

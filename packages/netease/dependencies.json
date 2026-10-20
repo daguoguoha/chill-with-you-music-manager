@@ -1,15 +1,15 @@
 {
   "ChillNetease": {
     "bundled": true,
-    "release": "local-1.5.0-daily",
+    "release": "local-1.5.1-playback",
     "source_commit": "4800dd2ac005c3c70e1bf1bc732e00f00556ec48",
     "download": null,
-    "sha256": "eac98cd94d65ba5d11ddcc6da0f227293c2c3474c3054d17c92bfdfd08cca845",
+    "sha256": "1bea853510686cd1de03090d835b413608e101500dc851ec8afc3bc7606eaba0",
     "downloaded_by_installer": false,
     "bundled_archive": "offline-dependencies/ChillNetease.dll",
     "url": "local-source-build:ChillNetease.dll",
     "corresponding_source": "native-source/ChillNetease-source.zip",
-    "source_sha256": "09ef00a6316f276e26ade60aab65113199aff13cb1b7bd34fb7f33fcf6bdbd9c",
+    "source_sha256": "5a5a96682451204fce9fa83fba5175d8bf74d4b4f004e018c81893edffc355d4",
     "original_binary_url": "https://github.com/BeyondtheApex/ChillPatcher/releases/download/3.0.3/ChillNetease.dll",
     "modified": true
   },
@@ -48,6 +48,17 @@
     "source": "https://github.com/naudio/NAudio",
     "bundled_archive": "offline-dependencies/NAudio.Wasapi.nupkg",
     "sha256": "c8396b8dbab86a2619edfd9158beaf18c21cb86677099b5594950fd8651b9d1a",
+    "downloaded_by_installer": false
+  },
+  "NLayer": {
+    "bundled": true,
+    "version": "3.0.0",
+    "license": "MIT",
+    "source": "https://github.com/naudio/NLayer/tree/046c7ce422970f8f0f0bc205d6c6341bcb7debf1",
+    "dll_path_in_package": "lib/netstandard2.0/NLayer.dll",
+    "bundled_archive": "offline-dependencies/NLayer.nupkg",
+    "sha256": "625b215f76453180d499c203f711aceedcce6e855c86a65716c0b1275afcb9c6",
+    "url": "https://api.nuget.org/v3-flatcontainer/nlayer/3.0.0/nlayer.3.0.0.nupkg",
     "downloaded_by_installer": false
   }
 }

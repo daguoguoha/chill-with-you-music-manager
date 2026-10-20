@@ -1,24 +1,24 @@
 {
   "Schema": 1,
-  "ManagerVersion": "1.6.0",
+  "ManagerVersion": "1.6.1",
   "Plugins": [
     {
       "Id": "netease",
       "Name": "网易云音乐",
-      "Version": "1.5.0",
+      "Version": "1.5.1",
       "Folder": "packages\\netease",
       "Primary": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
       "Manifest": "ChillNeteaseNative-install.json",
       "Hotkey": "F8",
-      "Hint": "扫码登录后，在原生列表选择网易云歌单。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 修复官方 FLAC 音源被误判为不可播放；解码复用 Windows Media Foundation。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 歌单顶部新增「每日推荐」，点击时读取最新推荐；当前播放不会自动切换。 新增底部账号红心，喜欢/取消与恢复均已用真实账号验证。",
+      "Hint": "MP3 使用随包纯托管解码，不依赖系统媒体组件；新接口异常会回退；下载失败有界重试并刷新地址。失败日志包含阶段与状态码。其他格式仍依赖 Windows 媒体组件。F8 打开面板。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "960A07504CB822E4EDE022DFBEB3DB8C81BFC8C41DC020F9A53E47547AB6862E"
+          "Hash": "5BA843A25E4F5D76B6025DDCBD438F9668232EDE7DE89F834C71BAC2A405901B"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNetease.dll",
-          "Hash": "EAC98CD94D65BA5D11DDCC6DA0F227293C2C3474C3054D17C92BFDFD08CCA845"
+          "Hash": "1BEA853510686CD1DE03090D835B413608E101500DC851EC8AFC3BC7606EABA0"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\QRCoder.dll",
@@ -31,16 +31,20 @@
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\NAudio.Wasapi.dll",
           "Hash": "618EF0E49D64E7A66DFE64BBF6AE81705B9D9683D8A9F321E5C3024D666BDF82"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\NLayer.dll",
+          "Hash": "F1DB8B641171799231AEE40712B01ED439611EBDEDA9324D4F5A524C34454E11"
         }
       ],
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "6E93DF0F3DC04A3F21ECD069C7FF1D105FAD96F5B581A745D1A83808C8A3F150"
+          "Hash": "0803B31168B6A70CF38EDEC462658B86759348D0F3681E9CE1346FD688C2FAF2"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "960A07504CB822E4EDE022DFBEB3DB8C81BFC8C41DC020F9A53E47547AB6862E"
+          "Hash": "5BA843A25E4F5D76B6025DDCBD438F9668232EDE7DE89F834C71BAC2A405901B"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -48,7 +52,7 @@
         },
         {
           "Path": "offline-dependencies\\ChillNetease.dll",
-          "Hash": "EAC98CD94D65BA5D11DDCC6DA0F227293C2C3474C3054D17C92BFDFD08CCA845"
+          "Hash": "1BEA853510686CD1DE03090D835B413608E101500DC851EC8AFC3BC7606EABA0"
         },
         {
           "Path": "offline-dependencies\\ChillNetease.h",
@@ -65,6 +69,14 @@
         {
           "Path": "offline-dependencies\\NAudio.Wasapi.nupkg",
           "Hash": "C8396B8DBAB86A2619EDFD9158BEAF18C21CB86677099B5594950FD8651B9D1A"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\NLayer.dll",
+          "Hash": "F1DB8B641171799231AEE40712B01ED439611EBDEDA9324D4F5A524C34454E11"
+        },
+        {
+          "Path": "offline-dependencies\\NLayer.nupkg",
+          "Hash": "625B215F76453180D499C203F711ACEEDCCE6E855C86A65716C0B1275AFCB9C6"
         }
       ]
     },

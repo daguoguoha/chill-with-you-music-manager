@@ -49,6 +49,7 @@ namespace ChillNeteasePlaylist
                     IntPtr error = NeteaseGetLastError();
                     string reason = error == IntPtr.Zero ? null : Take(error);
                     if (SongRequestPolicy.IsUnavailable(reason)) throw new SongUnavailableException();
+                    throw PlaybackFailure.FromSource(reason);
                 }
                 return Take(response);
             }

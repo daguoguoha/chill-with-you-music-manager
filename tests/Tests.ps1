@@ -1,4 +1,4 @@
-﻿param([string]$Package=(Split-Path -Parent $PSScriptRoot))
+﻿param([string]$Package=(Split-Path -Parent $PSScriptRoot),[string]$PreviousPackage)
 $ErrorActionPreference='Stop'
 $Package=[IO.Path]::GetFullPath($Package)
 $sandbox=Join-Path (Split-Path -Parent $Package) ('manager-heart-test-'+[Guid]::NewGuid().ToString('N'))
@@ -186,6 +186,25 @@ try {
     Test '无效游戏目录无操作副作用' {
         $invalid=Join-Path $sandbox 'invalid';New-Item -ItemType Directory -Path $invalid -Force | Out-Null
         $r=Call Install $invalid bilibili;Assert (-not $r.Ok) '接受无效目录';Assert (@(Get-ChildItem -LiteralPath $invalid -Force).Count -eq 0) '无效目录被写入'
+    }
+    if($PreviousPackage) {
+        Test '网易云旧版升级增加离线解码依赖，撤回后恢复旧版' {
+            $upgrade=Game '网易云旧版升级'
+            $old=Get-Content -LiteralPath (Join-Path $PreviousPackage 'catalog.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+            $oldNet=@($old.Plugins | Where-Object Id -eq 'netease')[0]
+            $newNet=@($catalog.Plugins | Where-Object Id -eq 'netease')[0]
+            $r=Call Install $upgrade netease $PreviousPackage;Assert $r.Ok $r.Message
+            $marker=Join-Path $upgrade 'BepInEx\plugins\ChillNeteasePlaylist\account\fixture.txt'
+            New-Item -ItemType Directory -Path (Split-Path -Parent $marker) -Force | Out-Null
+            [IO.File]::WriteAllText($marker,'upgrade sentinel only, no credentials')
+            $markerHash=Hash $marker
+            $r=Call Install $upgrade netease;Assert $r.Ok $r.Message
+            foreach($t in $newNet.Targets){Assert ((Hash (Join-Path $upgrade $t.Path)) -eq $t.Hash) ('升级文件错误 '+$t.Path)}
+            $r=Call Undo $upgrade netease;Assert $r.Ok $r.Message
+            foreach($t in $oldNet.Targets){Assert ((Hash (Join-Path $upgrade $t.Path)) -eq $t.Hash) ('撤回文件错误 '+$t.Path)}
+            Assert (-not(Test-Path -LiteralPath (Join-Path $upgrade 'BepInEx\plugins\ChillNeteasePlaylist\NLayer.dll'))) '新增解码依赖未撤回'
+            Assert ((Hash $marker) -eq $markerHash) '账号目录标记被修改'
+        }
     }
     Test 'WinForms 界面真实渲染' {
         $image=Join-Path $sandbox 'preview.png'

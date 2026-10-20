@@ -19,6 +19,7 @@ namespace ChillNeteasePlaylist
                 if (canceled()) throw new OperationCanceledException();
                 try { return request(); }
                 catch (SongUnavailableException) { throw; }
+                catch (PlaybackFailure error) { if (!error.Retryable || attempt >= 1) throw; delay(); }
                 catch (InvalidOperationException) { if (attempt >= 1) throw; delay(); }
             }
         }
