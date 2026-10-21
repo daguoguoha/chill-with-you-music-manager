@@ -5,16 +5,16 @@
     {
       "Id": "netease",
       "Name": "网易云音乐",
-      "Version": "1.5.1",
+      "Version": "1.5.2",
       "Folder": "packages\\netease",
       "Primary": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
       "Manifest": "ChillNeteaseNative-install.json",
       "Hotkey": "F8",
-      "Hint": "MP3 使用随包纯托管解码，不依赖系统媒体组件；新接口异常会回退；下载失败有界重试并刷新地址。失败日志包含阶段与状态码。其他格式仍依赖 Windows 媒体组件。F8 打开面板。",
+      "Hint": "MP3 使用随包纯托管解码，不依赖系统媒体组件；新接口异常会回退；下载失败有界重试并刷新地址。失败日志包含阶段与状态码。其他格式仍依赖 Windows 媒体组件。F8 打开面板。 扫码错误会显示具体分类，临时连接错误重试一次。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "5BA843A25E4F5D76B6025DDCBD438F9668232EDE7DE89F834C71BAC2A405901B"
+          "Hash": "BA18B48E316AC4805921E676253A84B3A4B043F234F88740008FFEAACB1DF440"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNetease.dll",
@@ -40,11 +40,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "0803B31168B6A70CF38EDEC462658B86759348D0F3681E9CE1346FD688C2FAF2"
+          "Hash": "7D21DFA106E925AF1974332294E32430628ECE8B25D46C642EC2E384637B03CB"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "5BA843A25E4F5D76B6025DDCBD438F9668232EDE7DE89F834C71BAC2A405901B"
+          "Hash": "BA18B48E316AC4805921E676253A84B3A4B043F234F88740008FFEAACB1DF440"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",

@@ -16,7 +16,7 @@ using UnityEngine.Networking;
 
 namespace ChillNeteasePlaylist
 {
-    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.5.1")]
+    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.5.2")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -141,13 +141,19 @@ namespace ChillNeteasePlaylist
                 Task<object> finished = job; Action<object> done = onDone;
                 job = null; onDone = null; busy = false;
                 if (finished.IsFaulted)
-                { status = "请求未完成，请检查网易云网络和登录状态后重试。"; qrPolling = false; Logger.LogWarning("网易云请求失败：" + finished.Exception.GetBaseException().GetType().Name); }
+                {
+                    Exception failure = finished.Exception.GetBaseException();
+                    QrRequestException qrFailure = failure as QrRequestException;
+                    status = qrFailure == null ? "请求未完成，请检查网易云网络和登录状态后重试。" : qrFailure.Message;
+                    qrPolling = false;
+                    Logger.LogWarning("网易云请求失败：" + (qrFailure == null ? failure.GetType().Name : qrFailure.Message));
+                }
                 else if (!finished.IsCanceled) { try { done(finished.Result); } catch (Exception ex) { status = "处理响应失败，请重试。"; Logger.LogWarning(ex.GetType().Name); } }
             }
             if (ready && qrPolling && !busy && Time.realtimeSinceStartup >= nextPoll)
             {
                 nextPoll = Time.realtimeSinceStartup + 3;
-                Run(delegate { return JsonConvert.DeserializeObject<QrState>(Bridge.Take(Bridge.NeteaseQRCheckStatus())); }, delegate(object result)
+                Run(delegate { return JsonConvert.DeserializeObject<QrState>(Bridge.QrResponse(true)); }, delegate(object result)
                 {
                     QrState qr = (QrState)result;
                     if (qr.statusCode == 803)
@@ -162,11 +168,13 @@ namespace ChillNeteasePlaylist
         void ClearQr() { if (qrImage != null) Destroy(qrImage); qrImage = null; }
         void Login()
         {
+            if (!ready || busy || destroying) return;
+            status = "正在获取登录二维码…";
             ResetFavorites();
             ResetPlaybackSessionAccount();
             ResetListeningAccount();
             qrPolling = false; ClearQr();
-            Run(delegate { return JsonConvert.DeserializeObject<QrState>(Bridge.Take(Bridge.NeteaseQRGetKey())); }, delegate(object result)
+            Run(delegate { return JsonConvert.DeserializeObject<QrState>(Bridge.QrResponse(false)); }, delegate(object result)
             {
                 QrState qr = (QrState)result;
                 Uri loginUri;

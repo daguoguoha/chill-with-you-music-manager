@@ -38,6 +38,18 @@ namespace ChillNeteasePlaylist
             IntPtr p = Utf8(directory);
             try { return NeteaseInit(p); } finally { Marshal.FreeHGlobal(p); }
         }
+        public static string QrResponse(bool poll)
+        {
+            for (int attempt = 0; ; attempt++)
+            {
+                IntPtr response = poll ? NeteaseQRCheckStatus() : NeteaseQRGetKey();
+                if (response != IntPtr.Zero) return Take(response);
+                IntPtr error = NeteaseGetLastError();
+                string reason = error == IntPtr.Zero ? "" : Take(error);
+                if (attempt == 0 && QrRequest.CanRetry(reason)) { System.Threading.Thread.Sleep(500); continue; }
+                throw new QrRequestException(QrRequest.Describe(poll ? "poll" : "key", reason));
+            }
+        }
         public static string SongURL(long id)
         {
             IntPtr p = Utf8("standard");

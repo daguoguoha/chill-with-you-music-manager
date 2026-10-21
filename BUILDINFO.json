@@ -1,6 +1,6 @@
 {
-  "Version": "1.6.1-rc.1",
-  "Base": "v1.6.0-rc.2",
+  "Version": "1.6.1-rc.2",
+  "Base": "v1.6.1-rc.1",
   "IncludedProviders": [
     "netease",
     "kugou",
@@ -19,15 +19,19 @@
   "NoPrivatePlugins": true,
   "Prerelease": true,
   "RecommendationChecks": 20,
-  "NeteaseVersion": "1.5.1",
+  "NeteaseVersion": "1.5.2",
   "PortableMP3Decoder": "NLayer 3.0.0 netstandard2.0",
   "PlaybackPolicyChecks": 38,
   "PlaybackCompatibilityChecks": 21,
   "NativeURLFallback": "fault injection tests passed",
-  "ManagerRegression": {
+  "NativeBridgeSmokeChecks": 3,
+  "IndependentNeteaseOfflineInstaller": true,
+  "QrPolicyChecks": 19,
+  "PreviousManagerRegression": {
     "Passed": 22,
     "Total": 22
   },
-  "NativeBridgeSmokeChecks": 3,
-  "IndependentNeteaseOfflineInstaller": true
+  "QrBridgeSmoke": "created; waiting for scan 801",
+  "LocalRuntimeLoginRestore": true,
+  "LocalRuntimeNativePlayback": true
 }
