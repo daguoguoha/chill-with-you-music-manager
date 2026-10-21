@@ -16,7 +16,7 @@ using UnityEngine.Networking;
 
 namespace ChillNeteasePlaylist
 {
-    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.5.3")]
+    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.5.4")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {

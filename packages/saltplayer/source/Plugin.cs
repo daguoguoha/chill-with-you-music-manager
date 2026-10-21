@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillSaltPlayerPlaylist
 {
-    [BepInPlugin("local.chill.saltplayerplaylist", "椒盐音乐歌单", "1.2.1")]
+    [BepInPlugin("local.chill.saltplayerplaylist", "椒盐音乐歌单", "1.2.2")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {

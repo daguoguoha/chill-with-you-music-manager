@@ -15,7 +15,7 @@ namespace ChillBilibiliPlaylist
     public sealed partial class Plugin
     {
         const string LyricProvider = "bilibili";
-        ConfigEntry<bool> lyricsEnabled;
+        ConfigEntry<bool> lyricsEnabled, lyricsTranslationEnabled;
         ConfigEntry<float> lyricsOffset, lyricsBottom, lyricsX, lyricsY;
         ConfigEntry<int> lyricsSize;
         ConfigEntry<string> lyricsColor;
@@ -23,6 +23,8 @@ namespace ChillBilibiliPlaylist
         string lyricsFile = "", lyricsPaste = "", lyricsImportKey;
         LyricTrack lyricTrack;
         LyricDocument lyricDocument = new LyricDocument();
+        LyricDocument lyricTranslation = new LyricDocument();
+        bool lyricTranslationLoaded, lyricImportTranslation, lyricTaskWithTranslation;
         Task<LyricResult> lyricTask;
         CancellationTokenSource lyricCancellation;
         int lyricEpoch, lyricTaskEpoch;
@@ -35,6 +37,7 @@ namespace ChillBilibiliPlaylist
         void SetupLyrics()
         {
             lyricsEnabled = Config.Bind("Lyrics", "Enabled", true, "显示游戏画面下方的同步歌词，可在歌词设置中独立隐藏。");
+            lyricsTranslationEnabled = Config.Bind("Lyrics", "ShowTranslation", false, "显示外语歌词的中文译文，默认关闭。网易云使用平台译文，其他平台可导入同时间轴翻译LRC；不发送歌词到额外翻译服务。");
             lyricsOffset = Config.Bind("Lyrics", "OffsetSeconds", 0f, new ConfigDescription("歌词同步修正，正数提前，负数延后。", new AcceptableValueRange<float>(-15f, 15f)));
             lyricsBottom = Config.Bind("Lyrics", "BottomMargin", 110f, new ConfigDescription("歌词底边距离屏幕底部的基准像素，随分辨率缩放。", new AcceptableValueRange<float>(30f, 360f)));
             lyricsX = Config.Bind("Lyrics", "PositionX", -1f, new ConfigDescription("拖动后保存的横向位置比例；-1 使用默认居中。", new AcceptableValueRange<float>(-1f, 1f)));
@@ -83,7 +86,7 @@ namespace ChillBilibiliPlaylist
             if ((lyricTrack == null ? null : lyricTrack.Key) != key)
             {
                 CancelLyricLoad();
-                lyricTrack = null; lyricDocument = new LyricDocument(); lyricPosition = 0;
+                lyricTrack = null; lyricDocument = new LyricDocument(); lyricTranslation = new LyricDocument(); lyricTranslationLoaded=false; lyricPosition = 0;
                 lyricsFile = ""; lyricsPaste = ""; lyricsImportKey = null; lyricImport = false;
                 lyricNeedsLoad = key != null; lyricRefresh = false;
                 lyricsMessage = key == null ? "播放本平台音频后可导入歌词" : "正在读取歌词…";
@@ -104,7 +107,7 @@ namespace ChillBilibiliPlaylist
                     if (epoch == lyricEpoch) lyricsMessage = error is OperationCanceledException ? "歌词读取已取消" : "歌词读取未完成 · 可导入 LRC 或重试";
                 }
                 else if (!completed.IsCanceled && epoch == lyricEpoch && lyricTrack != null)
-                { lyricDocument = completed.Result.Document; lyricsMessage = completed.Result.Message; }
+                { lyricDocument = completed.Result.Document; lyricTranslation=completed.Result.Translation; lyricTranslationLoaded=lyricTaskWithTranslation; lyricsMessage = completed.Result.Message; }
             }
             if (!lyricsEnabled.Value && !lyricsSettingsOpen)
             {
@@ -115,7 +118,9 @@ namespace ChillBilibiliPlaylist
             {
                 lyricNeedsLoad = false;
                 LyricTrack requested = lyricTrack;
-                bool refresh = lyricRefresh, importing = lyricImport;
+                bool refresh = lyricRefresh, importing = lyricImport, importTranslation=lyricImportTranslation;
+                bool showTranslation=lyricsTranslationEnabled.Value;lyricTaskWithTranslation=showTranslation || (importing && importTranslation);
+                LyricDocument originalDocument=lyricDocument, translatedDocument=lyricTranslation;
                 string file = lyricsFile, pasted = lyricsPaste;
                 lyricImport = false; lyricRefresh = false;
                 lyricTaskEpoch = lyricEpoch;
@@ -123,7 +128,13 @@ namespace ChillBilibiliPlaylist
                 CancellationToken token = lyricCancellation.Token;
                 lyricTask = Task.Factory.StartNew(delegate
                 {
-                    return importing ? LyricSource.Import(lyricsDirectory, requested, file, pasted, token) : LyricSource.Load(LyricProvider, lyricsDirectory, requested, refresh, token);
+                    if(importing && importTranslation)
+                    {
+                        var original=originalDocument.Lines.Count>0 ? new LyricResult { Document=originalDocument,Translation=translatedDocument } : LyricSource.Load(LyricProvider,lyricsDirectory,requested,false,token);
+                        return LyricSource.ImportTranslation(original,lyricsDirectory,requested,file,pasted,token);
+                    }
+                    var result=importing ? LyricSource.Import(lyricsDirectory,requested,file,pasted,token) : LyricSource.Load(LyricProvider,lyricsDirectory,requested,refresh,token);
+                    return showTranslation ? LyricSource.WithTranslation(result,LyricProvider,lyricsDirectory,requested,refresh,token) : result;
                 }, token);
             }
             if (info == null || info.AudioClip == null || !IsCloud(info)) return;
@@ -140,6 +151,12 @@ namespace ChillBilibiliPlaylist
             if (!lyricsEnabled.Value) CancelLyricLoad();
             else if (lyricDocument.Lines.Count == 0) lyricNeedsLoad = lyricTrack != null;
             Config.Save();
+        }
+        void ToggleLyricTranslation()
+        {
+            lyricsTranslationEnabled.Value=!lyricsTranslationEnabled.Value;Config.Save();
+            if(lyricsTranslationEnabled.Value && !lyricTranslationLoaded && lyricTrack!=null)
+            { CancelLyricLoad();lyricNeedsLoad=true;lyricImport=false;lyricRefresh=false;lyricsMessage="正在读取译文…"; }
         }
         void RequestLyrics(bool import)
         {

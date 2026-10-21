@@ -18,6 +18,7 @@ namespace ChillNeteasePlaylist
         internal const int MaxCharacters = 1024 * 1024;
         internal readonly List<LyricLine> Lines = new List<LyricLine>();
         internal bool Timed;
+        internal bool HasText { get { return Lines.Exists(delegate(LyricLine line){return !string.IsNullOrWhiteSpace(line.Text);}); } }
         static readonly Regex Tag = new Regex(@"\[(\d{1,5}):([0-5]\d)(?:[\.,](\d{1,3}))?\]", RegexOptions.CultureInvariant);
         static readonly Regex Offset = new Regex(@"\[offset:\s*([+-]?\d{1,8})\s*\]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         static readonly Regex Metadata = new Regex(@"^\[(?:ar|al|ti|au|by|re|ve|length|offset):[^\]]*\]\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
@@ -79,6 +80,16 @@ namespace ChillNeteasePlaylist
                 document.Lines.RemoveAt(i);
             }
             return document;
+        }
+        // Match the current original line, never the last translation from another verse.
+        internal string TranslationFor(LyricDocument translated,int index)
+        {
+            if(translated==null || index<0 || index>=Lines.Count || !Timed || !translated.Timed || string.IsNullOrWhiteSpace(Lines[index].Text)) return "";
+            double time=Lines[index].Time;int candidate=translated.IndexAt(time),after=candidate+1;
+            if(after<translated.Lines.Count && (candidate<0 || Math.Abs(translated.Lines[after].Time-time)<Math.Abs(translated.Lines[candidate].Time-time)))candidate=after;
+            if(candidate<0 || Math.Abs(translated.Lines[candidate].Time-time)>0.25) return "";
+            string text=translated.Lines[candidate].Text;
+            return string.IsNullOrWhiteSpace(text) || string.Equals(text,Lines[index].Text,StringComparison.Ordinal) ? "" : text;
         }
         internal int IndexAt(double position)
         {

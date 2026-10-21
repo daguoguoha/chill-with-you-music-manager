@@ -66,7 +66,7 @@ function Get-Dependency($Dependency, [string]$Cache) {
     $bundled = Get-SafeChild (Join-Path $script:InstallRoot 'offline-dependencies') $Dependency.Name
     if (Test-Path -LiteralPath $bundled -PathType Leaf) {
         if ((Get-FileHash -LiteralPath $bundled -Algorithm SHA256).Hash -ne $Dependency.SHA256) {
-            throw ('内置依赖校验不通过：' + $Dependency.Name + '。请重新下载并完整解压 酷狗音乐 v1.3.1 一键安装包。')
+            throw ('内置依赖校验不通过：' + $Dependency.Name + '。请重新下载并完整解压 酷狗音乐 v1.3.2 一键安装包。')
         }
         Write-InstallLog ('使用已校验的内置依赖 ' + $Dependency.Name) | Out-Host
         return $bundled
@@ -104,8 +104,8 @@ function Invoke-Installation([string]$Path) {
     }
     if (Test-Path -LiteralPath (Get-SafeChild $root 'BepInEx\plugins\ChillPatcher\ChillPatcher.dll')) { throw '发现完整 ChillPatcher 插件。请先停用它，避免两个插件同时接管播放器。' }
     $payload = Join-Path $script:InstallRoot 'BepInEx\plugins\ChillKuGouPlaylist\ChillKuGouPlaylist.dll'
-    if (-not (Test-Path -LiteralPath $payload) -or (Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash -ne '0CE3A336F9881444EEBC0C2E6F341526F51A3F68A5739C131E8DF2FC60856ACC') { throw '主插件文件缺失或校验失败，请重新解压原始安装包。' }
-    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillKuGouNative-1.3.1-downloads'
+    if (-not (Test-Path -LiteralPath $payload) -or (Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash -ne 'F927FC7B0F6EF6F39627748BF27D9854E91F23E3666E8984CDED24C50D062C3C') { throw '主插件文件缺失或校验失败，请重新解压原始安装包。' }
+    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillKuGouNative-1.3.2-downloads'
     New-Item -ItemType Directory -Path $cache -Force | Out-Null
     $stage = Join-Path $cache ([Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $stage | Out-Null
@@ -164,8 +164,8 @@ function Invoke-Installation([string]$Path) {
         $manifest = Get-SafeChild $root 'ChillKuGouNative-install.json'
         $history = @()
         if (Test-Path -LiteralPath $manifest) { $history += (Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json).History }
-        $history += [pscustomobject]@{Version='1.3.1'; Date=(Get-Date -Format o); Files=@($plan | Select-Object Path,Hash,Added,BackupPath)}
-        [pscustomobject]@{Version='1.3.1'; GameDirectory=$root; History=$history} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifest -Encoding UTF8
+        $history += [pscustomobject]@{Version='1.3.2'; Date=(Get-Date -Format o); Files=@($plan | Select-Object Path,Hash,Added,BackupPath)}
+        [pscustomobject]@{Version='1.3.2'; GameDirectory=$root; History=$history} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifest -Encoding UTF8
         Write-InstallLog '安装成功。请从 Steam 启动游戏，首次按 F10 扫码登录。'
         Write-InstallLog '打开原生播放列表，在上方下拉菜单选择“酷狗音乐 · 歌单名”。'
     } catch {
@@ -180,7 +180,7 @@ function Invoke-Installation([string]$Path) {
     }
 }
 if ($VerifyDownloadsOnly) {
-    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillKuGouNative-1.3.1-downloads'
+    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillKuGouNative-1.3.2-downloads'
     New-Item -ItemType Directory -Path $cache -Force | Out-Null
     foreach ($dependency in $script:Dependencies) { [void](Get-Dependency $dependency $cache) }
     Write-Output '三个内置依赖 SHA256 校验通过。'

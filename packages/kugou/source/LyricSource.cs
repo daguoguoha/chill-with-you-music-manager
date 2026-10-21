@@ -19,6 +19,7 @@ namespace ChillKuGouPlaylist
     internal sealed class LyricResult
     {
         internal LyricDocument Document = new LyricDocument();
+        internal LyricDocument Translation = new LyricDocument();
         internal string Message;
         internal bool FromLocal;
     }
@@ -101,6 +102,49 @@ namespace ChillKuGouPlaylist
             if (parsed.Lines.Count == 0) return new LyricResult { Message = "暂无歌词 · 可在歌词设置中导入 LRC" };
             try { Save(cache, raw); } catch (IOException) { } catch (UnauthorizedAccessException) { }
             return new LyricResult { Document = parsed, Message = parsed.Timed ? "自动同步歌词" : "纯文本歌词 · 无时间轴" };
+        }
+        internal static string TranslationCacheName(string key)
+        { return Path.ChangeExtension(CacheName(key),"translation.lrc"); }
+        internal static LyricResult WithTranslation(LyricResult original,string provider,string directory,LyricTrack track,bool refresh,CancellationToken cancel)
+        {
+            string cache=Path.Combine(directory,TranslationCacheName(track.Key));
+            cancel.ThrowIfCancellationRequested();
+            // Explicitly imported translations always win; refresh only retries an absent source.
+            if(File.Exists(cache))
+            {
+                try { original.Translation=LyricDocument.Parse(ReadLocal(cache)); }
+                catch(IOException){} catch(UnauthorizedAccessException){} catch(InvalidOperationException){}
+            }
+            if((!original.Translation.HasText || !original.Translation.Timed) && provider=="netease")
+            {
+                try
+                {
+                    long id;
+                    if(long.TryParse(track.Id,out id) && id>0)
+                    {
+                        var json=Get("https://music.163.com/api/song/lyric?id="+id.ToString(CultureInfo.InvariantCulture)+"&lv=-1&kv=-1&tv=-1","https://music.163.com/",cancel);
+                        string raw=(string)json.SelectToken("tlyric.lyric");
+                        original.Translation=LyricDocument.Parse(raw);
+                        cancel.ThrowIfCancellationRequested();
+                        if(original.Translation.HasText && original.Translation.Timed)try{Save(cache,raw);}catch(IOException){}catch(UnauthorizedAccessException){}
+                    }
+                }
+                catch(WebException){cancel.ThrowIfCancellationRequested();}
+                catch(Newtonsoft.Json.JsonException){} catch(InvalidOperationException){}
+            }
+            cancel.ThrowIfCancellationRequested();
+            original.Message+=original.Translation.HasText && original.Translation.Timed ? " · 已载入译文" : " · 暂无译文，可导入翻译LRC";
+            return original;
+        }
+        internal static LyricResult ImportTranslation(LyricResult original,string directory,LyricTrack track,string file,string pasted,CancellationToken cancel)
+        {
+            string raw=string.IsNullOrWhiteSpace(pasted)?ReadLocal(file):pasted;
+            cancel.ThrowIfCancellationRequested();
+            LyricDocument translated=LyricDocument.Parse(raw);
+            if(!translated.Timed || !translated.HasText)throw new InvalidOperationException("翻译歌词需要带时间戳的LRC，请使用与原文相同的时间轴。");
+            Save(Path.Combine(directory,TranslationCacheName(track.Key)),raw);
+            original.Translation=translated;original.Message="已导入译文 · 开启翻译后显示，原文保持不变";
+            return original;
         }
         internal static string DecodeBase64(string value)
         {

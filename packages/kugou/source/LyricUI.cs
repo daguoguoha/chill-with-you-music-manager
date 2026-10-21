@@ -7,7 +7,7 @@ namespace ChillKuGouPlaylist
     public sealed partial class Plugin
     {
         GUIStyle lyricMain, lyricNext, lyricCaption, lyricShadow, lyricNextShadow, lyricWindowStyle;
-        Rect lyricsSettingsRect = new Rect(410, 90, 780, 660);
+        Rect lyricsSettingsRect = new Rect(410, 90, 780, 708);
         Vector2 lyricListScroll;
         Rect lyricOverlayRect;
         bool lyricDragPending;
@@ -56,7 +56,7 @@ namespace ChillKuGouPlaylist
             if (lyricsSettingsOpen)
             {
                 lyricsSettingsRect.width = Mathf.Min(780, screenWidth - 24);
-                lyricsSettingsRect.height = Mathf.Min(660, screenHeight - 24);
+                lyricsSettingsRect.height = Mathf.Min(708, screenHeight - 24);
                 lyricsSettingsRect.x = Mathf.Clamp(lyricsSettingsRect.x, 0, Mathf.Max(0, screenWidth - lyricsSettingsRect.width));
                 lyricsSettingsRect.y = Mathf.Clamp(lyricsSettingsRect.y, 0, Mathf.Max(0, screenHeight - lyricsSettingsRect.height));
                 lyricsSettingsRect = GUI.Window(185002, lyricsSettingsRect, DrawLyricsSettings, "", windowStyle);
@@ -67,6 +67,8 @@ namespace ChillKuGouPlaylist
             int index = lyricDocument.IndexAt(lyricPosition + lyricsOffset.Value);
             currentText = index >= 0 ? lyricDocument.Lines[index].Text : lyricDocument.Lines.Count > 0 ? "♪" : lyricsMessage;
             nextText = index + 1 >= 0 && index + 1 < lyricDocument.Lines.Count ? lyricDocument.Lines[index + 1].Text.Replace('\n', ' ') : "";
+            string translated=lyricsTranslationEnabled.Value ? lyricDocument.TranslationFor(lyricTranslation,index) : "";
+            if(translated.Length>0)nextText=translated;
             if (!lyricDocument.Timed && lyricDocument.Lines.Count > 0) nextText = "纯文本歌词 · 无时间轴";
         }
         void DrawLyricOverlay(int id)
@@ -132,24 +134,28 @@ namespace ChillKuGouPlaylist
                 if (LyricPalette.TryRgb(lyricColorInput, out red, out green, out blue)) { lyricsColor.Value = lyricColorInput.ToUpperInvariant(); Config.Save(); }
                 else lyricsMessage = "颜色请使用 #RRGGBB，例如 #AADFFF。";
             }
-            GUI.Label(new Rect(25, 235, width - 50, 28), "导入当前音频的 LRC 文件，或粘贴带时间戳的歌词", bodyText);
-            string file = Input(new Rect(24, 270, width - 180, 36), lyricsFile, "lyric-file", @"C:\Music\歌曲.lrc");
+            if(GUI.Button(new Rect(24,235,160,34),lyricsTranslationEnabled.Value?"翻译：开":"翻译：关",lyricsTranslationEnabled.Value?primaryButton:buttonStyle)) ToggleLyricTranslation();
+            if(GUI.Button(new Rect(196,235,170,34),lyricImportTranslation?"导入内容：翻译LRC":"导入内容：原文LRC",buttonStyle))
+            { lyricImportTranslation=!lyricImportTranslation;lyricsFile="";lyricsPaste="";lyricsImportKey=null; }
+            Label(new Rect(378,239,width-402,28),"支持导入同时间轴翻译LRC",smallText);
+            GUI.Label(new Rect(25, 283, width - 50, 28), lyricImportTranslation?"导入译文LRC，时间戳须与原文一致，不会覆盖原文":"导入当前音频的 LRC 文件，或粘贴带时间戳的歌词", bodyText);
+            string file = Input(new Rect(24, 318, width - 180, 36), lyricsFile, "lyric-file", @"C:\Music\歌曲.lrc");
             if (file != lyricsFile) { lyricsFile = file; lyricsImportKey = lyricTrack == null ? null : lyricTrack.Key; }
             GUI.enabled = lyricTrack != null && lyricTask == null;
-            if (GUI.Button(new Rect(width - 143, 270, 119, 36), "导入歌词", primaryButton)) RequestLyrics(true);
+            if (GUI.Button(new Rect(width - 143, 318, 119, 36), lyricImportTranslation?"导入译文":"导入歌词", primaryButton)) RequestLyrics(true);
             GUI.enabled = true;
             GUI.SetNextControlName("lyric-paste");
-            string pasted = GUI.TextArea(new Rect(24, 317, width - 48, 80), lyricsPaste, inputStyle);
+            string pasted = GUI.TextArea(new Rect(24, 365, width - 48, 80), lyricsPaste, inputStyle);
             if (pasted.Length > LyricDocument.MaxCharacters) pasted = pasted.Substring(0, LyricDocument.MaxCharacters);
             if (pasted != lyricsPaste) { lyricsPaste = pasted; lyricsImportKey = lyricTrack == null ? null : lyricTrack.Key; }
             var hint = new GUIStyle(mutedText); hint.wordWrap = true;
-            GUI.Label(new Rect(25, 408, width - 190, 43), lyricsMessage, hint);
+            GUI.Label(new Rect(25, 456, width - 190, 43), lyricsMessage, hint);
             GUI.enabled = lyricTrack != null && lyricTask == null;
-            if (GUI.Button(new Rect(width - 154, 409, 130, 34), "重新获取", buttonStyle)) RequestLyrics(false);
+            if (GUI.Button(new Rect(width - 154, 457, 130, 34), "重新获取", buttonStyle)) RequestLyrics(false);
             GUI.enabled = true;
-            float listHeight = Mathf.Max(60, lyricsSettingsRect.height - 499);
-            GUI.Box(new Rect(24, 461, width - 48, listHeight), "", cardStyle);
-            lyricListScroll = GUI.BeginScrollView(new Rect(30, 467, width - 60, listHeight - 12), lyricListScroll, new Rect(0, 0, width - 88, Math.Max(listHeight - 16, lyricDocument.Lines.Count * 34)));
+            float listHeight = Mathf.Max(60, lyricsSettingsRect.height - 547);
+            GUI.Box(new Rect(24, 509, width - 48, listHeight), "", cardStyle);
+            lyricListScroll = GUI.BeginScrollView(new Rect(30, 515, width - 60, listHeight - 12), lyricListScroll, new Rect(0, 0, width - 88, Math.Max(listHeight - 16, lyricDocument.Lines.Count * 34)));
             int selected = lyricDocument.IndexAt(lyricPosition + lyricsOffset.Value);
             int first = Math.Max(0, (int)(lyricListScroll.y / 34));
             int end = Math.Min(lyricDocument.Lines.Count, first + (int)(listHeight / 34) + 2);

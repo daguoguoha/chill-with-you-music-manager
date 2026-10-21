@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+﻿// SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.IO;
 using System.Text;
@@ -75,6 +75,37 @@ class LyricTests
         rejected = false; try { LyricSource.Load("netease", cache, new LyricTrack { Key = "test:cancel" }, true, cancelled); } catch (OperationCanceledException) { rejected = true; }
         Check(rejected, "cancel before network");
         Check(LyricSource.DecodeBase64(Convert.ToBase64String(Encoding.UTF8.GetBytes("[00:01]Synthetic &amp; text"))).Contains("& text"), "base64 and HTML decode");
+        var originalTranslation=LyricDocument.Parse("[00:01]Foreign original\n[00:02]Second original\n[00:03]\n[00:04]Same");
+        var translated=LyricDocument.Parse("[00:01]中文译文\n[00:02.10]第二句\n[00:03]不应显示\n[00:04]Same");
+        Check(originalTranslation.TranslationFor(translated,0)=="中文译文","exact translation timestamp");
+        Check(originalTranslation.TranslationFor(translated,1)=="第二句","small timestamp drift aligned");
+        Check(originalTranslation.TranslationFor(translated,2)=="","blank original clears translation");
+        Check(originalTranslation.TranslationFor(translated,3)=="","duplicate original and translation hidden");
+        Check(originalTranslation.TranslationFor(translated,-1)=="","no translation before first line");
+        Check(originalTranslation.TranslationFor(translated,99)=="","invalid translation index safe");
+        Check(originalTranslation.TranslationFor(LyricDocument.Parse("[00:00]Old verse"),0)=="","missing translation never leaks previous verse");
+        Check(originalTranslation.TranslationFor(LyricDocument.Parse("[00:01]Exact\n[00:01.2]Nearby"),0)=="Exact","closest original timestamp wins");
+        Check(originalTranslation.TranslationFor(LyricDocument.Parse("plain text"),0)=="","untimed translation not guessed");
+        Check(originalTranslation.TranslationFor(null,0)=="","missing document safe");
+        var separate=new LyricTrack {Key="translation:separate",Id="1"};
+        var first=LyricSource.Import(cache,separate,null,"[00:01]Foreign original",CancellationToken.None);
+        string originalCache=Path.Combine(cache,LyricSource.CacheName(separate.Key)),beforeTranslation=File.ReadAllText(originalCache);
+        var paired=LyricSource.ImportTranslation(first,cache,separate,null,"[00:01]中文译文",CancellationToken.None);
+        Check(paired.Document.Lines[0].Text=="Foreign original" && File.ReadAllText(originalCache)==beforeTranslation,"translation import never overwrites original");
+        Check(File.Exists(Path.Combine(cache,LyricSource.TranslationCacheName(separate.Key))),"translation has separate atomic cache");
+        var offlinePair=LyricSource.WithTranslation(LyricSource.Load("bilibili",cache,separate,false,CancellationToken.None),"bilibili",cache,separate,false,CancellationToken.None);
+        Check(offlinePair.Document.TranslationFor(offlinePair.Translation,0)=="中文译文","all providers reload imported translation offline");
+        Check(LyricSource.TranslationCacheName("netease:1")!=LyricSource.TranslationCacheName("kugou:1"),"translation cache separated across platforms");
+        rejected=false;try{LyricSource.ImportTranslation(first,cache,separate,null,"Untimed translation",CancellationToken.None);}catch(InvalidOperationException){rejected=true;}
+        Check(rejected,"translation import requires aligned timed LRC");
+        rejected=false;try{LyricSource.ImportTranslation(first,cache,separate,null,"[00:01]Canceled",cancelled);}catch(OperationCanceledException){rejected=true;}
+        Check(rejected && File.ReadAllText(originalCache)==beforeTranslation,"cancelled translation import preserves existing files");
+        var absent=LyricSource.WithTranslation(new LyricResult(),"ximalaya",cache,new LyricTrack{Key="translation:absent"},false,CancellationToken.None);
+        Check(absent.Translation.Lines.Count==0 && absent.Message.Contains("暂无译文"),"unsupported provider reports absence without guessed endpoint");
+        Check(!LyricDocument.Parse("[00:01]\n[00:02]").HasText,"blank translation timestamps are not a real translation");
+        rejected=false;try{LyricSource.ImportTranslation(first,cache,separate,null,"[00:01]\n[00:02]",CancellationToken.None);}catch(InvalidOperationException){rejected=true;}
+        Check(rejected,"blank imported translation rejected");
+        Check(originalTranslation.TranslationFor(LyricDocument.Parse("[00:01.1]Nearest\n[00:01.2]Farther"),0)=="Nearest","closest future timestamp wins over later nearby lines");
         Console.WriteLine("TOTAL " + passed);
     }
 }

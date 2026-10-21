@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillKuGouPlaylist
 {
-    [BepInPlugin("local.chill.kugouplaylist", "酷狗音乐歌单", "1.3.1")]
+    [BepInPlugin("local.chill.kugouplaylist", "酷狗音乐歌单", "1.3.2")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {

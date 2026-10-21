@@ -42,7 +42,7 @@ namespace ChillNeteasePlaylist
     }
     class TestLog { internal void LogInfo(string s) { } }
     sealed class LyricTrack { internal string Key, Title, Id, Hash, LocalPath; internal double Duration; }
-    sealed class LyricResult { internal LyricDocument Document; internal string Message; }
+    sealed class LyricResult { internal LyricDocument Document; internal LyricDocument Translation = new LyricDocument(); internal string Message; }
     static class LyricSource
     {
         internal static ManualResetEventSlim Started = new ManualResetEventSlim(false), Release = new ManualResetEventSlim(false);
@@ -54,6 +54,10 @@ namespace ChillNeteasePlaylist
             if (Delayed) { Started.Set(); Release.Wait(3000); }
             return new LyricResult { Document = LyricDocument.Parse("[00:01]Synthetic " + track.Id + "\n[00:10]Next " + track.Id), Message = "loaded " + track.Id };
         }
+        internal static LyricResult WithTranslation(LyricResult result,string provider,string dir,LyricTrack track,bool refresh,CancellationToken cancel)
+        { result.Translation=LyricDocument.Parse("[00:01]Synthetic translated "+track.Id);return result; }
+        internal static LyricResult ImportTranslation(LyricResult original,string dir,LyricTrack track,string file,string paste,CancellationToken cancel)
+        { original.Translation=LyricDocument.Parse(paste);return original; }
         internal static LyricResult Import(string dir, LyricTrack track, string file, string paste, CancellationToken cancel) { return Load("", dir, track, false, cancel); }
     }
     public sealed partial class Plugin
@@ -119,8 +123,18 @@ namespace ChillNeteasePlaylist
             RuntimeHost.VDown = false; p.Frame();
             p.NativeService.PlayingMusic = new Bulbul.GameAudioInfo { UUID = "qq:4" }; p.Frame();
             Check(p.lyricTrack == null && p.lyricDocument.Lines.Count == 0, "other provider does not reuse overlay");
+            p.Select(5);p.Complete();
+            Check(!p.lyricsTranslationEnabled.Value && p.lyricTranslation.Lines.Count==0,"translation is opt-in by default");
+            p.ToggleLyricTranslation();p.Frame();p.Complete();
+            Check(p.lyricsTranslationEnabled.Value && p.lyricTranslation.Lines.Count==1,"toggle loads provider translation");
+            Check(p.lyricDocument.Lines[0].Text=="Synthetic 5","translation preserves original");
+            int calls=LyricSource.Calls;p.ToggleLyricTranslation();p.Frame();
+            Check(!p.lyricsTranslationEnabled.Value && LyricSource.Calls==calls,"hide translation without network or track change");
+            p.ToggleLyricTranslation();p.Frame();Check(LyricSource.Calls==calls,"show cached translation immediately");
+            p.Select(6);Check(p.lyricTranslation.Lines.Count==0,"track switch clears previous translation immediately");p.Complete();
+            Check(p.lyricTranslation.Lines[0].Text.Contains("6"),"new track receives own translation");
             p.CloseLyrics(); p.Select(5);
-            Check(p.lyricTrack == null, "destroyed plugin ignores further playback");
+            Check(p.lyricTrack != null && p.lyricTrack.Id == "6", "destroyed plugin ignores further playback");
             Console.WriteLine("TOTAL " + assertions);
         }
         static void NativePause(Plugin p, bool value) { p.NativeService.IsPause = value; }

@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillBilibiliPlaylist
 {
-    [BepInPlugin("local.chill.bilibiliplaylist", "B站歌单", "1.3.1")]
+    [BepInPlugin("local.chill.bilibiliplaylist", "B站歌单", "1.3.2")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
