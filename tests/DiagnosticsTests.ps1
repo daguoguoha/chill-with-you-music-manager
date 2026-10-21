@@ -27,6 +27,47 @@ try {
     Assert ($data.Events.Count -eq 3 -and $data.Events[0].HttpStatus -eq 503 -and $data.Events[0].Provider -eq 'netease' -and $data.Events[1].Category -eq 'decode') '错误分类未保留'
     Assert ((Get-FileHash -LiteralPath $log).Hash -eq $before) '导出修改了游戏日志'
     $r=Export 'shared.zip';Assert (-not $r.Ok) '不得覆盖已有报告'
+    $fixtures=@(
+        @('ConnectionError_HTTP_0','network',0,'','',1),
+        @('ProtocolError_HTTP_403','network',403,'','',2),
+        @('ProtocolError_HTTP_502','network',502,'','',3),
+        @('DataProcessingError_HTTP_200','decode',200,'','',1),
+        @('SEND_80004005','network',$null,'','0x80004005',2),
+        @('InvalidDataException_80131501','decode',$null,'InvalidDataException','0x80131501',3),
+        @('FileLoadException_80131040','dependency',$null,'FileLoadException','0x80131040',1),
+        @('HTTP_429','network',429,'','',2),
+        @('SIZE_LIMIT','playback',$null,'','',3),
+        @('EMPTY_BODY','playback',$null,'','',1),
+        @('AUTH_401','playback',$null,'','',2),
+        @('NETWORK','playback',$null,'','',3),
+        @('STALE_QUEUE','playback',$null,'','',1),
+        @('INVALID_URL','playback',$null,'','',2),
+        @('UNSUPPORTED_FORMAT','playback',$null,'','',3),
+        @('AUDIO_CLIP','playback',$null,'','',1),
+        @('InvalidOperationException','playback',$null,'InvalidOperationException','',2)
+    )
+    $lines=@(foreach($provider in @('Netease','Kugou','Bilibili','Ximalaya','SaltPlayer')) {
+        foreach($f in $fixtures){'[Warning: '+$provider+'] 播放失败 stage=下载 code='+$f[0]+' hresult=0x80131509 attempt='+$f[5]+'/3 Cookie='+$secret}
+    })
+    $lines+=@(
+        '[Warning: Netease] 播放失败 stage=下载 code=ConnectionError_HTTP_403_PRIVATE_SENTINEL hresult=0x80131509',
+        '[Warning: Netease] 播放失败 stage=下载 code=SEND_80004005_PRIVATE_SENTINEL hresult=0x80131509',
+        '[Warning: Netease] 播放失败 stage=下载 code=PRIVATE_SENTINEL hresult=0x80131509',
+        '[Warning: Netease] 播放失败 stage=下载 code=ProtocolError_HTTP_403?Cookie=PRIVATE_SENTINEL hresult=0x80131509'
+    )
+    [IO.File]::WriteAllText($log,($lines -join "`n"))
+    $r=Export 'playback.zip';Assert $r.Ok $r.Message
+    $text=ReadReport 'playback.zip';$data=$text | ConvertFrom-Json
+    Assert ($data.DiagnosticsRevision -eq 2 -and $data.Events.Count -eq 89) '下载诊断修订或事件数量错误'
+    Assert (-not $text.Contains('PRIVATE_SENTINEL') -and -not $text.Contains($secret)) '下载错误码泄漏未允许文本'
+    $i=0
+    foreach($provider in @('netease','kugou','bilibili','ximalaya','saltplayer')) {
+        foreach($f in $fixtures){
+            $e=$data.Events[$i++]
+            Assert ($e.Provider -eq $provider -and $e.Code -ceq $f[0] -and $e.Category -eq $f[1] -and $e.HttpStatus -eq $f[2] -and $e.Exception -ceq $f[3] -and $e.CodeHResult -ceq $f[4] -and $e.Attempt -eq $f[5] -and $e.HResult -eq '0x80131509') ('下载诊断丢失 '+$provider+' '+$f[0])
+        }
+    }
+    foreach($e in $data.Events[85..88]){Assert ($e.Code -eq '' -and $e.HttpStatus -eq $null -and $e.CodeHResult -eq '') '未知错误码应被丢弃'}
     $content=(1..5100 | ForEach-Object {'[Error: Netease] 网络失败 HTTP 502'}) -join "`n"
     [IO.File]::WriteAllText($log,$content)
     $r=Export 'bounded.zip';Assert $r.Ok $r.Message
@@ -44,5 +85,5 @@ try {
     $ui=Get-Content ($image+'.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     Assert ($ui.ExportEnabled -and $ui.ExportVisible) '导出按钮不可用或被截断'
     Copy-Item -LiteralPath $image -Destination (Join-Path (Split-Path -Parent $Package) 'diagnostics-preview.png')
-    Write-Output 'PASS report missing log, shared read, privacy, classifications, no mutation/overwrite, bounds, integrity and UI'
+    Write-Output 'PASS report missing log, shared read, privacy, 85 playback diagnostics across five providers, unknown code rejection, no mutation/overwrite, bounds, integrity and UI'
 } finally {if([IO.Path]::GetFullPath($sandbox).StartsWith([IO.Path]::GetTempPath(),[StringComparison]::OrdinalIgnoreCase)){Remove-Item -LiteralPath $sandbox -Recurse -Force}}

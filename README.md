@@ -2,6 +2,8 @@
 
 [下载完整一键包](https://github.com/daguoguoha/chill-with-you-music-manager/releases/tag/v2.0.1)，选择 **ChillMusicManager-2.0.1.zip**。完整解压后退出游戏，双击 `ChillMusicManager.exe`，只给需要的平台执行“安装 / 修复”。GitHub 的 Source code 压缩包仅用于查看源码，安装请使用 Release 完整包。
 
+如果正在反馈播放失败，请同时使用[错误报告诊断补丁 1](DIAGNOSTICS.md)，以保留旧版报告遗漏的具体下载错误码。补丁支持 2.0.0 / 2.0.1，只替换管理器的导出脚本，无需重装游戏插件。下载位于同一 Release 的 `ChillMusicManager-DiagnosticsFix-1.zip` 附件；这不是播放故障修复包。
+
 **2.0.1新增可选歌词翻译**。在平台面板打开“歌词设置”，将“翻译”切为开，原文保持在上方、译文显示在下方。网易云优先读取平台中文译文；其他平台支持导入同时间轴翻译LRC。译文独立缓存，不覆盖原文，默认关闭，不使用额外机器翻译服务。详见 [LYRIC_TRANSLATION.md](LYRIC_TRANSLATION.md)。
 
 本次2.0大更新统一修复五平台随机播放：左侧保留歌单顺序，实际随机切歌并定位当前行，切换歌单保留随机模式；同步 MP3 托管解码、长音轨内存控制，并为酷狗、B站、喜马拉雅补齐音频下载重试和错误分类。保留网易云扫码诊断修复。网易云/酷狗优先高码率MP3，五平台使用32位浮点中间缓冲，见[AUDIO_QUALITY.md](AUDIO_QUALITY.md)。更新保留账号、歌词、歌单和续播记录，详见 [PLATFORM_SYNC.md](PLATFORM_SYNC.md)。

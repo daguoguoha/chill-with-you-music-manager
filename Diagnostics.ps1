@@ -45,21 +45,32 @@ function Export-ErrorReport([string]$Root,[string]$Destination) {
                     if($logger -match $known[1]){$provider=$known[0];break}
                 }
                 $category='other'
-                foreach($known in @(@('storage','磁盘|空间|权限|UnauthorizedAccessException|IOException'),@('dependency','DllNotFoundException|FileNotFoundException|NLayer|mfplat|MediaFoundation'),@('tls','TLS|SSL|证书|certificate'),@('timeout','超时|timed?\s*out|TimeoutException'),@('network','连接|网络|WebException|HttpRequestException|HTTP'),@('decode','解码|decode|InvalidDataException'),@('qr-login','扫码|二维码|QR'),@('playback','播放|音频|AudioClip'))) {
+                foreach($known in @(@('storage','磁盘|空间|权限|UnauthorizedAccessException|IOException'),@('dependency','DllNotFoundException|FileNotFoundException|FileLoadException|BadImageFormatException|NLayer|mfplat|MediaFoundation'),@('tls','TLS|SSL|证书|certificate'),@('timeout','超时|timed?\s*out|TimeoutException'),@('network','连接|网络|WebException|HttpRequestException|HTTP'),@('decode','解码|decode|InvalidDataException'),@('qr-login','扫码|二维码|QR'),@('playback','播放|音频|AudioClip'))) {
                     if($line -match $known[1]){$category=$known[0];break}
                 }
-                $exception='';if($line -match '\b(UnauthorizedAccessException|IOException|DllNotFoundException|FileNotFoundException|TimeoutException|WebException|HttpRequestException|InvalidDataException|OutOfMemoryException|NullReferenceException|IndexOutOfRangeException)\b'){$exception=$Matches[1]}
+                # Match the complete token against known producers, never export arbitrary code text.
+                $exceptionTypes='UnauthorizedAccessException|IOException|DirectoryNotFoundException|DllNotFoundException|FileNotFoundException|FileLoadException|BadImageFormatException|TimeoutException|WebException|HttpRequestException|InvalidDataException|OutOfMemoryException|NullReferenceException|IndexOutOfRangeException|InvalidOperationException|OperationCanceledException|TaskCanceledException|NotSupportedException|ArgumentException|JsonReaderException|JsonSerializationException'
+                $exception='';if($line -match ('\b('+ $exceptionTypes +')\b')){$exception=$Matches[1]}
                 $http=$null;if($line -match '(?i)\bHTTP(?:\s+status)?\s*[:=]?\s*([45]\d\d)\b'){$http=[int]$Matches[1]}
                 $stage='';if($line -match 'stage=(取地址|下载|解码|加载|创建音频)(?:\s|$)'){$stage=$Matches[1]}
-                $code='';if($line -match '\bcode=(NETWORK|RESPONSE|AUTH_[0-9]{3}|API_[0-9]{3}|HTTP_[0-9]{3}|SIZE|FORMAT|CANCELLED)(?:\s|$)'){$code=$Matches[1]}
+                $knownCodes='NETWORK|RESPONSE|AUTH_[0-9]{3}|API_[0-9]{3}|HTTP_[1-5][0-9]{2}|SIZE|FORMAT|CANCELLED|STALE_QUEUE|INVALID_URL|UNSUPPORTED_FORMAT|SIZE_LIMIT|EMPTY_BODY|AUDIO_CLIP|SEND_[0-9A-Fa-f]{8}|(?:ConnectionError|ProtocolError|DataProcessingError)_HTTP_(?:0|[1-5][0-9]{2})|(?:'+$exceptionTypes+')(?:_[0-9A-Fa-f]{8})?'
+                $code='';if($line -cmatch ('\bcode=('+ $knownCodes +')(?:\s|$)')){$code=$Matches[1]}
+                $codeHResult=''
+                if($code -cmatch '^(?:(?:ConnectionError|ProtocolError|DataProcessingError)_)?HTTP_(0|[1-5][0-9]{2})$'){$http=[int]$Matches[1]}
+                if($code -cmatch ('^('+ $exceptionTypes +')(?:_([0-9A-Fa-f]{8}))?$')) {
+                    $exception=$Matches[1];if($Matches[2]){$codeHResult='0x'+$Matches[2]}
+                } elseif($code -cmatch '^SEND_([0-9A-Fa-f]{8})$'){$codeHResult='0x'+$Matches[1]}
+                if($code -cmatch '^(?:ConnectionError|ProtocolError)_HTTP_|^SEND_'){$category='network'}
+                elseif($code -cmatch '^DataProcessingError_HTTP_'){$category='decode'}
                 $hresult='';if($line -match '\bhresult=(0x[0-9A-Fa-f]{8})(?:\s|$)'){$hresult=$Matches[1]}
-                $events.Add([pscustomobject]@{Level=$level;Provider=$provider;Category=$category;Exception=$exception;Stage=$stage;Code=$code;HResult=$hresult;HttpStatus=$http})
+                $attempt=$null;if($line -match '\battempt=([1-3])/3(?:\s|$)'){$attempt=[int]$Matches[1]}
+                $events.Add([pscustomobject]@{Level=$level;Provider=$provider;Category=$category;Exception=$exception;Stage=$stage;Code=$code;HResult=$hresult;CodeHResult=$codeHResult;HttpStatus=$http;Attempt=$attempt})
                 if($events.Count -gt 200){$events.RemoveAt(0);$truncated=$true}
             }
             $logState='read'
         } catch {$logState='unavailable'}
     }
-    $report=[ordered]@{Schema=1;CreatedUtc=[DateTime]::UtcNow.ToString('o');ManagerVersion=$script:Catalog.ManagerVersion;Environment=[ordered]@{WindowsVersion=[Environment]::OSVersion.Version.ToString();OS64Bit=[Environment]::Is64BitOperatingSystem;Process64Bit=[Environment]::Is64BitProcess;CLR=[Environment]::Version.ToString();MediaFoundationPresent=(Test-Path -LiteralPath (Join-Path $env:WINDIR 'System32\mfplat.dll'));ProxyEnvironmentConfigured=[bool]($env:HTTP_PROXY -or $env:HTTPS_PROXY -or $env:ALL_PROXY)};Plugins=$plugins;LogState=$logState;LogTruncated=$truncated;Events=$events.ToArray()}
+    $report=[ordered]@{Schema=1;DiagnosticsRevision=2;CreatedUtc=[DateTime]::UtcNow.ToString('o');ManagerVersion=$script:Catalog.ManagerVersion;Environment=[ordered]@{WindowsVersion=[Environment]::OSVersion.Version.ToString();OS64Bit=[Environment]::Is64BitOperatingSystem;Process64Bit=[Environment]::Is64BitProcess;CLR=[Environment]::Version.ToString();MediaFoundationPresent=(Test-Path -LiteralPath (Join-Path $env:WINDIR 'System32\mfplat.dll'));ProxyEnvironmentConfigured=[bool]($env:HTTP_PROXY -or $env:HTTPS_PROXY -or $env:ALL_PROXY)};Plugins=$plugins;LogState=$logState;LogTruncated=$truncated;Events=$events.ToArray()}
     Add-Type -AssemblyName System.IO.Compression
     $file=$null;$archive=$null;$created=$false
     try {
