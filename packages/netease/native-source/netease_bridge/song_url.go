@@ -40,7 +40,7 @@ func songURLResponse(id int64, body []byte) (SongURL, error) {
 
 // The fallback covers transport and malformed-response failures as well as
 // empty URLs. Error text contains classifications only, never signed URLs.
-func resolveSongURL(id int64, primary func() (float64, []byte, error), fallback func() (float64, []byte)) (SongURL, error) {
+func resolveSongURL(id int64, primary func() (float64, []byte, error), fallback func() (float64, []byte, error)) (SongURL, error) {
 	code, body, err := primary()
 	if err == nil && code == 200 {
 		if value, parseErr := songURLResponse(id, body); parseErr == nil {
@@ -50,7 +50,10 @@ func resolveSongURL(id int64, primary func() (float64, []byte, error), fallback 
 	if err == nil && (code == 301 || code == 401 || code == 403) {
 		return SongURL{}, fmt.Errorf("Song URL API returned code: %.0f", code)
 	}
-	fallbackCode, fallbackBody := fallback()
+	fallbackCode, fallbackBody, fallbackErr := fallback()
+	if fallbackErr != nil {
+		return SongURL{}, safeSongRequestError(fallbackErr)
+	}
 	if fallbackCode != 200 {
 		return SongURL{}, fmt.Errorf("Fallback API returned code: %.0f", fallbackCode)
 	}

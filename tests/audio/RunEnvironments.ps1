@@ -15,6 +15,7 @@ foreach($id in @('netease','kugou','bilibili','ximalaya','saltplayer')) {
     $test=[IO.File]::ReadAllText((Join-Path $PSScriptRoot 'EnvironmentTests.cs')).Replace('PLATFORM_NAMESPACE',$map[$id])
     $test=$test.Replace('DIAGNOSTIC_ID',$(if($id -eq 'netease'){'123'}else{'"fixture"'}))
     $sources=@((Join-Path $source 'AudioDecoder.cs'),(Join-Path $source 'PlaybackFailure.cs'))
+    if($id -eq 'netease') {$sources+=Join-Path $source 'SongRequestPolicy.cs'}
     if($id -eq 'saltplayer') {
         $test=$test.Replace('DECODE_EXPRESSION','AudioDecoder.DecodeFile(source,canceled)')
         $sources+=Join-Path $source 'Models.cs'

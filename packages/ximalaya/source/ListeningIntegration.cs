@@ -171,7 +171,7 @@ namespace ChillXimalayaPlaylist
         {
             ResetListening(listeningAllowed); listeningSwitchingAccount = true;
         }
-        void OnApplicationQuit() { ClosePlaybackSession(); CloseListening(); }
+        void OnApplicationQuit() { try { ClosePlaybackSession(); CloseListening(); } finally { CloseAudioCache(); } }
         void CloseListening()
         {
             if (listeningClosed) return;

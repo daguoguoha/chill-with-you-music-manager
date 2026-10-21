@@ -1,6 +1,6 @@
 {
-  "Version": "2.0.1",
-  "Base": "v2.0.0",
+  "Version": "2.0.2",
+  "Base": "v2.0.1",
   "IncludedProviders": [
     "netease",
     "kugou",
@@ -11,11 +11,11 @@
     "speed"
   ],
   "ProviderVersions": {
-    "netease": "1.5.4",
-    "kugou": "1.3.2",
-    "bilibili": "1.3.2",
-    "ximalaya": "1.3.2",
-    "saltplayer": "1.2.2",
+    "netease": "1.5.6",
+    "kugou": "1.3.3",
+    "bilibili": "1.3.3",
+    "ximalaya": "1.3.3",
+    "saltplayer": "1.2.3",
     "progress": "1.0.0",
     "speed": "1.0.0"
   },
@@ -42,7 +42,7 @@
   },
   "OfflineCoreGroups": 14,
   "HighQualityNeteaseProbe": 3,
-  "LocalPreservedFiles": 108,
+  "LocalPreservedFiles": 118,
   "TestDetails": "TESTING.md",
   "PlaylistFocusChecksPerProvider": 13,
   "QrPolicyChecks": 29,
@@ -63,5 +63,52 @@
   "LyricTranslationProvider": "Netease platform tlyric; all providers aligned LRC import",
   "LyricTranslationLiveAlignedLines": 102,
   "LocalRuntimeLyricTranslation": true,
-  "LocalRuntimeLyricSettingsVisible": true
+  "LocalRuntimeLyricSettingsVisible": true,
+  "NetworkRecovery": {
+    "RequestTimeoutSeconds": 12,
+    "ResponseLimitBytes": 1048576,
+    "SafeNetworkCodes": 7,
+    "PolicyChecks": 67,
+    "DiagnosticsCases": 120,
+    "NativeTests": "netease_bridge including local TLS, transport faults, redirects and response bounds",
+    "LiveProfiles": [
+      "inherited proxy",
+      "direct",
+      "invalid proxy"
+    ],
+    "OriginalFailureCause": "Old fallback masked transport errors as API_520; exact original transport failure unknown",
+    "SystemHTTPAudioDownloader": true,
+    "AudioDownloadChecks": 41,
+    "GameplayVerification": "Full downloads recovered; final 1.5.6 verified three progressive tracks, buffering, seek recovery, manual pause and normal quit cleanup",
+    "AudioDeadlineMinimumSeconds": 120,
+    "AudioDeadlineMaximumSeconds": 600,
+    "AudioReadIdleTimeoutSeconds": 20,
+    "AudioConnectTimeoutSeconds": 15,
+    "DownloadProgress": true,
+    "AudioDeadlineAssumedBytesPerSecond": 16384
+  },
+  "AudioCache": {
+    "CleanupOnQuit": true,
+    "CleanupOnStartup": true,
+    "DeleteOnClosePcm": true,
+    "ChecksPerProvider": 16,
+    "LocalOrphansRemoved": 57,
+    "LocalOrphanBytesRemoved": 1157257554,
+    "RuntimeExitRemainingNeteaseAudioFiles": 0
+  },
+  "ProgressiveAudio": {
+    "Provider": "netease",
+    "Format": "Full MP3",
+    "StartupBufferSeconds": 8,
+    "ResumeBufferSeconds": 3,
+    "OtherFormats": "Full download fallback",
+    "GameplayVerified": true,
+    "DecoderChecks": 33,
+    "RuntimeTracks": 3,
+    "RealMp3Streams": 7,
+    "RuntimeBufferWait": true,
+    "RuntimeSeekRecovery": true,
+    "RuntimeManualPause": true
+  },
+  "SessionIntegrationChecks": 23
 }

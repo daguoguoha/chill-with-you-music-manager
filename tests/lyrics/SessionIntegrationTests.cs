@@ -87,6 +87,13 @@ namespace ChillNeteasePlaylist
             Check(p.NativeService.IsPause && !source.isPlaying && source.time == 34, "paused session restores paused at saved position");
             p.NativeService.IsPause = false; p.SavePlaybackSession(true); p.sessionWrites.Flush(3000);
             Check(PlaybackSessionStore.Read(p.sessionPath).Paused, "actual paused audio wins over stale service flag");
+            p.sessionPauseOverride = delegate(bool paused) { return false; };
+            p.SavePlaybackSession(true); p.sessionWrites.Flush(3000);
+            Check(!PlaybackSessionStore.Read(p.sessionPath).Paused, "automatic buffering pause preserves playing intent");
+            p.sessionPauseOverride = delegate(bool paused) { return true; };
+            p.SavePlaybackSession(true); p.sessionWrites.Flush(3000);
+            Check(PlaybackSessionStore.Read(p.sessionPath).Paused, "manual pause during buffering remains paused on resume");
+            p.sessionPauseOverride = null;
             p.NativeService.CurrentPlayList.Clear(); p.SavePlaybackSession(true); p.sessionWrites.Flush(3000);
             Check(JsonConvert.DeserializeObject<List<Song>>(PlaybackSessionStore.Read(p.sessionPath).QueueJson).Count == 2, "transient empty native playlist preserves full saved queue");
             p = Boot("netease", false); p.Frame(.2f); p.Frame(.6f);

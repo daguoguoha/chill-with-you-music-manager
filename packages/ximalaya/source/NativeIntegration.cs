@@ -346,6 +346,15 @@ namespace ChillXimalayaPlaylist
             status = "已交给游戏原生播放器 · " + song.name;
             completion.TrySetResult(clip);
         }
+        bool audioCacheClosed;
+        void CloseAudioCache()
+        {
+            if (audioCacheClosed) return;
+            audioCacheClosed = true; destroying = true; nativeLoadVersion++;
+            foreach (var item in nativeClips) ReleaseNativeClip(item);
+            nativeClips.Clear();
+            AudioTemporaryFiles.Cleanup(System.IO.Path.GetTempPath());
+        }
         void ReleaseNativeClip(GameAudioInfo info)
         {
             AudioClip clip = info.AudioClip;

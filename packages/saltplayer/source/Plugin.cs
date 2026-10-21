@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillSaltPlayerPlaylist
 {
-    [BepInPlugin("local.chill.saltplayerplaylist", "椒盐音乐歌单", "1.2.2")]
+    [BepInPlugin("local.chill.saltplayerplaylist", "椒盐音乐歌单", "1.2.3")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -44,6 +44,7 @@ namespace ChillSaltPlayerPlaylist
         void Awake()
         {
             Instance = this;
+            Task.Factory.StartNew(delegate { AudioTemporaryFiles.Cleanup(Path.GetTempPath()); });
             // This game changes scenes immediately after the BepInEx bootstrap.
             // Keep the plugin and its callbacks outside scene-owned objects.
             gameObject.hideFlags = HideFlags.HideAndDontSave;
@@ -177,7 +178,7 @@ namespace ChillSaltPlayerPlaylist
             }
             visible = false;
         }
-        void OnApplicationQuit() { ClosePlaybackSession(); }
+        void OnApplicationQuit() { try { ClosePlaybackSession(); } finally { CloseAudioCache(); } }
         void OnDestroy()
         {
             ClosePlaybackSession();
@@ -187,7 +188,7 @@ namespace ChillSaltPlayerPlaylist
             destroying = true;
             FilePicker.Cancel();
             StopExternal();
-            foreach (var item in nativeClips) ReleaseNativeClip(item);
+            CloseAudioCache();
             foreach (var button in nativeButtons) if (button != null) Destroy(button);
             DisposeUI();
             if (harmony != null) harmony.UnpatchSelf();

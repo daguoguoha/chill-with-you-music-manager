@@ -26,7 +26,7 @@ func TestSongURLFallback(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			n := 0
-			result, err := resolveSongURL(123, func() (float64, []byte, error) { return c.code, c.body, c.err }, func() (float64, []byte) { n++; return 200, good })
+			result, err := resolveSongURL(123, func() (float64, []byte, error) { return c.code, c.body, c.err }, func() (float64, []byte, error) { n++; return 200, good, nil })
 			if err != nil || result.ID != 123 || result.Size != 42 || result.IsTrial || n != c.calls {
 				t.Fatalf("result=%+v err=%v calls=%d", result, err, n)
 			}
@@ -34,7 +34,7 @@ func TestSongURLFallback(t *testing.T) {
 	}
 	for _, code := range []float64{301, 401, 403} {
 		t.Run("auth", func(t *testing.T) {
-			_, err := resolveSongURL(1, func() (float64, []byte, error) { return code, nil, nil }, func() (float64, []byte) { t.Fatal("authentication refusal retried"); return 0, nil })
+			_, err := resolveSongURL(1, func() (float64, []byte, error) { return code, nil, nil }, func() (float64, []byte, error) { t.Fatal("authentication refusal retried"); return 0, nil, nil })
 			if err == nil || !strings.Contains(err.Error(), "code:") {
 				t.Fatal(err)
 			}
@@ -55,7 +55,7 @@ func TestSongURLErrorsAndTrials(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			_, err := resolveSongURL(1, func() (float64, []byte, error) { return 0, nil, errors.New("SECRET") }, func() (float64, []byte) { return c.code, []byte(c.body) })
+			_, err := resolveSongURL(1, func() (float64, []byte, error) { return 0, nil, errors.New("SECRET") }, func() (float64, []byte, error) { return c.code, []byte(c.body), nil })
 			if err == nil || !strings.Contains(err.Error(), c.expected) || strings.Contains(err.Error(), "SECRET") {
 				t.Fatal(err)
 			}

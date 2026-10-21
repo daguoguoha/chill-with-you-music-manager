@@ -16,7 +16,7 @@ namespace ChillBilibiliPlaylist
         public bool IsStreaming { get { return pcmPath != null; } }
         internal void OpenPcm(string path)
         {
-            stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, FileOptions.RandomAccess);
+            stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete, 65536, FileOptions.RandomAccess | FileOptions.DeleteOnClose);
             pcmPath = path;
         }
         // Unity's audio callbacks only read an already decoded, local PCM file.
@@ -53,6 +53,36 @@ namespace ChillBilibiliPlaylist
             }
         }
     }
+
+    // Only exact plugin-owned temporary audio names qualify; never recurse or read file contents.
+    internal static class AudioTemporaryFiles
+    {
+        internal const string Prefix = "ChillBilibiliPlaylist-";
+        internal static int Cleanup(string root)
+        {
+            int removed = 0;
+            try
+            {
+                foreach (string path in Directory.GetFiles(Path.GetFullPath(root), Prefix + "*", SearchOption.TopDirectoryOnly))
+                {
+                    if (!System.Text.RegularExpressions.Regex.IsMatch(Path.GetFileName(path), "^" + Prefix + "[0-9a-f]{32}\\.(?:mp3|m4a|aac|flac|pcm)$", System.Text.RegularExpressions.RegexOptions.CultureInvariant)) continue;
+                    try
+                    {
+                        if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0) continue;
+                        // Exclusive open atomically skips files held by a decoder or another game instance.
+                        using (var owned = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None, 1, FileOptions.DeleteOnClose)) { }
+                        removed++;
+                    }
+                    catch (IOException) { }
+                    catch (UnauthorizedAccessException) { }
+                }
+            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
+            return removed;
+        }
+    }
+
     public static class AudioDecoder
     {
         const long InMemoryLimit = 32L * 1024 * 1024;

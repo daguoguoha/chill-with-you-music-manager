@@ -39,7 +39,14 @@ try {
         @('SIZE_LIMIT','playback',$null,'','',3),
         @('EMPTY_BODY','playback',$null,'','',1),
         @('AUTH_401','playback',$null,'','',2),
-        @('NETWORK','playback',$null,'','',3),
+        @('NETWORK','network',$null,'','',3),
+        @('NETWORK_PROXY','network',$null,'','',1),
+        @('NETWORK_TLS','tls',$null,'','',2),
+        @('NETWORK_DNS','network',$null,'','',3),
+        @('NETWORK_TIMEOUT','timeout',$null,'','',1),
+        @('NETWORK_REFUSED','network',$null,'','',2),
+        @('NETWORK_RESET','network',$null,'','',3),
+        @('NETWORK_IO','network',$null,'','',1),
         @('STALE_QUEUE','playback',$null,'','',1),
         @('INVALID_URL','playback',$null,'','',2),
         @('UNSUPPORTED_FORMAT','playback',$null,'','',3),
@@ -58,7 +65,8 @@ try {
     [IO.File]::WriteAllText($log,($lines -join "`n"))
     $r=Export 'playback.zip';Assert $r.Ok $r.Message
     $text=ReadReport 'playback.zip';$data=$text | ConvertFrom-Json
-    Assert ($data.DiagnosticsRevision -eq 2 -and $data.Events.Count -eq 89) '下载诊断修订或事件数量错误'
+    $expected=$fixtures.Count*5
+    Assert ($data.DiagnosticsRevision -eq 2 -and $data.Events.Count -eq ($expected+4)) '下载诊断修订或事件数量错误'
     Assert (-not $text.Contains('PRIVATE_SENTINEL') -and -not $text.Contains($secret)) '下载错误码泄漏未允许文本'
     $i=0
     foreach($provider in @('netease','kugou','bilibili','ximalaya','saltplayer')) {
@@ -67,7 +75,7 @@ try {
             Assert ($e.Provider -eq $provider -and $e.Code -ceq $f[0] -and $e.Category -eq $f[1] -and $e.HttpStatus -eq $f[2] -and $e.Exception -ceq $f[3] -and $e.CodeHResult -ceq $f[4] -and $e.Attempt -eq $f[5] -and $e.HResult -eq '0x80131509') ('下载诊断丢失 '+$provider+' '+$f[0])
         }
     }
-    foreach($e in $data.Events[85..88]){Assert ($e.Code -eq '' -and $e.HttpStatus -eq $null -and $e.CodeHResult -eq '') '未知错误码应被丢弃'}
+    foreach($e in $data.Events[$expected..($expected+3)]){Assert ($e.Code -eq '' -and $e.HttpStatus -eq $null -and $e.CodeHResult -eq '') '未知错误码应被丢弃'}
     $content=(1..5100 | ForEach-Object {'[Error: Netease] 网络失败 HTTP 502'}) -join "`n"
     [IO.File]::WriteAllText($log,$content)
     $r=Export 'bounded.zip';Assert $r.Ok $r.Message
@@ -85,5 +93,5 @@ try {
     $ui=Get-Content ($image+'.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     Assert ($ui.ExportEnabled -and $ui.ExportVisible) '导出按钮不可用或被截断'
     Copy-Item -LiteralPath $image -Destination (Join-Path (Split-Path -Parent $Package) 'diagnostics-preview.png')
-    Write-Output 'PASS report missing log, shared read, privacy, 85 playback diagnostics across five providers, unknown code rejection, no mutation/overwrite, bounds, integrity and UI'
+    Write-Output ('PASS report missing log, shared read, privacy, '+$expected+' playback diagnostics across five providers, unknown code rejection, no mutation/overwrite, bounds, integrity and UI')
 } finally {if([IO.Path]::GetFullPath($sandbox).StartsWith([IO.Path]::GetTempPath(),[StringComparison]::OrdinalIgnoreCase)){Remove-Item -LiteralPath $sandbox -Recurse -Force}}

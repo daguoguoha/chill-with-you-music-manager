@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillXimalayaPlaylist
 {
-    [BepInPlugin("local.chill.ximalayaplaylist", "喜马拉雅歌单", "1.3.2")]
+    [BepInPlugin("local.chill.ximalayaplaylist", "喜马拉雅歌单", "1.3.3")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -46,6 +46,7 @@ namespace ChillXimalayaPlaylist
         void Awake()
         {
             Instance = this;
+            Task.Factory.StartNew(delegate { AudioTemporaryFiles.Cleanup(Path.GetTempPath()); });
             // This game changes scenes immediately after the BepInEx bootstrap.
             // Keep the plugin and its callbacks outside scene-owned objects.
             gameObject.hideFlags = HideFlags.HideAndDontSave;
@@ -240,7 +241,7 @@ namespace ChillXimalayaPlaylist
             Logger.LogInfo("喜马拉雅插件对象已销毁。");
             destroying = true; qrPolling = false;
             StopExternal(); ClearQr();
-            foreach (var item in nativeClips) ReleaseNativeClip(item);
+            CloseAudioCache();
             foreach (var button in nativeButtons) if (button != null) Destroy(button);
             DisposeUI();
             if (harmony != null) harmony.UnpatchSelf();

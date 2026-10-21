@@ -18,6 +18,18 @@ namespace ChillNeteasePlaylist
         internal static PlaybackFailure FromSource(string reason)
         {
             string value = (reason ?? "").ToLowerInvariant();
+            Match network = Regex.Match(reason ?? "", @"\b(NETWORK_(?:PROXY|TLS|DNS|TIMEOUT|REFUSED|RESET|IO)|RESPONSE)$");
+            if (network.Success)
+            {
+                string kind = network.Groups[1].Value;
+                string message = kind == "NETWORK_PROXY" ? "代理连接未完成，请检查当前代理是否可用。"
+                    : kind == "NETWORK_TLS" ? "安全连接未完成，请检查系统时间和网络证书。"
+                    : kind == "NETWORK_DNS" ? "无法解析网易云地址，请检查网络和 DNS。"
+                    : kind == "NETWORK_TIMEOUT" ? "连接网易云超时，请恢复网络后重试。"
+                    : kind == "RESPONSE" ? "网易云返回的歌曲响应无效，请稍后重试。"
+                    : "连接网易云未完成，请恢复网络后重试。";
+                return new PlaybackFailure("取地址", kind, message, true);
+            }
             Match code = Regex.Match(value, @"(?:code|status)\s*[:=]?\s*(\d{3})\b");
             string number = code.Success ? code.Groups[1].Value : "";
             if (number == "301" || number == "401" || number == "403")
@@ -26,6 +38,20 @@ namespace ChillNeteasePlaylist
                 return new PlaybackFailure("取地址", "RESPONSE", "网易云返回的歌曲响应无效，请稍后重试。", true);
             return new PlaybackFailure("取地址", number.Length == 0 ? "NETWORK" : "API_" + number,
                 number.Length == 0 ? "连接网易云未完成，请稍后重试。" : "网易云接口返回状态 " + number + "，请稍后重试。", true);
+        }
+
+        internal static bool StopQueue(Exception error)
+        {
+            if (error is SongUnavailableException) return false;
+            PlaybackFailure failure = error as PlaybackFailure;
+            if (failure == null) return true;
+            string code = failure.Code;
+            if (failure.Stage == "取地址")
+                return code != "STALE_QUEUE" && code != "INVALID_URL" && code != "UNSUPPORTED_FORMAT" && code != "API_404" && code != "API_410";
+            if (failure.Stage == "下载")
+                return code.StartsWith("NETWORK_", StringComparison.Ordinal) || code.StartsWith("ConnectionError_", StringComparison.Ordinal) || code.StartsWith("SEND_", StringComparison.Ordinal)
+                    || Regex.IsMatch(code, @"^ProtocolError_HTTP_(?:401|403|408|429|5[0-9]{2})$");
+            return Regex.IsMatch(code, @"^(?:UnauthorizedAccessException|DirectoryNotFoundException|FileNotFoundException|FileLoadException|DllNotFoundException|BadImageFormatException|OutOfMemoryException)_");
         }
 
         internal static string Diagnostic(long id, Exception error)

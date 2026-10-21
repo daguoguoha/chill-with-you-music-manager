@@ -27,6 +27,7 @@ namespace ChillNeteasePlaylist
         float sessionSeekAt;
         bool sessionSeekRequested, sessionWasMuted;
         AudioSource sessionMutedSource;
+        Func<bool, bool> sessionPauseOverride;
 
         void SetupPlaybackSession()
         {
@@ -167,7 +168,7 @@ namespace ChillNeteasePlaylist
                     foreach (var song in queue) { string key = CloudPrefix + Convert.ToString(song.id, CultureInfo.InvariantCulture); if (ids.Add(key)) list.Add(song); if (list.Count >= 1999) break; }
                 if (ids.Add(info.UUID)) list.Insert(0, currentSong);
                 var record = new PlaybackSession { Provider = LyricProvider, CurrentId = Convert.ToString(currentSong.id, CultureInfo.InvariantCulture), PlaylistId = Convert.ToString(selectedPlaylistId, CultureInfo.InvariantCulture), PlaylistTitle = selectedPlaylistTitle,
-                    QueueJson = "[]", Seconds = source.time, Duration = source.clip.length, Paused = !source.isPlaying, UpdatedUtcTicks = DateTime.UtcNow.Ticks };
+                    QueueJson = "[]", Seconds = source.time, Duration = source.clip.length, Paused = sessionPauseOverride == null ? !source.isPlaying : sessionPauseOverride(!source.isPlaying), UpdatedUtcTicks = DateTime.UtcNow.Ticks };
                 sessionKey = info.UUID;
                 sessionHasPlayed = true;
                 var snapshot=list.ToArray();

@@ -6,7 +6,7 @@ $script:InstallRoot = $PSScriptRoot
 $script:LogControl = $null
 $script:Dependencies = @(
     @{Name='BepInEx.zip'; Url='https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip'; SHA256='82F9878551030F54657792C0740D9D51A09500EEAE1FBA21106B0C441E6732C4'},
-    @{Name='ChillNetease.dll'; Url='local-source-build:ChillNetease.dll'; SHA256='76BEEDB77A6A4346361D35045BA9BEC65C83250AEAD5A49A76AFE45DAC1FAED1'},
+    @{Name='ChillNetease.dll'; Url='local-source-build:ChillNetease.dll'; SHA256='D3488D6E0D2B4A4F437FD6EA04AEE6FB03B0C82D30238A3BC17AD11002976319'},
     @{Name='QRCoder.nupkg'; Url='https://api.nuget.org/v3-flatcontainer/qrcoder/1.4.3/qrcoder.1.4.3.nupkg'; SHA256='8ADE16246255AE99986FC60B9532DE52B4DB196F00166DAB5EC916ECDBC2B4C2'},
     @{Name='NAudio.Core.nupkg'; Url='https://api.nuget.org/v3-flatcontainer/naudio.core/2.2.1/naudio.core.2.2.1.nupkg'; SHA256='794645DBFD30E4880663D52D9D9224D55C301FA54228FF623C95D572C7887347'},
     @{Name='NLayer.nupkg'; Url='https://api.nuget.org/v3-flatcontainer/nlayer/3.0.0/nlayer.3.0.0.nupkg'; SHA256='625B215F76453180D499C203F711ACEEDCCE6E855C86A65716C0B1275AFCB9C6'},
@@ -68,7 +68,7 @@ function Get-Dependency($Dependency, [string]$Cache) {
     $bundled = Get-SafeChild (Join-Path $script:InstallRoot 'offline-dependencies') $Dependency.Name
     if (Test-Path -LiteralPath $bundled -PathType Leaf) {
         if ((Get-FileHash -LiteralPath $bundled -Algorithm SHA256).Hash -ne $Dependency.SHA256) {
-            throw ('内置依赖校验不通过：' + $Dependency.Name + '。请重新下载并完整解压 网易云音乐 v1.5.4 一键安装包。')
+            throw ('内置依赖校验不通过：' + $Dependency.Name + '。请重新下载并完整解压 网易云音乐 v1.5.6 一键安装包。')
         }
         Write-InstallLog ('使用已校验的内置依赖 ' + $Dependency.Name) | Out-Host
         return $bundled
@@ -106,8 +106,8 @@ function Invoke-Installation([string]$Path) {
     }
     if (Test-Path -LiteralPath (Get-SafeChild $root 'BepInEx\plugins\ChillPatcher\ChillPatcher.dll')) { throw '发现完整 ChillPatcher 插件。请先停用它，避免两个插件同时接管播放器。' }
     $payload = Join-Path $script:InstallRoot 'BepInEx\plugins\ChillNeteasePlaylist\ChillNeteasePlaylist.dll'
-    if (-not (Test-Path -LiteralPath $payload) -or (Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash -ne '612D785E2CECBED42B91C7B30042E05B4D21FECF1DAC1E4EBDBB181ADD867B5F') { throw '主插件文件缺失或校验失败，请重新解压原始安装包。' }
-    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillNeteaseNative-1.5.4-downloads'
+    if (-not (Test-Path -LiteralPath $payload) -or (Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash -ne 'FA35E8BCDF501335212B150D3D8840017437276C9E4C8C26144900E94EEC849F') { throw '主插件文件缺失或校验失败，请重新解压原始安装包。' }
+    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillNeteaseNative-1.5.6-downloads'
     New-Item -ItemType Directory -Path $cache -Force | Out-Null
     $stage = Join-Path $cache ([Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $stage | Out-Null
@@ -168,8 +168,8 @@ function Invoke-Installation([string]$Path) {
         $manifest = Get-SafeChild $root 'ChillNeteaseNative-install.json'
         $history = @()
         if (Test-Path -LiteralPath $manifest) { $history += (Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json).History }
-        $history += [pscustomobject]@{Version='1.5.4'; Date=(Get-Date -Format o); Files=@($plan | Select-Object Path,Hash,Added,BackupPath)}
-        [pscustomobject]@{Version='1.5.4'; GameDirectory=$root; History=$history} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifest -Encoding UTF8
+        $history += [pscustomobject]@{Version='1.5.6'; Date=(Get-Date -Format o); Files=@($plan | Select-Object Path,Hash,Added,BackupPath)}
+        [pscustomobject]@{Version='1.5.6'; GameDirectory=$root; History=$history} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifest -Encoding UTF8
         Write-InstallLog '安装成功。请从 Steam 启动游戏，首次按 F8 扫码登录。'
         Write-InstallLog '打开原生播放列表，在上方下拉菜单选择“网易云 · 歌单名”。'
     } catch {
@@ -184,7 +184,7 @@ function Invoke-Installation([string]$Path) {
     }
 }
 if ($VerifyDownloadsOnly) {
-    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillNeteaseNative-1.5.4-downloads'
+    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillNeteaseNative-1.5.6-downloads'
     New-Item -ItemType Directory -Path $cache -Force | Out-Null
     foreach ($dependency in $script:Dependencies) { [void](Get-Dependency $dependency $cache) }
     Write-Output '五个内置依赖 SHA256 校验通过；无需联网安装。'

@@ -16,7 +16,7 @@ using UnityEngine.Networking;
 
 namespace ChillNeteasePlaylist
 {
-    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.5.4")]
+    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.5.6")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -46,6 +46,7 @@ namespace ChillNeteasePlaylist
         void Awake()
         {
             Instance = this;
+            Task.Factory.StartNew(delegate { AudioTemporaryFiles.Cleanup(Path.GetTempPath()); });
             // This game changes scenes immediately after the BepInEx bootstrap.
             // Keep the plugin and its callbacks outside scene-owned objects.
             gameObject.hideFlags = HideFlags.HideAndDontSave;
@@ -99,6 +100,7 @@ namespace ChillNeteasePlaylist
         }
         internal void Tick()
         {
+            ProgressiveTickSafe();
             FavoritesTick();
             NativeFavoriteTick();
             LyricsTickSafe();
@@ -206,6 +208,17 @@ namespace ChillNeteasePlaylist
             Run(delegate { return JsonConvert.DeserializeObject<User>(Bridge.Take(Bridge.NeteaseGetUserInfo())); }, delegate(object result)
             { nickname = ((User)result).nickname; RefreshPlaylists(); });
         }
+        void RetrySavedAccount()
+        {
+            if (!ready || busy || qrPolling) return;
+            status = "正在重试现有账号连接…";
+            Run(delegate { return Bridge.NeteaseRefreshLogin() == 1; }, delegate(object result)
+            {
+                logged = (bool)result;
+                if (logged) LoadAccount();
+                else status = "现有登录未验证，请检查网络后点重连，或由你重新扫码。";
+            });
+        }
         void RefreshPlaylists()
         {
             qrPolling = false;
@@ -264,7 +277,7 @@ namespace ChillNeteasePlaylist
             Logger.LogInfo("网易云插件对象已销毁。");
             destroying = true; qrPolling = false;
             StopExternal(); ClearQr();
-            foreach (var item in nativeClips) ReleaseNativeClip(item);
+            CloseAudioCache();
             foreach (var button in nativeButtons) if (button != null) Destroy(button);
             DisposeUI();
             if (harmony != null) harmony.UnpatchSelf();

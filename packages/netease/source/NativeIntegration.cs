@@ -56,6 +56,7 @@ namespace ChillNeteasePlaylist
             harmony.Patch(AccessTools.Method(typeof(MusicPlayListView), "ViewPlayList"), postfix: new HarmonyMethod(typeof(Plugin), "NativeFocusRebuilt"));
             foreach(string name in new[] { "OnChangeMusic", "ActivatePlayList" })
                 harmony.Patch(AccessTools.Method(typeof(MusicUI), name), postfix: new HarmonyMethod(typeof(Plugin), "NativeFocusChanged"));
+            SetupProgressiveAudio();
             Logger.LogInfo("原生网易云播放器接口已接入。");
         }
         static void NativeTagSetup(MusicTagListUI __instance) { if (Instance != null) { Instance.nativeTagUI = __instance; Instance.nativeMenuVersion = -1; } }
@@ -124,8 +125,13 @@ namespace ChillNeteasePlaylist
             }
             catch (Exception error)
             {
-                if (version == nativeLoadVersion) NativeNotice("已跳过「" + info.Title + "」：" + error.Message, 10);
                 Logger.LogWarning(PlaybackFailure.Diagnostic(CloudSongId(info), error));
+                if (PlaybackFailure.StopQueue(error))
+                {
+                    if (version == nativeLoadVersion) NativeNotice("已停止自动跳曲：" + error.Message + " 请稍后重新点播。", 15);
+                    completion.TrySetCanceled(); yield break;
+                }
+                if (version == nativeLoadVersion) NativeNotice("已跳过「" + info.Title + "」：" + error.Message, 10);
             }
             if (!SongRequestPolicy.CanDeliver(version, nativeLoadVersion, destroying, cancellation.IsCancellationRequested))
             { completion.TrySetCanceled(); yield break; }
@@ -165,8 +171,10 @@ namespace ChillNeteasePlaylist
             {
                 if (version == nativeLoadVersion && !destroying)
                 {
-                    NativeNotice("已跳过「" + info.Title + "」：" + ex.Message, 10);
                     Logger.LogWarning(PlaybackFailure.Diagnostic(CloudSongId(info), ex));
+                    if (PlaybackFailure.StopQueue(ex))
+                    { NativeNotice("已停止自动跳曲：" + ex.Message + " 请稍后重新点播。", 15); yield break; }
+                    NativeNotice("已跳过「" + info.Title + "」：" + ex.Message, 10);
                     var list = service.CurrentPlayList;
                     int selected = list.IndexOf(info);
                     if (selected >= 0 && list.Count > 1)
@@ -182,6 +190,7 @@ namespace ChillNeteasePlaylist
         }
         UniTask<AudioClip> BeginNativeLoad(GameAudioInfo info, CancellationToken cancellation)
         {
+            pendingAudio = info;
             int version = ++nativeLoadVersion;
             if (info.AudioClip != null) return UniTask.FromResult(info.AudioClip);
             UniTaskCompletionSource<AudioClip> completion = new UniTaskCompletionSource<AudioClip>();
@@ -231,7 +240,7 @@ namespace ChillNeteasePlaylist
             for (int attempt = 0; attempt < 3; attempt++)
             {
                 if (canceled()) { completion.TrySetCanceled(); yield break; }
-                status = "正在加载「" + song.name + "」…" + (attempt == 0 ? "" : "（重试 " + attempt + "/2）");
+                status = "正在获取音源「" + song.name + "」…" + (attempt == 0 ? "" : "（重试 " + attempt + "/2）");
                 Task<SongUrl> urlTask = Task.Factory.StartNew(delegate { return SongRequestPolicy.Resolve(
                     delegate
                     {
@@ -256,39 +265,47 @@ namespace ChillNeteasePlaylist
                 { completion.TrySetException(new PlaybackFailure("取地址", "UNSUPPORTED_FORMAT", "音频格式不受支持。", false)); yield break; }
                 if (url.size > 64L * 1024 * 1024)
                 { completion.TrySetException(new PlaybackFailure("下载", "SIZE_LIMIT", "音频超过 64 MB，请选择较短曲目。", false)); yield break; }
-                PlaybackFailure failure = null;
-                using (var download = UnityEngine.Networking.UnityWebRequest.Get(Rules.SecureMusicUrl(url.url)))
+                if (format == "mp3" && !url.isTrial && song.duration > 0 && song.duration <= 5400)
                 {
-                    download.timeout = 45;
-                    UnityEngine.Networking.UnityWebRequestAsyncOperation operation = null;
-                    try { operation = download.SendWebRequest(); }
-                    catch (Exception error) { failure = new PlaybackFailure("下载", "SEND_" + error.HResult.ToString("X8"), "无法开始音频下载。", true); }
-                    if (operation != null)
+                    IEnumerator progressive = NativeProgressiveClip(info, song, url, canceled, completion);
+                    try { while (progressive.MoveNext()) yield return progressive.Current; }
+                    finally { var disposable = progressive as IDisposable; if (disposable != null) disposable.Dispose(); }
+                    yield break;
+                }
+                PlaybackFailure failure = null;
+                using (var downloadCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
+                {
+                    CancellationToken downloadToken = downloadCancellation.Token;
+                    long downloaded = 0;
+                    Task<byte[]> download = Task.Factory.StartNew(delegate { return AudioDownload.Read(url.url, downloadToken, url.size, delegate(long bytes) { Interlocked.Exchange(ref downloaded, bytes); }); });
+                    download.ContinueWith(delegate(Task<byte[]> task) { var observed = task.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
+                    float nextProgress = 0;
+                    try
                     {
-                        while (!operation.isDone)
+                        while (!download.IsCompleted)
                         {
-                            if (canceled()) { download.Abort(); completion.TrySetCanceled(); yield break; }
-                            if (download.downloadedBytes > 64UL * 1024 * 1024)
-                            { download.Abort(); completion.TrySetException(new PlaybackFailure("下载", "SIZE_LIMIT", "音频超过 64 MB。", false)); yield break; }
+                            if (canceled()) { downloadCancellation.Cancel(); completion.TrySetCanceled(); yield break; }
+                            if (Time.realtimeSinceStartup >= nextProgress)
+                            {
+                                nextProgress = Time.realtimeSinceStartup + 0.25f;
+                                long bytes = Interlocked.Read(ref downloaded);
+                                status = "正在下载「" + song.name + "」 " + (bytes / 1048576d).ToString("F1")
+                                    + (url.size > 0 ? " / " + (url.size / 1048576d).ToString("F1") : "") + " MB"
+                                    + (attempt == 0 ? "" : "（重试 " + attempt + "/2）");
+                            }
                             yield return null;
                         }
                         if (canceled()) { completion.TrySetCanceled(); yield break; }
-                        if (download.result != UnityEngine.Networking.UnityWebRequest.Result.Success)
+                        if (download.IsFaulted)
                         {
-                            bool connection = download.result == UnityEngine.Networking.UnityWebRequest.Result.ConnectionError;
-                            failure = new PlaybackFailure("下载", download.result.ToString() + "_HTTP_" + download.responseCode,
-                                download.responseCode > 0 ? "音频服务器返回 HTTP " + download.responseCode + "。" : "音频连接中断或超时。",
-                                PlaybackFailure.RetryDownload(connection, download.responseCode));
+                            Exception error = download.Exception.GetBaseException();
+                            if (error is OperationCanceledException) { completion.TrySetCanceled(); yield break; }
+                            failure = error as PlaybackFailure ?? new PlaybackFailure("下载", "NETWORK_IO", "音频网络连接未完成，请稍后重试。", true);
                         }
-                        else
-                        {
-                            encoded = download.downloadHandler.data;
-                            if (encoded == null || encoded.Length == 0)
-                                failure = new PlaybackFailure("下载", "EMPTY_BODY", "服务器返回了空音频。", true);
-                            else if (encoded.Length > 64 * 1024 * 1024)
-                                failure = new PlaybackFailure("下载", "SIZE_LIMIT", "音频超过 64 MB。", false);
-                        }
+                        else if (download.IsCanceled) { completion.TrySetCanceled(); yield break; }
+                        else encoded = download.Result;
                     }
+                    finally { downloadCancellation.Cancel(); }
                 }
                 if (failure == null) break;
                 Logger.LogWarning(PlaybackFailure.Diagnostic(song.id, failure) + " attempt=" + (attempt + 1) + "/3");
@@ -298,6 +315,7 @@ namespace ChillNeteasePlaylist
                 while (Time.realtimeSinceStartup < retryAt)
                 { if (canceled()) { completion.TrySetCanceled(); yield break; } yield return null; }
             }
+            status = "正在解码「" + song.name + "」…";
             Task<DecodedAudio> decode = Task.Factory.StartNew(delegate { return AudioDecoder.Decode(encoded, format, delegate { return destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion; }); });
             // Observe completion even when the user selects another song; the worker deletes its temporary file.
             while (!decode.IsCompleted) yield return null;
@@ -345,11 +363,23 @@ namespace ChillNeteasePlaylist
             status = "已交给游戏原生播放器 · " + song.name + (url.isTrial ? "（网易云试听片段）" : "");
             completion.TrySetResult(clip);
         }
+        bool audioCacheClosed;
+        void CloseAudioCache()
+        {
+            if (audioCacheClosed) return;
+            audioCacheClosed = true; destroying = true; nativeLoadVersion++;
+            foreach (var item in nativeClips) ReleaseNativeClip(item);
+            nativeClips.Clear();
+            CloseProgressiveAudio();
+            AudioTemporaryFiles.Cleanup(System.IO.Path.GetTempPath());
+        }
         void ReleaseNativeClip(GameAudioInfo info)
         {
             AudioClip clip = info.AudioClip;
             if (!object.ReferenceEquals(clip, null))
             {
+                ProgressiveAudio streaming;
+                if (progressiveClips.TryGetValue(clip, out streaming)) { progressiveClips.Remove(clip); streaming.Dispose(); }
                 DecodedAudio source;
                 if (streamingClips.TryGetValue(clip, out source)) { streamingClips.Remove(clip); source.Dispose(); }
                 if (clip != null) Destroy(clip);

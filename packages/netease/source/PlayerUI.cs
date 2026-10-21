@@ -182,8 +182,9 @@ namespace ChillNeteasePlaylist
             GUI.Label(new Rect(33, 27, 30, 32), "云", headingText);
             GUI.Label(new Rect(80, 18, 300, 36), "网易云音乐", titleText);
             GUI.Label(new Rect(81, 52, 330, 22), "在放松时光里，听你的歌单", mutedText);
-            GUI.enabled = logged && ready && !busy;
-            if (GUI.Button(new Rect(686, 27, 80, 36), "刷新", buttonStyle)) RefreshPlaylists();
+            GUI.enabled = ready && !busy && (logged || !qrPolling);
+            if (GUI.Button(new Rect(686, 27, 80, 36), logged ? "刷新" : "重连", buttonStyle))
+            { if (logged) RefreshPlaylists(); else RetrySavedAccount(); }
             GUI.enabled = ready && !busy;
             if (GUI.Button(new Rect(776, 27, 110, 36), logged ? "切换账号" : "扫码登录", buttonStyle)) Login();
             GUI.enabled = true;

@@ -252,20 +252,10 @@ func NeteaseGetSongURL(songId C.longlong, quality *C.char) *C.char {
 	id := strconv.FormatInt(int64(songId), 10)
 	result, err := resolveSongURL(int64(songId),
 		func() (float64, []byte, error) {
-			request := service.SongUrlV1Service{ID: id, Level: service.SongQualityLevel(qualityStr)}
-			request.EncodeType = portableSongEncoding(qualityStr)
-			return request.SongUrl()
+			return fetchSongURL(id, qualityStr, true)
 		},
-		func() (float64, []byte) {
-			bitrate := "320000"
-			if qualityStr == "standard" {
-				bitrate = "128000"
-			}
-			if qualityStr == "lossless" || qualityStr == "hires" {
-				bitrate = "999000"
-			}
-			request := service.SongUrlService{ID: id, Br: bitrate}
-			return request.SongUrl()
+		func() (float64, []byte, error) {
+			return fetchSongURL(id, qualityStr, false)
 		})
 	if err != nil {
 		lastError = err.Error()
