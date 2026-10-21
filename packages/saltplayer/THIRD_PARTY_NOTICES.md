@@ -23,3 +23,6 @@ TXT 路径歌单格式的兼容性调查参考 [SaltPlayerConverter](https://git
 
 游戏、Unity、TextMeshPro、UniTask、R3、ObservableCollections 和 Newtonsoft.Json 仅从本地游戏引用，不随包分发。Windows Media Foundation、文件选择对话框及 .NET Framework 由系统提供。测试音乐为本项目生成的原创旋律，不包含用户音乐文件。
 
+
+
+MP3 解码同步采用 NLayer 3.0.0（MIT），对应来源与包哈希见 dependencies.json，许可见 licenses/NLayer-LICENSE.txt。MP3 不依赖 Windows Media Foundation；其他格式仍依赖系统媒体组件。

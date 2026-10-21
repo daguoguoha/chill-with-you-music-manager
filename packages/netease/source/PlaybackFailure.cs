@@ -39,6 +39,7 @@ namespace ChillNeteasePlaylist
         {
             string message;
             if ((uint)error.HResult == 0x80070070) message = "系统临时目录空间不足，请清理空间后重试。";
+            else if (error is System.IO.DirectoryNotFoundException) message = "系统临时目录不可用，请检查临时目录设置。";
             else if (error is UnauthorizedAccessException) message = "系统临时目录不可写，请检查文件权限。";
             else if (error is System.IO.FileNotFoundException || error is System.IO.FileLoadException || error is DllNotFoundException || error is BadImageFormatException)
                 message = "音频解码依赖缺失或无法加载，请使用完整包执行安装 / 修复。";

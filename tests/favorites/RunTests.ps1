@@ -12,7 +12,7 @@ foreach($provider in @('bilibili','ximalaya','saltplayer')) {
  $names=@('Models.cs','Bridge.cs','FavoritesBridge.cs','FavoriteOperation.cs')
  if($provider -ne 'saltplayer'){$names+='NetworkErrors.cs'}
  if($provider -eq 'bilibili'){$names+=@('RequestIssue.cs','DeviceCookies.cs')}
- if($provider -eq 'ximalaya'){$names+=@('ListeningHttp.cs','ListeningReport.cs')}
+ if($provider -eq 'ximalaya'){$names+=@('ListeningHttp.cs','ListeningReport.cs','NetworkRequestException.cs')}
  foreach($name in $names){$compile+=Join-Path $packages ($provider+'/source/'+$name)}
 }
 & $compiler @compile

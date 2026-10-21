@@ -16,18 +16,22 @@ using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
+[assembly: AssemblyTitle("Chill Music Manager")]
+[assembly: AssemblyVersion("2.0.0.0")]
+[assembly: AssemblyFileVersion("2.0.0.0")]
+
 internal sealed class ManagerWindow : Form
 {
     readonly string root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
     readonly ComboBox paths = new NightComboBox();
-    readonly Button browse = new NightButton(), scan = new NightButton(), install = new NightButton(), enable = new NightButton(), disable = new NightButton(), undo = new NightButton(), verify = new NightButton();
+    readonly Button browse = new NightButton(), scan = new NightButton(), install = new NightButton(), enable = new NightButton(), disable = new NightButton(), undo = new NightButton(), verify = new NightButton(), export = new NightButton();
     readonly DataGridView table = new DataGridView();
     readonly Label summary = new Label(), detailTitle = new Label(), footer = new Label();
     readonly TextBox details = new TextBox(), output = new TextBox();
     readonly BackgroundWorker worker = new BackgroundWorker();
     readonly JavaScriptSerializer serializer = new JavaScriptSerializer();
     readonly Color ink=Color.FromArgb(238,235,247), green=Color.FromArgb(71,67,94), muted=Color.FromArgb(172,168,190), paper=Color.FromArgb(25,25,42);
-    string scannedPath="", jobPath="", jobId="", jobAction="", previousId="", lastMessage="";
+    string scannedPath="", jobPath="", jobId="", jobAction="", jobOutput="", previousId="", lastMessage="";
     bool busy, blocked=true;
     Dictionary<string,object> currentStatus;
     [DllImport("dwmapi.dll")] static extern int DwmSetWindowAttribute(IntPtr window,int attribute,ref int value,int size);
@@ -45,7 +49,7 @@ internal sealed class ManagerWindow : Form
         Panel header=new NightHeader {Dock=DockStyle.Top,Height=112,BackColor=paper}; Controls.Add(header);
         header.Controls.Add(new Label {Text="CHILL WITH YOU  /  MUSIC",Location=new Point(108,20),Size=new Size(600,22),Font=new Font(Font.FontFamily,9F),ForeColor=muted,BackColor=Color.Transparent});
         header.Controls.Add(new Label {Text="放松时光 · 音乐插件",Location=new Point(104,42),Size=new Size(680,42),Font=new Font(Font.FontFamily,24F),ForeColor=ink,BackColor=Color.Transparent});
-        Label badge=new Label {Text="v1.6.1-rc.2 / 扫码修复",Location=new Point(865,42),Size=new Size(220,32),TextAlign=ContentAlignment.MiddleRight,ForeColor=muted,BackColor=Color.Transparent,Anchor=AnchorStyles.Top|AnchorStyles.Right}; header.Controls.Add(badge);
+        Label badge=new Label {Text="v2.0.0 / 全平台更新",Location=new Point(865,42),Size=new Size(220,32),TextAlign=ContentAlignment.MiddleRight,ForeColor=muted,BackColor=Color.Transparent,Anchor=AnchorStyles.Top|AnchorStyles.Right}; header.Controls.Add(badge);
         Panel content=new Panel {Dock=DockStyle.Fill,Padding=new Padding(26,16,26,14),BackColor=paper}; Controls.Add(content); content.BringToFront();
         TableLayoutPanel layout=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=1,RowCount=7};
         foreach(int height in new[]{68,34,324,48,112,80}) layout.RowStyles.Add(new RowStyle(SizeType.Absolute,height));
@@ -69,27 +73,28 @@ internal sealed class ManagerWindow : Form
         }
         table.SelectionChanged+=delegate{ShowSelected();};NightPanel tableFrame=new NightPanel{Dock=DockStyle.Fill,Padding=new Padding(1),BackColor=Color.FromArgb(33,33,52),Margin=Padding.Empty};tableFrame.Controls.Add(table);layout.Controls.Add(tableFrame,0,2);
         FlowLayoutPanel actions=new FlowLayoutPanel {Dock=DockStyle.Fill,WrapContents=false,Padding=new Padding(0,6,0,0)};
-        foreach(Button b in new[]{install,enable,disable,undo,verify}) {b.Size=new Size(b==install?196:b==undo?162:130,34);b.Margin=new Padding(0,0,10,0);actions.Controls.Add(b);}
-        StyleButton(install,"安装 / 修复至随包版本",true);StyleButton(enable,"重新启用",false);StyleButton(disable,"停用",false);StyleButton(undo,"撤回上次操作",false);StyleButton(verify,"校验安装包",false);layout.Controls.Add(actions,0,3);
+        foreach(Button b in new[]{install,enable,disable,undo,verify,export}) {b.Size=new Size(b==install?196:b==undo?162:b==export?154:130,34);b.Margin=new Padding(0,0,10,0);actions.Controls.Add(b);}
+        StyleButton(install,"安装 / 修复至随包版本",true);StyleButton(enable,"重新启用",false);StyleButton(disable,"停用",false);StyleButton(undo,"撤回上次操作",false);StyleButton(verify,"校验安装包",false);StyleButton(export,"导出错误报告",false);layout.Controls.Add(actions,0,3);
         TableLayoutPanel selectedPanel=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=1,RowCount=2,BackColor=Color.FromArgb(36,35,55),Padding=new Padding(16,10,16,8)};
         selectedPanel.RowStyles.Add(new RowStyle(SizeType.Absolute,24));selectedPanel.RowStyles.Add(new RowStyle(SizeType.Percent,100));
         detailTitle.Dock=DockStyle.Fill;detailTitle.Font=new Font(Font.FontFamily,11F);selectedPanel.Controls.Add(detailTitle,0,0);
         details.Dock=DockStyle.Fill;details.Multiline=true;details.ReadOnly=true;details.BorderStyle=BorderStyle.None;details.ScrollBars=ScrollBars.Vertical;details.BackColor=selectedPanel.BackColor;details.ForeColor=muted;selectedPanel.Controls.Add(details,0,1);layout.Controls.Add(selectedPanel,0,4);
         output.Dock=DockStyle.Fill;output.Multiline=true;output.ReadOnly=true;output.ScrollBars=ScrollBars.Vertical;output.BorderStyle=BorderStyle.None;output.BackColor=Color.FromArgb(30,30,48);output.ForeColor=muted;output.Margin=new Padding(0,12,0,0);layout.Controls.Add(output,0,5);
-        footer.Text="修改前请退出游戏。本候选包暂不含 QQ；酷狗、喜马拉雅红心受平台验证限制。账号、存档与本地进度保留。";footer.Dock=DockStyle.Fill;footer.ForeColor=muted;footer.TextAlign=ContentAlignment.MiddleLeft;layout.Controls.Add(footer,0,6);
+        footer.Text="修改前请退出游戏。本候选包暂不含 QQ；酷狗、喜马拉雅红心受平台验证限制。账号、存档与本地进度保留。可在游戏运行时导出错误报告。";footer.Dock=DockStyle.Fill;footer.ForeColor=muted;footer.TextAlign=ContentAlignment.MiddleLeft;layout.Controls.Add(footer,0,6);
         foreach(Control control in new Control[]{paths,details,output,table})control.HandleCreated+=delegate(object sender,EventArgs e){try{SetWindowTheme(((Control)sender).Handle,"DarkMode_Explorer",null);}catch(DllNotFoundException){}catch(EntryPointNotFoundException){}};
         foreach(string p in FindGames()) paths.Items.Add(p);
         if(!string.IsNullOrEmpty(initialPath)) paths.Text=initialPath; else if(paths.Items.Count==1) paths.SelectedIndex=0;
         paths.TextChanged+=delegate { if(!busy) {scannedPath="";summary.Text="目录已变化，请点击扫描 / 刷新。";UpdateButtons();} };
         browse.Click+=delegate {using(FolderBrowserDialog dialog=new FolderBrowserDialog()) {dialog.Description="选择包含 Chill With You.exe 的文件夹";if(Directory.Exists(paths.Text))dialog.SelectedPath=paths.Text;if(dialog.ShowDialog(this)==DialogResult.OK)paths.Text=dialog.SelectedPath;}};
         scan.Click+=delegate {Start("Status");}; install.Click+=delegate {Start("Install");};enable.Click+=delegate {Start("Enable");};disable.Click+=delegate {Start("Disable");};undo.Click+=delegate {Start("Undo");};verify.Click+=delegate {Start("Verify");};
-        worker.DoWork+=delegate(object sender,DoWorkEventArgs e) {e.Result=RunBackend(jobAction,jobPath,jobId);};
+        export.Click+=delegate {Start("Export");};
+        worker.DoWork+=delegate(object sender,DoWorkEventArgs e) {e.Result=RunBackend(jobAction,jobPath,jobId,jobOutput);};
         worker.RunWorkerCompleted+=delegate(object sender,RunWorkerCompletedEventArgs e) {
             SetBusy(false);
             if(e.Error!=null) {Log("未完成："+e.Error.Message);return;}
             Dictionary<string,object> result=(Dictionary<string,object>)e.Result;
             if(jobAction=="Status" && Flag(result,"Ok")) {scannedPath=jobPath;currentStatus=result;LoadStatus(result);}
-            else {lastMessage=(Flag(result,"Ok")?"完成：":"未完成：")+Value(result,"Message");Log(lastMessage); if(jobAction!="Verify")Start("Status");}
+            else {lastMessage=(Flag(result,"Ok")?"完成：":"未完成：")+Value(result,"Message");Log(lastMessage); if(jobAction!="Verify"&&jobAction!="Export")Start("Status");}
         };
         FormClosing+=delegate(object sender,FormClosingEventArgs e) {if(busy){e.Cancel=true;MessageBox.Show(this,"正在处理文件，请等操作完成。","音乐插件管理器");}};
         UpdateButtons();
@@ -128,13 +133,15 @@ internal sealed class ManagerWindow : Form
         foreach(object note in Items(p,"Notes"))text.AppendLine().Append(Convert.ToString(note));
         if(Flag(p,"CanUndo"))text.AppendLine().Append("可撤回该平台最近一次由本管理器完成的操作；共享框架保留。");details.Text=text.ToString();UpdateButtons();}
     void UpdateButtons() {Dictionary<string,object> p=Selected();bool ready=!busy&&p!=null&&scannedPath==paths.Text.Trim().TrimEnd('\\')&&!string.IsNullOrEmpty(scannedPath);
-        install.Enabled=ready&&!blocked&&Flag(p,"PackageOk")&&!Flag(p,"NewerInstalled");enable.Enabled=ready&&!blocked&&Flag(p,"Disabled")&&!Flag(p,"Enabled")&&!Flag(p,"NeedsRepair")&&Flag(p,"PackageOk")&&!Flag(p,"NewerInstalled");disable.Enabled=ready&&Flag(p,"Enabled");undo.Enabled=ready&&Flag(p,"CanUndo");verify.Enabled=!busy&&p!=null;scan.Enabled=browse.Enabled=paths.Enabled=!busy;}
+        install.Enabled=ready&&!blocked&&Flag(p,"PackageOk")&&!Flag(p,"NewerInstalled");enable.Enabled=ready&&!blocked&&Flag(p,"Disabled")&&!Flag(p,"Enabled")&&!Flag(p,"NeedsRepair")&&Flag(p,"PackageOk")&&!Flag(p,"NewerInstalled");disable.Enabled=ready&&Flag(p,"Enabled");undo.Enabled=ready&&Flag(p,"CanUndo");verify.Enabled=!busy&&p!=null;export.Enabled=!busy&&!string.IsNullOrEmpty(scannedPath)&&scannedPath==paths.Text.Trim().TrimEnd('\\');scan.Enabled=browse.Enabled=paths.Enabled=!busy;}
     void SetBusy(bool value) {busy=value;UseWaitCursor=value;UpdateButtons();}
     void Log(string message) {output.AppendText(Environment.NewLine+message+Environment.NewLine);output.SelectionStart=output.TextLength;output.ScrollToCaret();}
     void Start(string action) {
         if(busy)return;Dictionary<string,object> p=Selected();jobPath=paths.Text.Trim().TrimEnd('\\');
-        if(action!="Status"&&p==null)return;
+        if(action!="Status"&&action!="Export"&&p==null)return;
         if(action!="Status"&&action!="Verify"&&(jobPath!=scannedPath||string.IsNullOrEmpty(jobPath))){Log("请先扫描当前游戏目录。");return;}
+        jobOutput="";
+        if(action=="Export")using(SaveFileDialog dialog=new SaveFileDialog()){dialog.Title="导出错误报告";dialog.Filter="错误报告 (*.zip)|*.zip";dialog.FileName="ChillMusic-Report-"+DateTime.Now.ToString("yyyyMMdd-HHmmss")+".zip";dialog.OverwritePrompt=true;if(dialog.ShowDialog(this)!=DialogResult.OK)return;jobOutput=dialog.FileName;}
         jobAction=action;jobId=p==null?"":Value(p,"Id");SetBusy(true);summary.Text=action=="Status"?"正在扫描插件文件与共享框架…":"正在处理，请稍候…";worker.RunWorkerAsync();
     }
     static string Quote(string arg) {
@@ -142,11 +149,12 @@ internal sealed class ManagerWindow : Form
         foreach(char c in arg){if(c=='\\'){slashes++;continue;}if(c=='\"'){result.Append('\\',slashes*2+1);result.Append(c);}else{result.Append('\\',slashes);result.Append(c);}slashes=0;}
         result.Append('\\',slashes*2);return result.Append('"').ToString();
     }
-    Dictionary<string,object> RunBackend(string action,string game,string id) {
+    Dictionary<string,object> RunBackend(string action,string game,string id,string destination="") {
         string engine=Path.Combine(root,"Manager.ps1");if(!File.Exists(engine))throw new IOException("缺少 Manager.ps1，请完整解压管理器包。");
         string shell=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows),@"System32\WindowsPowerShell\v1.0\powershell.exe");
         string arguments="-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "+Quote(engine)+" -Action "+Quote(action);
         if(!string.IsNullOrEmpty(game))arguments+=" -GameDirectory "+Quote(Path.GetFullPath(game));if(!string.IsNullOrEmpty(id))arguments+=" -Id "+Quote(id);
+        if(!string.IsNullOrEmpty(destination))arguments+=" -OutputPath "+Quote(destination);
         ProcessStartInfo info=new ProcessStartInfo(shell,arguments){UseShellExecute=false,CreateNoWindow=true,WorkingDirectory=root,RedirectStandardOutput=true,RedirectStandardError=true,StandardOutputEncoding=Encoding.UTF8,StandardErrorEncoding=Encoding.UTF8};
         info.EnvironmentVariables["PSModulePath"]=Path.Combine(Path.GetDirectoryName(shell),"Modules");
         using(Process process=new Process()){process.StartInfo=info;process.Start();System.Threading.Tasks.Task<string> err=process.StandardError.ReadToEndAsync();string text=process.StandardOutput.ReadToEnd();process.WaitForExit();string error=err.Result;
@@ -178,7 +186,7 @@ internal sealed class ManagerWindow : Form
                     window.ActiveControl=window.table;window.paths.SelectionLength=0;Application.DoEvents();
                     using(Bitmap bitmap=new Bitmap(window.Width,window.Height))
                     {window.DrawToBitmap(bitmap,new Rectangle(0,0,bitmap.Width,bitmap.Height));bitmap.Save(render,ImageFormat.Png);}
-                    File.WriteAllText(render+".json",window.serializer.Serialize(new {Status=window.currentStatus,InstallEnabled=window.install.Enabled,DisableEnabled=window.disable.Enabled,UndoEnabled=window.undo.Enabled}),Encoding.UTF8);
+                    File.WriteAllText(render+".json",window.serializer.Serialize(new {Status=window.currentStatus,InstallEnabled=window.install.Enabled,DisableEnabled=window.disable.Enabled,UndoEnabled=window.undo.Enabled,ExportEnabled=window.export.Enabled,ExportVisible=window.export.Right<=window.export.Parent.ClientSize.Width}),Encoding.UTF8);
                     window.Close();
                 }
                 else Application.Run(window);

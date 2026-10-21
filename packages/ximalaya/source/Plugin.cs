@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 
 namespace ChillXimalayaPlaylist
 {
-    [BepInPlugin("local.chill.ximalayaplaylist", "喜马拉雅歌单", "1.3.0")]
+    [BepInPlugin("local.chill.ximalayaplaylist", "喜马拉雅歌单", "1.3.1")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -92,7 +92,7 @@ namespace ChillXimalayaPlaylist
         void Run(Func<object> action, Action<object> done)
         {
             if (busy || destroying) return;
-            busy = true; onDone = done;
+            busy = true; onDone = done; qrPendingPoll = false;
             job = Task.Factory.StartNew(delegate { lock (nativeGate) { return action(); } });
         }
         internal void Tick()
@@ -137,23 +137,28 @@ namespace ChillXimalayaPlaylist
             if (job != null && job.IsCompleted)
             {
                 Task<object> finished = job; Action<object> done = onDone;
+                bool wasQrPoll=qrPendingPoll;qrPendingPoll=false;
                 job = null; onDone = null; busy = false;
                 if (finished.IsFaulted)
-                { status = "请求未完成：" + finished.Exception.GetBaseException().Message; qrPolling = false; Logger.LogWarning("喜马拉雅请求失败：" + finished.Exception.GetBaseException().GetType().Name); }
-                else if (!finished.IsCanceled) { try { done(finished.Result); } catch (Exception ex) { status = "处理响应失败，请重试。"; Logger.LogWarning(ex.GetType().Name); } }
+                { var error=finished.Exception.GetBaseException();if(!RecoverQrPoll(error,wasQrPoll)){status="请求未完成："+error.Message;qrPolling=false;Logger.LogWarning("喜马拉雅请求失败："+error.GetType().Name);} }
+                else if (!finished.IsCanceled) { try { done(finished.Result); } catch (Exception ex) { if(wasQrPoll){qrPolling=false;ClearQr();}status = "处理响应失败，请重试。"; Logger.LogWarning(ex.GetType().Name); } }
             }
+            ExpireQrPolling();
             if (ready && qrPolling && !busy && Time.realtimeSinceStartup >= nextPoll)
             {
                 nextPoll = Time.realtimeSinceStartup + 3;
                 Run(delegate { return JsonConvert.DeserializeObject<QrState>(Bridge.CheckQr()); }, delegate(object result)
                 {
                     QrState qr = (QrState)result;
+                    if(qr==null)throw new InvalidOperationException("扫码响应无效。");
+                    qrPollFailures=0;
                     if (qr.code == 0 && Bridge.IsLoggedIn)
                     { qrPolling = false; logged = true; listeningSwitchingAccount = false; ClearQr(); LoadAccount(); }
                     else if (qr.code == 65) { qrPolling = false; status = "二维码已过期，请重新生成。"; ClearQr(); }
                     else if (qr.code != 66 && qr.code != 67) { qrPolling = false; status = "登录未完成，请重新扫码。"; ClearQr(); }
                     else status = qr.code == 67 ? "已扫码，请在手机上确认登录。" : "请使用喜马拉雅 App 扫一扫。";
                 });
+                qrPendingPoll=busy;
             }
             if (playing && !paused && !audio.isPlaying && audio.clip != null && !busy && request == null)
             { playing = false; Next(1); }
@@ -164,7 +169,7 @@ namespace ChillXimalayaPlaylist
             ResetPlaybackSessionAccount();
             ResetListeningAccount();
             ResetFavorites();
-            qrPolling = false; ClearQr();
+            qrPolling = false; qrPollFailures=0; ClearQr();
             status = "正在获取登录二维码，连接失败时自动重试一次…";
             Run(delegate { Bridge.CancelQr(); return Bridge.QrImage(loginType); }, delegate(object result)
             {
@@ -173,6 +178,7 @@ namespace ChillXimalayaPlaylist
                 qrImage = new Texture2D(2, 2, TextureFormat.RGBA32, false);
                 if (!qrImage.LoadImage(png)) { ClearQr(); throw new InvalidOperationException("二维码图片无效。"); }
                 qrImage.filterMode = FilterMode.Point;
+                qrPollFailures=0;qrDeadline=Time.realtimeSinceStartup+180;
                 qrPolling = true; nextPoll = Time.realtimeSinceStartup + 3;
                 status = "请使用喜马拉雅 App 扫码，并在手机确认登录。";
             });

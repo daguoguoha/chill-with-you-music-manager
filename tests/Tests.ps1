@@ -1,7 +1,7 @@
 ﻿param([string]$Package=(Split-Path -Parent $PSScriptRoot),[string]$PreviousPackage)
 $ErrorActionPreference='Stop'
 $Package=[IO.Path]::GetFullPath($Package)
-$sandbox=Join-Path (Split-Path -Parent $Package) ('manager-heart-test-'+[Guid]::NewGuid().ToString('N'))
+$sandbox=Join-Path (Split-Path -Parent $Package) ('mt-'+[Guid]::NewGuid().ToString('N').Substring(0,8))
 New-Item -ItemType Directory -Path $sandbox -Force | Out-Null
 $shell=Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
 $catalog=Get-Content -LiteralPath (Join-Path $Package 'catalog.json') -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -188,22 +188,24 @@ try {
         $r=Call Install $invalid bilibili;Assert (-not $r.Ok) '接受无效目录';Assert (@(Get-ChildItem -LiteralPath $invalid -Force).Count -eq 0) '无效目录被写入'
     }
     if($PreviousPackage) {
-        Test '网易云旧版升级增加离线解码依赖，撤回后恢复旧版' {
-            $upgrade=Game '网易云旧版升级'
-            $old=Get-Content -LiteralPath (Join-Path $PreviousPackage 'catalog.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-            $oldNet=@($old.Plugins | Where-Object Id -eq 'netease')[0]
-            $newNet=@($catalog.Plugins | Where-Object Id -eq 'netease')[0]
-            $r=Call Install $upgrade netease $PreviousPackage;Assert $r.Ok $r.Message
-            $marker=Join-Path $upgrade 'BepInEx\plugins\ChillNeteasePlaylist\account\fixture.txt'
-            New-Item -ItemType Directory -Path (Split-Path -Parent $marker) -Force | Out-Null
-            [IO.File]::WriteAllText($marker,'upgrade sentinel only, no credentials')
-            $markerHash=Hash $marker
-            $r=Call Install $upgrade netease;Assert $r.Ok $r.Message
-            foreach($t in $newNet.Targets){Assert ((Hash (Join-Path $upgrade $t.Path)) -eq $t.Hash) ('升级文件错误 '+$t.Path)}
-            $r=Call Undo $upgrade netease;Assert $r.Ok $r.Message
-            foreach($t in $oldNet.Targets){Assert ((Hash (Join-Path $upgrade $t.Path)) -eq $t.Hash) ('撤回文件错误 '+$t.Path)}
-            Assert (-not(Test-Path -LiteralPath (Join-Path $upgrade 'BepInEx\plugins\ChillNeteasePlaylist\NLayer.dll'))) '新增解码依赖未撤回'
-            Assert ((Hash $marker) -eq $markerHash) '账号目录标记被修改'
+        $old=Get-Content -LiteralPath (Join-Path $PreviousPackage 'catalog.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+        foreach($provider in @('netease','kugou','bilibili','ximalaya','saltplayer')) {
+            Test ($provider+' 旧版升级、完整解码依赖、撤回和账号保留') {
+                $upgrade=Game ($provider+'旧版升级')
+                $oldPlugin=@($old.Plugins | Where-Object Id -eq $provider)[0]
+                $newPlugin=@($catalog.Plugins | Where-Object Id -eq $provider)[0]
+                $r=Call Install $upgrade $provider $PreviousPackage;Assert $r.Ok $r.Message
+                $marker=Join-Path $upgrade ((Split-Path -Parent $newPlugin.Primary)+'\account\fixture.txt')
+                New-Item -ItemType Directory -Path (Split-Path -Parent $marker) -Force | Out-Null
+                [IO.File]::WriteAllText($marker,'upgrade sentinel only, no credentials')
+                $markerHash=Hash $marker
+                $r=Call Install $upgrade $provider;Assert $r.Ok $r.Message
+                foreach($t in $newPlugin.Targets){Assert ((Hash (Join-Path $upgrade $t.Path)) -eq $t.Hash) ('升级文件错误 '+$t.Path)}
+                $r=Call Undo $upgrade $provider;Assert $r.Ok $r.Message
+                foreach($t in $oldPlugin.Targets){Assert ((Hash (Join-Path $upgrade $t.Path)) -eq $t.Hash) ('撤回文件错误 '+$t.Path)}
+                foreach($t in $newPlugin.Targets){if($t.Path -notin $oldPlugin.Targets.Path){Assert (-not(Test-Path -LiteralPath (Join-Path $upgrade $t.Path))) ('新增文件未撤回 '+$t.Path)}}
+                Assert ((Hash $marker) -eq $markerHash) '账号目录标记被修改'
+            }
         }
     }
     Test 'WinForms 界面真实渲染' {

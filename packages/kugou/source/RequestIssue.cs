@@ -4,12 +4,12 @@ namespace ChillKuGouPlaylist
 {
     public sealed class RequestIssue : InvalidOperationException
     {
-        public readonly bool RequiresVerification, LoginExpired;
+        public readonly bool RequiresVerification, LoginExpired, CanRetry;
         public readonly string DiagnosticCode, Operation;
         public readonly int WaitSeconds, VerificationType;
         public readonly bool HasVerificationEvent;
-        RequestIssue(string message,string code,string operation,bool verify,bool expired,int wait,bool hasEvent,int verificationType)
-            :base(message){DiagnosticCode=code;Operation=operation;RequiresVerification=verify;LoginExpired=expired;WaitSeconds=wait;HasVerificationEvent=hasEvent;VerificationType=verificationType;}
+        RequestIssue(string message,string code,string operation,bool verify,bool expired,int wait,bool hasEvent,int verificationType,bool canRetry=false)
+            :base(message){CanRetry=canRetry;DiagnosticCode=code;Operation=operation;RequiresVerification=verify;LoginExpired=expired;WaitSeconds=wait;HasVerificationEvent=hasEvent;VerificationType=verificationType;}
         static string OperationCode(string path)
         {
             if(path=="/x/web-interface/nav")return "ACCOUNT";
@@ -43,7 +43,7 @@ namespace ChillKuGouPlaylist
         }
         public static RequestIssue Cooling(int seconds)
         {return new RequestIssue("当前请求仍在冷却，请等待后再刷新。","KUGOU-COOLDOWN","等待平台限制解除",true,false,Math.Max(1,Math.Min(seconds,60)),false,0);}
-        public static RequestIssue Network(string safeDescription,string path)
-        {string op=OperationCode(path);return new RequestIssue(safeDescription,"KUGOU-NETWORK-"+op,Title(op),false,false,0,false,0);}
+        public static RequestIssue Network(string safeDescription,string path,bool canRetry=false)
+        {string op=OperationCode(path);return new RequestIssue(safeDescription,"KUGOU-NETWORK-"+op,Title(op),false,false,0,false,0,canRetry);}
     }
 }

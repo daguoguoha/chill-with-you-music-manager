@@ -26,5 +26,16 @@
     "bundled": true,
     "file": "offline-dependencies/QRCoder.nupkg",
     "sha256": "8ade16246255ae99986fc60b9532de52b4db196f00166dab5ec916ecdbc2b4c2"
+  },
+  "NLayer": {
+    "bundled": true,
+    "version": "3.0.0",
+    "license": "MIT",
+    "source": "https://github.com/naudio/NLayer/tree/046c7ce422970f8f0f0bc205d6c6341bcb7debf1",
+    "dll_path_in_package": "lib/netstandard2.0/NLayer.dll",
+    "bundled_archive": "offline-dependencies/NLayer.nupkg",
+    "sha256": "625b215f76453180d499c203f711aceedcce6e855c86a65716c0b1275afcb9c6",
+    "url": "https://api.nuget.org/v3-flatcontainer/nlayer/3.0.0/nlayer.3.0.0.nupkg",
+    "downloaded_by_installer": false
   }
 }

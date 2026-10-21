@@ -1,119 +1,136 @@
 {
-  "Package": "<isolated test fixture>",
-  "Fixture": "<isolated test fixture>",
-  "Sandbox": "<isolated test fixture>",
   "Results": [
     {
       "Name": "无需游戏即可校验五个平台、进度和倍速插件",
       "Passed": true,
-      "Seconds": 26.38
+      "Seconds": 5.14
     },
     {
       "Name": "五个平台全新安装共存及完整文件校验",
       "Passed": true,
-      "Seconds": 104.89
+      "Seconds": 22.18
     },
     {
       "Name": "五平台停用、启用、撤回及账号标记保留",
       "Passed": true,
-      "Seconds": 245.16
+      "Seconds": 47
     },
     {
       "Name": "进度插件更新、停用、启用与撤回保留记录和配置",
       "Passed": true,
-      "Seconds": 34.03
+      "Seconds": 8.52
     },
     {
       "Name": "进度插件可独立首次安装并撤回",
       "Passed": true,
-      "Seconds": 6.58
+      "Seconds": 3.77
     },
     {
       "Name": "重复安装可撤回且保留既有文件",
       "Passed": true,
-      "Seconds": 10.37
+      "Seconds": 4.32
     },
     {
       "Name": "停用状态安装后可撤回到停用状态",
       "Passed": true,
-      "Seconds": 20.67
+      "Seconds": 7.83
     },
     {
       "Name": "拒绝覆盖操作后手动更改的文件",
       "Passed": true,
-      "Seconds": 13.26
+      "Seconds": 5.66
     },
     {
       "Name": "修复缺少依赖且可撤回修复",
       "Passed": true,
-      "Seconds": 19.93
+      "Seconds": 9.06
     },
     {
       "Name": "完整 ChillPatcher 冲突时阻止安装但允许停用",
       "Passed": true,
-      "Seconds": 9.94
+      "Seconds": 4.11
     },
     {
       "Name": "非标准目录重复 DLL 检测",
       "Passed": true,
-      "Seconds": 1.64
+      "Seconds": 0.82
     },
     {
       "Name": "拒绝降级新版本",
       "Passed": true,
-      "Seconds": 5.11
+      "Seconds": 1.69
     },
     {
       "Name": "并发操作锁",
       "Passed": true,
-      "Seconds": 1.29
+      "Seconds": 0.53
     },
     {
       "Name": "拒绝不同加载器及缺失共享框架文件",
       "Passed": true,
-      "Seconds": 4.43
+      "Seconds": 1.72
     },
     {
       "Name": "损坏备份在撤回前被识别",
       "Passed": true,
-      "Seconds": 8.36
+      "Seconds": 3.69
     },
     {
       "Name": "初次安装撤回保留共享框架",
       "Passed": true,
-      "Seconds": 18.77
+      "Seconds": 6.55
     },
     {
       "Name": "损坏安装包在安装前被拒绝",
       "Passed": true,
-      "Seconds": 4.15
+      "Seconds": 1.35
     },
     {
       "Name": "目录链接和路径越界被拒绝",
       "Passed": true,
-      "Seconds": 1.91
+      "Seconds": 0.65
     },
     {
       "Name": "游戏运行时阻止改动",
       "Passed": true,
-      "Seconds": 2.46
+      "Seconds": 0.89
     },
     {
       "Name": "无效游戏目录无操作副作用",
       "Passed": true,
-      "Seconds": 1.47
+      "Seconds": 0.53
     },
     {
-      "Name": "网易云旧版升级增加离线解码依赖，撤回后恢复旧版",
+      "Name": "netease 旧版升级、完整解码依赖、撤回和账号保留",
       "Passed": true,
-      "Seconds": 35.69
+      "Seconds": 11.47
+    },
+    {
+      "Name": "kugou 旧版升级、完整解码依赖、撤回和账号保留",
+      "Passed": true,
+      "Seconds": 7.31
+    },
+    {
+      "Name": "bilibili 旧版升级、完整解码依赖、撤回和账号保留",
+      "Passed": true,
+      "Seconds": 7.78
+    },
+    {
+      "Name": "ximalaya 旧版升级、完整解码依赖、撤回和账号保留",
+      "Passed": true,
+      "Seconds": 7.32
+    },
+    {
+      "Name": "saltplayer 旧版升级、完整解码依赖、撤回和账号保留",
+      "Passed": true,
+      "Seconds": 7.63
     },
     {
       "Name": "WinForms 界面真实渲染",
       "Passed": true,
-      "Seconds": 12.44
+      "Seconds": 3.08
     }
   ],
-  "Passed": 22,
-  "Total": 22
+  "Passed": 26,
+  "Total": 26
 }

@@ -19,5 +19,16 @@
     "bundled": true,
     "file": "offline-dependencies/NAudio.Wasapi.nupkg",
     "sha256": "c8396b8dbab86a2619edfd9158beaf18c21cb86677099b5594950fd8651b9d1a"
+  },
+  "NLayer": {
+    "bundled": true,
+    "version": "3.0.0",
+    "license": "MIT",
+    "source": "https://github.com/naudio/NLayer/tree/046c7ce422970f8f0f0bc205d6c6341bcb7debf1",
+    "dll_path_in_package": "lib/netstandard2.0/NLayer.dll",
+    "bundled_archive": "offline-dependencies/NLayer.nupkg",
+    "sha256": "625b215f76453180d499c203f711aceedcce6e855c86a65716c0b1275afcb9c6",
+    "url": "https://api.nuget.org/v3-flatcontainer/nlayer/3.0.0/nlayer.3.0.0.nupkg",
+    "downloaded_by_installer": false
   }
 }

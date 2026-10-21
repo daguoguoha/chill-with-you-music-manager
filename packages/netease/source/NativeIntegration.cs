@@ -47,6 +47,15 @@ namespace ChillNeteasePlaylist
             harmony.Patch(AccessTools.Method(typeof(MusicSettingV2), "SaveReady"), postfix: new HarmonyMethod(typeof(Plugin), "NativeSaveReady"));
             // These three lists belong to the game save. Cloud IDs remain runtime-only.
             harmony.Patch(AccessTools.Method(typeof(SaveDataManager), "SaveMusicSetting"), prefix: new HarmonyMethod(typeof(Plugin), "NativeSavePrefix"), finalizer: new HarmonyMethod(typeof(Plugin), "NativeSaveFinalizer"));
+            harmony.Patch(AccessTools.Method(typeof(MusicService), "SetShuffle"), transpiler: new HarmonyMethod(typeof(Plugin), "NativeShuffleBounds"));
+            harmony.Patch(AccessTools.Method(typeof(MusicService), "SetShuffle"), transpiler: new HarmonyMethod(typeof(Plugin), "NativeShuffleDisplaySource"));
+            harmony.Patch(AccessTools.Method(typeof(MusicService), "<Setup>b__62_0"), transpiler: new HarmonyMethod(typeof(Plugin), "NativeShuffleDisplaySource"));
+            var nextState=(System.Runtime.CompilerServices.AsyncStateMachineAttribute)System.Attribute.GetCustomAttribute(AccessTools.Method(typeof(MusicService), "GetNextGameAudio"),typeof(System.Runtime.CompilerServices.AsyncStateMachineAttribute));
+            harmony.Patch(AccessTools.Method(nextState.StateMachineType,"MoveNext"),transpiler:new HarmonyMethod(typeof(Plugin),"NativeShufflePlayback"));
+            harmony.Patch(AccessTools.Method(typeof(MusicPlayListView), "ScrollToPlayingMusic"), prefix: new HarmonyMethod(typeof(Plugin), "NativeFocusPlaying"));
+            harmony.Patch(AccessTools.Method(typeof(MusicPlayListView), "ViewPlayList"), postfix: new HarmonyMethod(typeof(Plugin), "NativeFocusRebuilt"));
+            foreach(string name in new[] { "OnChangeMusic", "ActivatePlayList" })
+                harmony.Patch(AccessTools.Method(typeof(MusicUI), name), postfix: new HarmonyMethod(typeof(Plugin), "NativeFocusChanged"));
             Logger.LogInfo("原生网易云播放器接口已接入。");
         }
         static void NativeTagSetup(MusicTagListUI __instance) { if (Instance != null) { Instance.nativeTagUI = __instance; Instance.nativeMenuVersion = -1; } }
@@ -161,7 +170,7 @@ namespace ChillNeteasePlaylist
                     var list = service.CurrentPlayList;
                     int selected = list.IndexOf(info);
                     if (selected >= 0 && list.Count > 1)
-                        service.PlayNextMusic(SongRequestPolicy.NextOffset(selected, list.IndexOf(service.PlayingMusic), list.Count), kind).Forget();
+                        service.PlayNextMusic(NativeFailureOffset(service,info), kind).Forget();
                 }
                 yield break;
             }
@@ -366,9 +375,11 @@ namespace ChillNeteasePlaylist
                 all.Add(info);
             }
             // A new tag rebuilds the native observable playlist and the existing native rows.
-            AccessTools.Field(typeof(MusicService), "shuffleList").SetValue(service, all.ToList());
-            SaveDataManager.Instance.MusicSetting.CurrentAudioTag.Value = (AudioTag)0;
-            SaveDataManager.Instance.MusicSetting.CurrentAudioTag.Value = CloudTag;
+            AccessTools.Field(typeof(MusicService), "shuffleList").SetValue(service, ShufflePolicy.Build(all, service.IsShuffle, service.PlayingMusic, delegate(int max) { return UnityEngine.Random.Range(0, max); }));
+            // Rebuild once even when reopening the same tag; avoid an intermediate full native list.
+            if(SaveDataManager.Instance.MusicSetting.CurrentAudioTag.Value==CloudTag)
+                AccessTools.Method(typeof(MusicService),"<Setup>b__62_0").Invoke(service,new object[]{CloudTag});
+            else SaveDataManager.Instance.MusicSetting.CurrentAudioTag.Value = CloudTag;
             if (nativeTagUI != null) AccessTools.Method(typeof(MusicTagListUI), "SetTitle").Invoke(nativeTagUI, new object[] { (AudioTag?)CloudTag });
             service.SetIsAllExcludedMusicFromPlaylist();
             Logger.LogInfo("原生网易云歌单已载入：" + selectedPlaylistTitle + "，" + songs.Count + " 首。");

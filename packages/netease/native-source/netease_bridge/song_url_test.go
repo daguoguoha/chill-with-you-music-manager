@@ -66,3 +66,16 @@ func TestSongURLErrorsAndTrials(t *testing.T) {
 		t.Fatal(trial, err)
 	}
 }
+
+func TestPortableSongEncoding(t *testing.T) {
+	for _, quality := range []string{"standard", "high", "exhigh"} {
+		if portableSongEncoding(quality) != "mp3" {
+			t.Fatal(quality)
+		}
+	}
+	for _, quality := range []string{"lossless", "hires"} {
+		if portableSongEncoding(quality) != "flac" {
+			t.Fatal(quality)
+		}
+	}
+}

@@ -79,15 +79,15 @@ namespace ChillNeteasePlaylist
             p.Frame(.2f); p.Frame(.6f); p.Frame(.2f); p.Frame(.2f);
             Check(!p.sessionApplying && KanKikuchi.AudioManager.MusicManager.Current.Player.AudioSource.time == 34, "startup restores exact saved second");
             Check(!p.NativeService.IsPause, "playing session continues playing");
-            p.sessionWriting = null;
+            p.sessionWrites.Flush(3000);
             var source = KanKikuchi.AudioManager.MusicManager.Current.Player.AudioSource;
             source.time = 53; p.ClosePlaybackSession();
             Check(PlaybackSessionStore.Read(p.sessionPath).Seconds == 53, "normal quit flushes latest position");
             p = Boot("netease", true); p.Frame(.2f); p.Frame(.2f); p.Frame(.6f); p.Frame(.2f); p.Frame(.2f);
             Check(p.NativeService.IsPause && !source.isPlaying && source.time == 34, "paused session restores paused at saved position");
-            p.NativeService.IsPause = false; p.SavePlaybackSession(true);
+            p.NativeService.IsPause = false; p.SavePlaybackSession(true); p.sessionWrites.Flush(3000);
             Check(PlaybackSessionStore.Read(p.sessionPath).Paused, "actual paused audio wins over stale service flag");
-            p.NativeService.CurrentPlayList.Clear(); p.SavePlaybackSession(true);
+            p.NativeService.CurrentPlayList.Clear(); p.SavePlaybackSession(true); p.sessionWrites.Flush(3000);
             Check(JsonConvert.DeserializeObject<List<Song>>(PlaybackSessionStore.Read(p.sessionPath).QueueJson).Count == 2, "transient empty native playlist preserves full saved queue");
             p = Boot("netease", false); p.Frame(.2f); p.Frame(.6f);
             Check(p.sessionApplying, "seek is verified on a later audio frame");
@@ -111,7 +111,7 @@ namespace ChillNeteasePlaylist
             p.NativeService.AllMusicList.Add(new Bulbul.GameAudioInfo { UUID = "game:original" }); p.Frame(.2f);
             Check(p.sessionApplying, "restore begins after native music catalog is ready");
             p = Boot("netease", false); p.Frame(.2f); p.Frame(.2f); p.Frame(.6f); p.Frame(.2f); p.Frame(.2f);
-            p.NativeService.PlayingMusic = new Bulbul.GameAudioInfo { UUID = "game:original" }; SessionAfterTrack();
+            p.NativeService.PlayingMusic = new Bulbul.GameAudioInfo { UUID = "game:original" }; SessionAfterTrack(); p.sessionWrites.Flush(3000);
             Check(PlaybackSessionStore.Read(p.sessionPath).Provider == "game", "selecting original game music suppresses stale cloud resume");
             Console.WriteLine("TOTAL " + checks);
         }

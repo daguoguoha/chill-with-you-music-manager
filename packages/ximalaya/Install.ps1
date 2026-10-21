@@ -7,7 +7,8 @@ $script:LogControl = $null
 $script:Dependencies = @(
     @{Name='BepInEx.zip'; Url='https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip'; SHA256='82F9878551030F54657792C0740D9D51A09500EEAE1FBA21106B0C441E6732C4'},
     @{Name='NAudio.Core.nupkg'; Url='https://api.nuget.org/v3-flatcontainer/naudio.core/2.2.1/naudio.core.2.2.1.nupkg'; SHA256='794645DBFD30E4880663D52D9D9224D55C301FA54228FF623C95D572C7887347'},
-    @{Name='NAudio.Wasapi.nupkg'; Url='https://api.nuget.org/v3-flatcontainer/naudio.wasapi/2.2.1/naudio.wasapi.2.2.1.nupkg'; SHA256='C8396B8DBAB86A2619EDFD9158BEAF18C21CB86677099B5594950FD8651B9D1A'}
+    @{Name='NAudio.Wasapi.nupkg'; Url='https://api.nuget.org/v3-flatcontainer/naudio.wasapi/2.2.1/naudio.wasapi.2.2.1.nupkg'; SHA256='C8396B8DBAB86A2619EDFD9158BEAF18C21CB86677099B5594950FD8651B9D1A'},
+    @{Name='NLayer.nupkg'; Url='https://api.nuget.org/v3-flatcontainer/nlayer/3.0.0/nlayer.3.0.0.nupkg'; SHA256='625B215F76453180D499C203F711ACEEDCCE6E855C86A65716C0B1275AFCB9C6'}
 )
 function Write-InstallLog([string]$Text) {
     Write-Output $Text
@@ -65,7 +66,7 @@ function Get-Dependency($Dependency, [string]$Cache) {
     $bundled = Get-SafeChild (Join-Path $script:InstallRoot 'offline-dependencies') $Dependency.Name
     if (Test-Path -LiteralPath $bundled -PathType Leaf) {
         if ((Get-FileHash -LiteralPath $bundled -Algorithm SHA256).Hash -ne $Dependency.SHA256) {
-            throw ('内置依赖校验不通过：' + $Dependency.Name + '。请重新下载并完整解压 喜马拉雅 v1.3.0 一键安装包。')
+            throw ('内置依赖校验不通过：' + $Dependency.Name + '。请重新下载并完整解压 喜马拉雅 v1.3.1 一键安装包。')
         }
         Write-InstallLog ('使用已校验的内置依赖 ' + $Dependency.Name) | Out-Host
         return $bundled
@@ -103,8 +104,8 @@ function Invoke-Installation([string]$Path) {
     }
     if (Test-Path -LiteralPath (Get-SafeChild $root 'BepInEx\plugins\ChillPatcher\ChillPatcher.dll')) { throw '发现完整 ChillPatcher 插件。请先停用它，避免两个插件同时接管播放器。' }
     $payload = Join-Path $script:InstallRoot 'BepInEx\plugins\ChillXimalayaPlaylist\ChillXimalayaPlaylist.dll'
-    if (-not (Test-Path -LiteralPath $payload) -or (Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash -ne 'C18D1BF0EF0722D63A6D2C80C923DAA619DA9088DF9A2B5E6312EFFA385E8AB1') { throw '主插件文件缺失或校验失败，请重新解压原始安装包。' }
-    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillXimalayaNative-1.3.0-downloads'
+    if (-not (Test-Path -LiteralPath $payload) -or (Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash -ne '0336C72AB5C45058EB6728F48FE938E0B24F8123B119C9A8759144D2A115E529') { throw '主插件文件缺失或校验失败，请重新解压原始安装包。' }
+    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillXimalayaNative-1.3.1-downloads'
     New-Item -ItemType Directory -Path $cache -Force | Out-Null
     $stage = Join-Path $cache ([Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $stage | Out-Null
@@ -130,6 +131,10 @@ function Invoke-Installation([string]$Path) {
         $files += @{Path=($pluginRelative+$name); Source=(Join-Path $expanded ('lib\netstandard2.0\'+$name)); Loader=$false}
     }
     $files += @{Path=($pluginRelative+'ChillXimalayaPlaylist.dll'); Source=(Join-Path $script:InstallRoot ($pluginRelative+'ChillXimalayaPlaylist.dll')); Loader=$false}
+    $nlayerArchive = Get-Dependency ($script:Dependencies | Where-Object Name -eq 'NLayer.nupkg') $cache
+    $nlayerStage = Join-Path $stage 'nlayer'
+    Expand-SafeZip $nlayerArchive $nlayerStage
+    $files += @{Path=($pluginRelative+'NLayer.dll'); Source=(Join-Path $nlayerStage 'lib\netstandard2.0\NLayer.dll'); Loader=$false}
     $backupRelative = 'BepInEx\ChillXimalayaNative-backups\' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [Guid]::NewGuid().ToString('N')
     $plan = @()
     foreach ($file in $files) {
@@ -159,8 +164,8 @@ function Invoke-Installation([string]$Path) {
         $manifest = Get-SafeChild $root 'ChillXimalayaNative-install.json'
         $history = @()
         if (Test-Path -LiteralPath $manifest) { $history += (Get-Content -LiteralPath $manifest -Raw | ConvertFrom-Json).History }
-        $history += [pscustomobject]@{Version='1.3.0'; Date=(Get-Date -Format o); Files=@($plan | Select-Object Path,Hash,Added,BackupPath)}
-        [pscustomobject]@{Version='1.3.0'; GameDirectory=$root; History=$history} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifest -Encoding UTF8
+        $history += [pscustomobject]@{Version='1.3.1'; Date=(Get-Date -Format o); Files=@($plan | Select-Object Path,Hash,Added,BackupPath)}
+        [pscustomobject]@{Version='1.3.1'; GameDirectory=$root; History=$history} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $manifest -Encoding UTF8
         Write-InstallLog '安装成功。请从 Steam 启动游戏，首次按 F7 扫码登录。'
         Write-InstallLog '打开原生播放列表，在上方下拉菜单选择“喜马拉雅 · 歌单名”。'
     } catch {
@@ -175,7 +180,7 @@ function Invoke-Installation([string]$Path) {
     }
 }
 if ($VerifyDownloadsOnly) {
-    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillXimalayaNative-1.3.0-downloads'
+    $cache = Join-Path ([IO.Path]::GetTempPath()) 'ChillXimalayaNative-1.3.1-downloads'
     New-Item -ItemType Directory -Path $cache -Force | Out-Null
     foreach ($dependency in $script:Dependencies) { [void](Get-Dependency $dependency $cache) }
     Write-Output '三个内置依赖 SHA256 校验通过。'

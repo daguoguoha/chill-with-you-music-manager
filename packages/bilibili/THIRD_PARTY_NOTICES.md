@@ -22,3 +22,6 @@
 设备 Cookie 字段参考 [bilibili-API-collect 设备接口文档](https://github.com/pskdje/bilibili-API-collect/blob/main/docs/misc/buvid3_4.md) 的接口说明，未复制其示例设备标识。
 
 真实播放记录兼容性实现的协议来源见 PLAYBACK_REPORTING.md；没有复制或分发平台网页播放器的整份代码或美术资源。
+
+
+MP3 解码同步采用 NLayer 3.0.0（MIT），对应来源与包哈希见 dependencies.json，许可见 licenses/NLayer-LICENSE.txt。MP3 不依赖 Windows Media Foundation；其他格式仍依赖系统媒体组件。

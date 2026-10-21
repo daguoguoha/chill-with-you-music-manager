@@ -47,12 +47,22 @@ namespace ChillNeteasePlaylist
                 IntPtr error = NeteaseGetLastError();
                 string reason = error == IntPtr.Zero ? "" : Take(error);
                 if (attempt == 0 && QrRequest.CanRetry(reason)) { System.Threading.Thread.Sleep(500); continue; }
-                throw new QrRequestException(QrRequest.Describe(poll ? "poll" : "key", reason));
+                throw new QrRequestException(QrRequest.Describe(poll ? "poll" : "key", reason),QrRequest.CanRetry(reason));
             }
         }
         public static string SongURL(long id)
         {
-            IntPtr p = Utf8("standard");
+            try { return SongURLQuality(id, "exhigh"); }
+            catch (SongUnavailableException) { return SongURLQuality(id, "standard"); }
+            catch (PlaybackFailure error)
+            {
+                if (!error.Code.StartsWith("AUTH_", StringComparison.Ordinal)) throw;
+                return SongURLQuality(id, "standard");
+            }
+        }
+        static string SongURLQuality(long id, string quality)
+        {
+            IntPtr p = Utf8(quality);
             try
             {
                 IntPtr response = NeteaseGetSongURL(id, p);

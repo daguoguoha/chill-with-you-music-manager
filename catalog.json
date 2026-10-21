@@ -1,24 +1,24 @@
 {
   "Schema": 1,
-  "ManagerVersion": "1.6.1",
+  "ManagerVersion": "2.0.0",
   "Plugins": [
     {
       "Id": "netease",
       "Name": "网易云音乐",
-      "Version": "1.5.2",
+      "Version": "1.5.3",
       "Folder": "packages\\netease",
       "Primary": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
       "Manifest": "ChillNeteaseNative-install.json",
       "Hotkey": "F8",
-      "Hint": "MP3 使用随包纯托管解码，不依赖系统媒体组件；新接口异常会回退；下载失败有界重试并刷新地址。失败日志包含阶段与状态码。其他格式仍依赖 Windows 媒体组件。F8 打开面板。 扫码错误会显示具体分类，临时连接错误重试一次。",
+      "Hint": "MP3 使用随包纯托管解码，不依赖系统媒体组件；新接口异常会回退；下载失败有界重试并刷新地址。失败日志包含阶段与状态码。其他格式仍依赖 Windows 媒体组件。F8 打开面板。 扫码错误会显示具体分类，临时连接错误重试一次。 接入底部原生随机播放，切换歌单保留随机模式；MP3 使用随包解码，长音轨使用流式 PCM。 音频下载失败最多尝试三次，每次刷新地址。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "BA18B48E316AC4805921E676253A84B3A4B043F234F88740008FFEAACB1DF440"
+          "Hash": "B7A0DF305418674660793A535C39A06DDDB99CBFBCD60D0EAF764835609328DC"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNetease.dll",
-          "Hash": "1BEA853510686CD1DE03090D835B413608E101500DC851EC8AFC3BC7606EABA0"
+          "Hash": "76BEEDB77A6A4346361D35045BA9BEC65C83250AEAD5A49A76AFE45DAC1FAED1"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\QRCoder.dll",
@@ -40,11 +40,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "7D21DFA106E925AF1974332294E32430628ECE8B25D46C642EC2E384637B03CB"
+          "Hash": "7AB48426648C4C1F14FAE2DA5EC847126FA148019314E304C8702B6FF636BB8D"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "BA18B48E316AC4805921E676253A84B3A4B043F234F88740008FFEAACB1DF440"
+          "Hash": "B7A0DF305418674660793A535C39A06DDDB99CBFBCD60D0EAF764835609328DC"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -52,11 +52,11 @@
         },
         {
           "Path": "offline-dependencies\\ChillNetease.dll",
-          "Hash": "1BEA853510686CD1DE03090D835B413608E101500DC851EC8AFC3BC7606EABA0"
+          "Hash": "76BEEDB77A6A4346361D35045BA9BEC65C83250AEAD5A49A76AFE45DAC1FAED1"
         },
         {
           "Path": "offline-dependencies\\ChillNetease.h",
-          "Hash": "15335670E3F502A187D1316E59496755FC7CA564E9FF476E5FBCF3F85A0A88FD"
+          "Hash": "FEE5F0970BBF052FA7FFA33B3547C87C19A43C1B84306B1ED51A8BBA523A0E7E"
         },
         {
           "Path": "offline-dependencies\\QRCoder.nupkg",
@@ -83,16 +83,16 @@
     {
       "Id": "kugou",
       "Name": "酷狗音乐",
-      "Version": "1.3.0",
+      "Version": "1.3.1",
       "Folder": "packages\\kugou",
       "Primary": "BepInEx\\plugins\\ChillKuGouPlaylist\\ChillKuGouPlaylist.dll",
       "Manifest": "ChillKuGouNative-install.json",
       "Hotkey": "F10",
-      "Hint": "使用酷狗手机 App 扫码登录，读取歌单。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。 歌单顶部新增「每日推荐」，点击时读取最新推荐；当前播放不会自动切换。 本候选版新增底栏红心（酷狗我喜欢）；验收状态见 HEART_TESTING.md。",
+      "Hint": "使用酷狗手机 App 扫码登录，读取歌单。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。 歌单顶部新增「每日推荐」，点击时读取最新推荐；当前播放不会自动切换。 本候选版新增底栏红心（酷狗我喜欢）；验收状态见 HEART_TESTING.md。 接入底部原生随机播放，切换歌单保留随机模式；MP3 使用随包解码，长音轨使用流式 PCM。 音频下载失败最多尝试三次，每次刷新地址。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\ChillKuGouPlaylist.dll",
-          "Hash": "C8C34A5D1E70029471A69EC55E033BB4AAD3BB3AA0893986DF6E9379D31E1779"
+          "Hash": "0CE3A336F9881444EEBC0C2E6F341526F51A3F68A5739C131E8DF2FC60856ACC"
         },
         {
           "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\NAudio.Core.dll",
@@ -101,16 +101,20 @@
         {
           "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\NAudio.Wasapi.dll",
           "Hash": "618EF0E49D64E7A66DFE64BBF6AE81705B9D9683D8A9F321E5C3024D666BDF82"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\NLayer.dll",
+          "Hash": "F1DB8B641171799231AEE40712B01ED439611EBDEDA9324D4F5A524C34454E11"
         }
       ],
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "ADBF9B1A0E984C62F0C6190C88E5FFFFFCE5E1D7DB45CF82832EDB96FFF26E33"
+          "Hash": "B4C76A96652545944CF9F16D309A31D309BC4C642854F8DEB2E185CB3B9628E8"
         },
         {
           "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\ChillKuGouPlaylist.dll",
-          "Hash": "C8C34A5D1E70029471A69EC55E033BB4AAD3BB3AA0893986DF6E9379D31E1779"
+          "Hash": "0CE3A336F9881444EEBC0C2E6F341526F51A3F68A5739C131E8DF2FC60856ACC"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -123,22 +127,30 @@
         {
           "Path": "offline-dependencies\\NAudio.Wasapi.nupkg",
           "Hash": "C8396B8DBAB86A2619EDFD9158BEAF18C21CB86677099B5594950FD8651B9D1A"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillKuGouPlaylist\\NLayer.dll",
+          "Hash": "F1DB8B641171799231AEE40712B01ED439611EBDEDA9324D4F5A524C34454E11"
+        },
+        {
+          "Path": "offline-dependencies\\NLayer.nupkg",
+          "Hash": "625B215F76453180D499C203F711ACEEDCCE6E855C86A65716C0B1275AFCB9C6"
         }
       ]
     },
     {
       "Id": "bilibili",
       "Name": "B站音频",
-      "Version": "1.3.0",
+      "Version": "1.3.1",
       "Folder": "packages\\bilibili",
       "Primary": "BepInEx\\plugins\\ChillBilibiliPlaylist\\ChillBilibiliPlaylist.dll",
       "Manifest": "ChillBilibiliNative-install.json",
       "Hotkey": "F11",
-      "Hint": "扫码后导入收藏夹；播放视频音频，不显示视频画面。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。 本候选版新增底栏红心（B站点赞）；验收状态见 HEART_TESTING.md。",
+      "Hint": "扫码后导入收藏夹；播放视频音频，不显示视频画面。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。 本候选版新增底栏红心（B站点赞）；验收状态见 HEART_TESTING.md。 接入底部原生随机播放，切换歌单保留随机模式；MP3 使用随包解码，长音轨使用流式 PCM。 音频下载失败最多尝试三次，每次刷新地址。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\ChillBilibiliPlaylist.dll",
-          "Hash": "6C5C21A5ED62DAD96484999B2C078E3B0C405DB7F8C2EAA22F5B92AE10ABEA15"
+          "Hash": "016E19ADFCD1C556FDC731E98FA1281E77CB020FD9C00E7DC65F9EBDD421CEBE"
         },
         {
           "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\NAudio.Core.dll",
@@ -151,16 +163,20 @@
         {
           "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\QRCoder.dll",
           "Hash": "52E2B84298EBDF48F7B58FC9C7A46FB383B1668C51D90D4AD0D7AB388ACC1E0C"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\NLayer.dll",
+          "Hash": "F1DB8B641171799231AEE40712B01ED439611EBDEDA9324D4F5A524C34454E11"
         }
       ],
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "A32507E40F1C8B0C8E87FFAF199536BEC1A9CE7598A237FA0ADC26372ABBEA6E"
+          "Hash": "72E110A6617ECAAA45C7AD0F13ADE063129A54DC6EC72A5126F131C67AE091BF"
         },
         {
           "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\ChillBilibiliPlaylist.dll",
-          "Hash": "6C5C21A5ED62DAD96484999B2C078E3B0C405DB7F8C2EAA22F5B92AE10ABEA15"
+          "Hash": "016E19ADFCD1C556FDC731E98FA1281E77CB020FD9C00E7DC65F9EBDD421CEBE"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -177,22 +193,30 @@
         {
           "Path": "offline-dependencies\\QRCoder.nupkg",
           "Hash": "8ADE16246255AE99986FC60B9532DE52B4DB196F00166DAB5EC916ECDBC2B4C2"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillBilibiliPlaylist\\NLayer.dll",
+          "Hash": "F1DB8B641171799231AEE40712B01ED439611EBDEDA9324D4F5A524C34454E11"
+        },
+        {
+          "Path": "offline-dependencies\\NLayer.nupkg",
+          "Hash": "625B215F76453180D499C203F711ACEEDCCE6E855C86A65716C0B1275AFCB9C6"
         }
       ]
     },
     {
       "Id": "ximalaya",
       "Name": "喜马拉雅",
-      "Version": "1.3.0",
+      "Version": "1.3.1",
       "Folder": "packages\\ximalaya",
       "Primary": "BepInEx\\plugins\\ChillXimalayaPlaylist\\ChillXimalayaPlaylist.dll",
       "Manifest": "ChillXimalayaNative-install.json",
       "Hotkey": "F7",
-      "Hint": "导入专辑、播客和声音；登录后读取订阅及喜欢的声音。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。 本候选版新增底栏红心（喜欢的声音）；验收状态见 HEART_TESTING.md。",
+      "Hint": "导入专辑、播客和声音；登录后读取订阅及喜欢的声音。 本候选版新增真实播放记录开关；平台时长入账需实测确认。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。 本候选版新增底栏红心（喜欢的声音）；验收状态见 HEART_TESTING.md。 接入底部原生随机播放，切换歌单保留随机模式；MP3 使用随包解码，长音轨使用流式 PCM。 音频下载失败最多尝试三次，每次刷新地址。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\ChillXimalayaPlaylist.dll",
-          "Hash": "C18D1BF0EF0722D63A6D2C80C923DAA619DA9088DF9A2B5E6312EFFA385E8AB1"
+          "Hash": "0336C72AB5C45058EB6728F48FE938E0B24F8123B119C9A8759144D2A115E529"
         },
         {
           "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\NAudio.Core.dll",
@@ -201,16 +225,20 @@
         {
           "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\NAudio.Wasapi.dll",
           "Hash": "618EF0E49D64E7A66DFE64BBF6AE81705B9D9683D8A9F321E5C3024D666BDF82"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\NLayer.dll",
+          "Hash": "F1DB8B641171799231AEE40712B01ED439611EBDEDA9324D4F5A524C34454E11"
         }
       ],
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "55F104F2ECDE2C594EA35B50882D532A17A9F43C74D858DFDB7011B658D33B95"
+          "Hash": "E440A7262C321617051404F8F234F31F36AFC257AE2EB40062238011A8B35A3C"
         },
         {
           "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\ChillXimalayaPlaylist.dll",
-          "Hash": "C18D1BF0EF0722D63A6D2C80C923DAA619DA9088DF9A2B5E6312EFFA385E8AB1"
+          "Hash": "0336C72AB5C45058EB6728F48FE938E0B24F8123B119C9A8759144D2A115E529"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -223,22 +251,30 @@
         {
           "Path": "offline-dependencies\\NAudio.Wasapi.nupkg",
           "Hash": "C8396B8DBAB86A2619EDFD9158BEAF18C21CB86677099B5594950FD8651B9D1A"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillXimalayaPlaylist\\NLayer.dll",
+          "Hash": "F1DB8B641171799231AEE40712B01ED439611EBDEDA9324D4F5A524C34454E11"
+        },
+        {
+          "Path": "offline-dependencies\\NLayer.nupkg",
+          "Hash": "625B215F76453180D499C203F711ACEEDCCE6E855C86A65716C0B1275AFCB9C6"
         }
       ]
     },
     {
       "Id": "saltplayer",
       "Name": "椒盐 / 本地音乐",
-      "Version": "1.2.0",
+      "Version": "1.2.1",
       "Folder": "packages\\saltplayer",
       "Primary": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerPlaylist.dll",
       "Manifest": "ChillSaltPlayerNative-install.json",
       "Hotkey": "F6",
-      "Hint": "导入本地歌曲、音乐文件夹或椒盐导出的路径歌单，无需登录。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。 本候选版新增底栏红心（本地我喜欢）；验收状态见 HEART_TESTING.md。",
+      "Hint": "导入本地歌曲、音乐文件夹或椒盐导出的路径歌单，无需登录。 底部同步歌词，可独立隐藏并导入 LRC。 本次修正音频格式转换与播放失败跳曲；快速切歌会取消旧请求。 此修正版尚未逐一通过真实账号实机播放验收。 本候选版新增底栏红心（本地我喜欢）；验收状态见 HEART_TESTING.md。 接入底部原生随机播放，切换歌单保留随机模式；MP3 使用随包解码，长音轨使用流式 PCM。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerPlaylist.dll",
-          "Hash": "4D81E2A8547A96FDB569667E4161FE5AD6BDC57310BCDA75BE4A6661FD9460D3"
+          "Hash": "E9E8F6095FB98063916F469316198D22366D58F45BF14CF8C7381E75ABD457D4"
         },
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\NAudio.Core.dll",
@@ -251,12 +287,16 @@
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerFilePicker.exe",
           "Hash": "A0E51FBCC26E105A7D3277397097B8E3A41C72102E67E4F5AD74351BAEDE1A0D"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\NLayer.dll",
+          "Hash": "F1DB8B641171799231AEE40712B01ED439611EBDEDA9324D4F5A524C34454E11"
         }
       ],
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "E3786E1919EEE113E05DC1E3E80DC5ACCB8687673F47D47C43A724CABA2B1A4C"
+          "Hash": "182FBE5C043563855D7B79052896C7246DD03A8C281E5AEB4A09BE0F9E916665"
         },
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerFilePicker.exe",
@@ -264,7 +304,7 @@
         },
         {
           "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\ChillSaltPlayerPlaylist.dll",
-          "Hash": "4D81E2A8547A96FDB569667E4161FE5AD6BDC57310BCDA75BE4A6661FD9460D3"
+          "Hash": "E9E8F6095FB98063916F469316198D22366D58F45BF14CF8C7381E75ABD457D4"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -277,6 +317,14 @@
         {
           "Path": "offline-dependencies\\NAudio.Wasapi.nupkg",
           "Hash": "C8396B8DBAB86A2619EDFD9158BEAF18C21CB86677099B5594950FD8651B9D1A"
+        },
+        {
+          "Path": "BepInEx\\plugins\\ChillSaltPlayerPlaylist\\NLayer.dll",
+          "Hash": "F1DB8B641171799231AEE40712B01ED439611EBDEDA9324D4F5A524C34454E11"
+        },
+        {
+          "Path": "offline-dependencies\\NLayer.nupkg",
+          "Hash": "625B215F76453180D499C203F711ACEEDCCE6E855C86A65716C0B1275AFCB9C6"
         }
       ]
     },

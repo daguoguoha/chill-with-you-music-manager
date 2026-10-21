@@ -56,3 +56,13 @@ func resolveSongURL(id int64, primary func() (float64, []byte, error), fallback 
 	}
 	return songURLResponse(id, fallbackBody)
 }
+
+// Lossy quality levels request MP3 explicitly for the managed game decoder.
+func portableSongEncoding(quality string) string {
+	switch quality {
+	case "standard", "high", "exhigh":
+		return "mp3"
+	default:
+		return "flac"
+	}
+}

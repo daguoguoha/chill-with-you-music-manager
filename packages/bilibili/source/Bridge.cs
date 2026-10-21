@@ -57,7 +57,7 @@ namespace ChillBilibiliPlaylist
         static JObject Request(string url, CookieContainer jar, string form=null)
         {
             Uri uri=new Uri(url);
-            if (uri.Scheme!="https" || (uri.Host!="api.bilibili.com" && uri.Host!="passport.bilibili.com")) throw new InvalidOperationException("接口地址无效。");
+            if (uri.Scheme!="https" || !uri.IsDefaultPort || !string.IsNullOrEmpty(uri.UserInfo) || (uri.Host!="api.bilibili.com" && uri.Host!="passport.bilibili.com")) throw new InvalidOperationException("接口地址无效。");
             if(uri.Host=="api.bilibili.com" && RetryAfterSeconds>0)throw RequestIssue.Cooling(RetryAfterSeconds);
             for (int attempt=0; ; attempt++)
             {
@@ -97,11 +97,12 @@ namespace ChillBilibiliPlaylist
                     HttpWebResponse failedResponse=error.Response as HttpWebResponse;
                     if(failedResponse!=null && ((int)failedResponse.StatusCode==412 || (int)failedResponse.StatusCode==429))
                     {int status=(int)failedResponse.StatusCode;failedResponse.Close();throw Fail(RequestIssue.Http(status,uri.AbsolutePath));}
-                    bool retry=form==null && attempt==0 && NetworkErrors.CanRetry(error);
+                    bool transient=NetworkErrors.CanRetry(error);
+                    bool retry=form==null && attempt==0 && transient;
                     string message=NetworkErrors.Describe(error,uri.Host);
                     if (error.Response!=null) error.Response.Close();
                     if (retry) continue;
-                    throw RequestIssue.Network(message,uri.AbsolutePath);
+                    throw RequestIssue.Network(message,uri.AbsolutePath,transient);
                 }
             }
         }
@@ -139,7 +140,7 @@ namespace ChillBilibiliPlaylist
             JObject data=result["data"] as JObject;
             string value=data==null ? "" : Text(data["url"]);
             Uri uri;
-            if (!Uri.TryCreate(value,UriKind.Absolute,out uri) || uri.Scheme!="https" || (uri.Host!="passport.bilibili.com" && uri.Host!="account.bilibili.com")) throw new InvalidOperationException("B站未返回有效登录二维码。");
+            if (!Uri.TryCreate(value,UriKind.Absolute,out uri) || uri.Scheme!="https" || !uri.IsDefaultPort || !string.IsNullOrEmpty(uri.UserInfo) || (uri.Host!="passport.bilibili.com" && uri.Host!="account.bilibili.com")) throw new InvalidOperationException("B站未返回有效登录二维码。");
             qrKey=Text(data["qrcode_key"]);
             if (qrKey.Length<10) throw new InvalidOperationException("B站二维码缺少凭证。");
             using (var generator=new QRCodeGenerator())

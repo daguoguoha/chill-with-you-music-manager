@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -49,6 +49,15 @@ namespace ChillSaltPlayerPlaylist
             harmony.Patch(AccessTools.Method(typeof(MusicSettingV2), "SaveReady"), postfix: new HarmonyMethod(typeof(Plugin), "NativeSaveReady"));
             // These three lists belong to the game save. Cloud IDs remain runtime-only.
             harmony.Patch(AccessTools.Method(typeof(SaveDataManager), "SaveMusicSetting"), prefix: new HarmonyMethod(typeof(Plugin), "NativeSavePrefix"), finalizer: new HarmonyMethod(typeof(Plugin), "NativeSaveFinalizer"));
+            harmony.Patch(AccessTools.Method(typeof(MusicService), "SetShuffle"), transpiler: new HarmonyMethod(typeof(Plugin), "NativeShuffleBounds"));
+            harmony.Patch(AccessTools.Method(typeof(MusicService), "SetShuffle"), transpiler: new HarmonyMethod(typeof(Plugin), "NativeShuffleDisplaySource"));
+            harmony.Patch(AccessTools.Method(typeof(MusicService), "<Setup>b__62_0"), transpiler: new HarmonyMethod(typeof(Plugin), "NativeShuffleDisplaySource"));
+            var nextState=(System.Runtime.CompilerServices.AsyncStateMachineAttribute)System.Attribute.GetCustomAttribute(AccessTools.Method(typeof(MusicService), "GetNextGameAudio"),typeof(System.Runtime.CompilerServices.AsyncStateMachineAttribute));
+            harmony.Patch(AccessTools.Method(nextState.StateMachineType,"MoveNext"),transpiler:new HarmonyMethod(typeof(Plugin),"NativeShufflePlayback"));
+            harmony.Patch(AccessTools.Method(typeof(MusicPlayListView), "ScrollToPlayingMusic"), prefix: new HarmonyMethod(typeof(Plugin), "NativeFocusPlaying"));
+            harmony.Patch(AccessTools.Method(typeof(MusicPlayListView), "ViewPlayList"), postfix: new HarmonyMethod(typeof(Plugin), "NativeFocusRebuilt"));
+            foreach(string name in new[] { "OnChangeMusic", "ActivatePlayList" })
+                harmony.Patch(AccessTools.Method(typeof(MusicUI), name), postfix: new HarmonyMethod(typeof(Plugin), "NativeFocusChanged"));
             Logger.LogInfo("原生椒盐音乐播放器接口已接入。");
         }
         static void NativeTagSetup(MusicTagListUI __instance) { if (Instance != null) { Instance.nativeTagUI = __instance; Instance.nativeMenuVersion = -1; } }
@@ -160,8 +169,7 @@ namespace ChillSaltPlayerPlaylist
                     int selected = list.IndexOf(info);
                     if (selected >= 0 && list.Count > 1)
                     {
-                        int offset = (selected-list.IndexOf(service.PlayingMusic)+1)%list.Count;
-                        if (offset < 0) offset += list.Count;
+                        int offset = NativeFailureOffset(service,info);
                         service.PlayNextMusic(offset,kind).Forget();
                     }
                 }
@@ -183,6 +191,34 @@ namespace ChillSaltPlayerPlaylist
         }
         IEnumerator NativeLoadClip(GameAudioInfo info, CancellationToken cancellation, int version, UniTaskCompletionSource<AudioClip> completion)
         {
+            // Unity otherwise stops an iterator on an unexpected exception and leaves
+            // its UniTask pending forever. Every exit must complete or cancel it.
+            IEnumerator worker = NativeLoadClipCore(info, cancellation, version, completion);
+            try
+            {
+                while (true)
+                {
+                    bool more; object current;
+                    try { more = worker.MoveNext(); current = more ? worker.Current : null; }
+                    catch (OperationCanceledException) { completion.TrySetCanceled(); yield break; }
+                    catch (Exception error)
+                    {
+                        completion.TrySetException(new PlaybackFailure("加载", error.GetType().Name + "_" + error.HResult.ToString("X8"), "处理音频未完成，请重试。", false));
+                        yield break;
+                    }
+                    if (!more) yield break;
+                    yield return current;
+                }
+            }
+            finally
+            {
+                var disposable = worker as IDisposable;
+                if (disposable != null) disposable.Dispose();
+                if (completion.Task.Status == UniTaskStatus.Pending) completion.TrySetCanceled();
+            }
+        }
+        IEnumerator NativeLoadClipCore(GameAudioInfo info, CancellationToken cancellation, int version, UniTaskCompletionSource<AudioClip> completion)
+        {
             Song song;
             if (!nativeSongs.TryGetValue(info.UUID, out song)) { completion.TrySetException(new InvalidOperationException("专辑条目已过期。")); yield break; }
             NativeNotice("正在加载「" + song.name + "」…", 60);
@@ -193,9 +229,7 @@ namespace ChillSaltPlayerPlaylist
             {
                 Exception error = decode.Exception.GetBaseException();
                 if (error is OperationCanceledException) completion.TrySetCanceled();
-                else if (error is InvalidOperationException) completion.TrySetException(new InvalidOperationException(error.Message));
-                else if ((uint)error.HResult == 0x80070070) completion.TrySetException(new InvalidOperationException("系统临时目录空间不足，请清理空间后重试。"));
-                else completion.TrySetException(new InvalidOperationException("Windows 无法解码此音轨（0x" + error.HResult.ToString("X8") + "）。"));
+                else completion.TrySetException(PlaybackFailure.Decode(error, System.IO.Path.GetExtension(song.path).TrimStart('.').ToLowerInvariant()));
                 yield break;
             }
             DecodedAudio pcm = decode.Result;
@@ -268,9 +302,11 @@ namespace ChillSaltPlayerPlaylist
                 all.Add(info);
             }
             // A new tag rebuilds the native observable playlist and the existing native rows.
-            AccessTools.Field(typeof(MusicService), "shuffleList").SetValue(service, all.ToList());
-            SaveDataManager.Instance.MusicSetting.CurrentAudioTag.Value = (AudioTag)0;
-            SaveDataManager.Instance.MusicSetting.CurrentAudioTag.Value = CloudTag;
+            AccessTools.Field(typeof(MusicService), "shuffleList").SetValue(service, ShufflePolicy.Build(all, service.IsShuffle, service.PlayingMusic, delegate(int max) { return UnityEngine.Random.Range(0, max); }));
+            // Rebuild once even when reopening the same tag; avoid an intermediate full native list.
+            if(SaveDataManager.Instance.MusicSetting.CurrentAudioTag.Value==CloudTag)
+                AccessTools.Method(typeof(MusicService),"<Setup>b__62_0").Invoke(service,new object[]{CloudTag});
+            else SaveDataManager.Instance.MusicSetting.CurrentAudioTag.Value = CloudTag;
             if (nativeTagUI != null) AccessTools.Method(typeof(MusicTagListUI), "SetTitle").Invoke(nativeTagUI, new object[] { (AudioTag?)CloudTag });
             service.SetIsAllExcludedMusicFromPlaylist();
             Logger.LogInfo("原生椒盐音乐歌单已载入：" + selectedPlaylistTitle + "，" + songs.Count + " 集。");

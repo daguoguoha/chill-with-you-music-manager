@@ -1,7 +1,8 @@
 ﻿param(
-    [ValidateSet('Status','Verify','Install','Enable','Disable','Undo')][string]$Action='Status',
+    [ValidateSet('Status','Verify','Install','Enable','Disable','Undo','Export')][string]$Action='Status',
     [string]$GameDirectory,
-    [string]$Id
+    [string]$Id,
+    [string]$OutputPath
 )
 $ErrorActionPreference='Stop'
 # Use only the Windows PowerShell modules in this child process. GUI launchers may
@@ -205,6 +206,7 @@ function Get-Status([string]$Root) {
     return [pscustomobject]@{Ok=$true;Message='扫描完成';GameDirectory=$Root;Plugins=@($plugins);Diagnostics=$diag}
 }
 try {
+    if($Action -eq 'Export') { . (Join-Path $PSScriptRoot 'Diagnostics.ps1'); Export-ErrorReport $GameDirectory $OutputPath | ConvertTo-Json -Depth 10 -Compress; exit 0 }
     if($Action -eq 'Status') { Get-Status $GameDirectory | ConvertTo-Json -Depth 10 -Compress; exit 0 }
     $package=Get-Package $Id
     if($Action -eq 'Verify') { Verify-Package $package; [pscustomobject]@{Ok=$true;Message=($package.Name+' 的安装器、插件及离线依赖 SHA256 校验通过。')} | ConvertTo-Json -Compress; exit 0 }

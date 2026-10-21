@@ -81,8 +81,8 @@ namespace ChillXimalayaPlaylist
                 }
                 catch(WebException error)
                 {
-                    bool retry=form==null && attempt==0 && NetworkErrors.CanRetry(error);string message=NetworkErrors.Describe(error,uri.Host);
-                    if(error.Response!=null)error.Response.Close();if(retry)continue;throw new InvalidOperationException(message);
+                    bool transient=NetworkErrors.CanRetry(error);bool retry=form==null && attempt==0 && transient;string message=NetworkErrors.Describe(error,uri.Host);
+                    if(error.Response!=null)error.Response.Close();if(retry)continue;throw new NetworkRequestException(message,transient);
                 }
             }
         }
@@ -154,7 +154,7 @@ namespace ChillXimalayaPlaylist
                 if(!parsed.StartsWith("short:",StringComparison.Ordinal))return parsed;
                 var req=(HttpWebRequest)WebRequest.Create(current);req.Timeout=15000;req.ReadWriteTimeout=15000;req.AllowAutoRedirect=false;req.UserAgent=UserAgent;
                 try{using(var r=(HttpWebResponse)req.GetResponse()){int status=(int)r.StatusCode;string location=r.Headers["Location"];if(status<300 || status>=400 || string.IsNullOrEmpty(location))throw new InvalidOperationException("分享链接无法解析，请复制完整专辑或声音链接。");current=new Uri(new Uri(current),location).AbsoluteUri;}}
-                catch(WebException e){string message=NetworkErrors.Describe(e,new Uri(current).Host);if(e.Response!=null)e.Response.Close();throw new InvalidOperationException(message);}
+                catch(WebException e){bool transient=NetworkErrors.CanRetry(e);string message=NetworkErrors.Describe(e,new Uri(current).Host);if(e.Response!=null)e.Response.Close();throw new NetworkRequestException(message,transient);}
             }
             throw new InvalidOperationException("分享链接跳转过多，请复制完整链接。");
         }

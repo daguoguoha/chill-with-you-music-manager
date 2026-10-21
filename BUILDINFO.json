@@ -1,5 +1,5 @@
 {
-  "Version": "1.6.1-rc.2",
+  "Version": "2.0.0",
   "Base": "v1.6.1-rc.1",
   "IncludedProviders": [
     "netease",
@@ -10,28 +10,50 @@
     "progress",
     "speed"
   ],
-  "ExcludedProviders": {
-    "qq": "Kaspersky VHO:Backdoor.Win32.Androm.gen detection; no flagged DLL read, executed, rebuilt or packaged"
+  "ProviderVersions": {
+    "netease": "1.5.3",
+    "kugou": "1.3.1",
+    "bilibili": "1.3.1",
+    "ximalaya": "1.3.1",
+    "saltplayer": "1.2.1",
+    "progress": "1.0.0",
+    "speed": "1.0.0"
   },
-  "OfflineFavoriteChecks": 30,
-  "IndependentInstallChecks": 20,
+  "ExcludedProviders": {
+    "qq": "Unchanged security exclusion; flagged bridge not read, executed, rebuilt or packaged"
+  },
   "NoUserData": true,
   "NoPrivatePlugins": true,
   "Prerelease": true,
-  "RecommendationChecks": 20,
-  "NeteaseVersion": "1.5.2",
   "PortableMP3Decoder": "NLayer 3.0.0 netstandard2.0",
-  "PlaybackPolicyChecks": 38,
-  "PlaybackCompatibilityChecks": 21,
-  "NativeURLFallback": "fault injection tests passed",
-  "NativeBridgeSmokeChecks": 3,
-  "IndependentNeteaseOfflineInstaller": true,
-  "QrPolicyChecks": 19,
-  "PreviousManagerRegression": {
-    "Passed": 22,
-    "Total": 22
+  "ManagerRegression": {
+    "Passed": 26,
+    "Total": 26
   },
-  "QrBridgeSmoke": "created; waiting for scan 801",
-  "LocalRuntimeLoginRestore": true,
-  "LocalRuntimeNativePlayback": true
+  "ShuffleChecksPerProvider": 313,
+  "EnvironmentChecksPerProvider": 62,
+  "MissingNLayerPerProvider": true,
+  "AudioChecks": {
+    "netease": 24,
+    "kugou": 24,
+    "bilibili": 24,
+    "ximalaya": 24,
+    "saltplayer": 39
+  },
+  "OfflineCoreGroups": 14,
+  "HighQualityNeteaseProbe": 3,
+  "LocalPreservedFiles": 85,
+  "TestDetails": "TESTING.md",
+  "PlaylistFocusChecksPerProvider": 13,
+  "QrPolicyChecks": 29,
+  "QrPollingChecksPerOnlineProvider": 19,
+  "QrMatrixScenarios": 12,
+  "QrExistingAccountPreservation": true,
+  "ShuffleDisplayPlaybackChecksPerProvider": 17,
+  "ErrorReportExport": true,
+  "ErrorReportPrivacyTests": true,
+  "BackgroundSaveCoalescing": true,
+  "LocalRuntimeRandomNext": true,
+  "LocalRuntimeRandomAutoEnd": true,
+  "LocalRuntimePlaylistFocus": true
 }

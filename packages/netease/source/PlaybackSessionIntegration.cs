@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -19,7 +19,7 @@ namespace ChillNeteasePlaylist
         ConfigEntry<bool> restorePlayback;
         string sessionPath, sessionKey;
         Task<PlaybackSession> sessionReading;
-        Task sessionWriting;
+        readonly LatestWorkQueue sessionWrites=new LatestWorkQueue();
         readonly object sessionWriteGate = new object();
         PlaybackSession sessionRestoring;
         bool sessionStartupDone, sessionApplying, sessionClosed, sessionHasPlayed, sessionReadLogged;
@@ -48,7 +48,8 @@ namespace ChillNeteasePlaylist
             if (service == null || service.PlayingMusic == null || PlaybackSessionStoreProvider(service.PlayingMusic.UUID)) return;
             try
             {
-                lock (owner.sessionWriteGate) PlaybackSessionStore.Write(owner.sessionPath, new PlaybackSession { Provider = "game", CurrentId = service.PlayingMusic.UUID, QueueJson = "[]", Duration = 1, UpdatedUtcTicks = DateTime.UtcNow.Ticks });
+                var record=new PlaybackSession { Provider = "game", CurrentId = service.PlayingMusic.UUID, QueueJson = "[]", Duration = 1, UpdatedUtcTicks = DateTime.UtcNow.Ticks };
+                owner.sessionWrites.Enqueue(delegate { lock(owner.sessionWriteGate) PlaybackSessionStore.Write(owner.sessionPath,record); });
                 owner.sessionHasPlayed = false;
             }
             catch (Exception) { }
@@ -152,7 +153,7 @@ namespace ChillNeteasePlaylist
                 if (!IsCloud(info)) return;
                 var source = PlaybackSessionSource(info);
                 if (source == null || source.clip.length <= 0 || (!source.isPlaying && source.time < 0.01f && !service.IsPause)) return;
-                if (!force && sessionWriting != null && !sessionWriting.IsCompleted) return;
+                if (!force && sessionWrites.IsBusy) return;
                 Song currentSong;
                 if (!nativeSongs.TryGetValue(info.UUID, out currentSong)) return;
                 var list = new List<Song>(); var ids = new HashSet<string>();
@@ -166,16 +167,18 @@ namespace ChillNeteasePlaylist
                     foreach (var song in queue) { string key = CloudPrefix + Convert.ToString(song.id, CultureInfo.InvariantCulture); if (ids.Add(key)) list.Add(song); if (list.Count >= 1999) break; }
                 if (ids.Add(info.UUID)) list.Insert(0, currentSong);
                 var record = new PlaybackSession { Provider = LyricProvider, CurrentId = Convert.ToString(currentSong.id, CultureInfo.InvariantCulture), PlaylistId = Convert.ToString(selectedPlaylistId, CultureInfo.InvariantCulture), PlaylistTitle = selectedPlaylistTitle,
-                    QueueJson = JsonConvert.SerializeObject(list), Seconds = source.time, Duration = source.clip.length, Paused = !source.isPlaying, UpdatedUtcTicks = DateTime.UtcNow.Ticks };
+                    QueueJson = "[]", Seconds = source.time, Duration = source.clip.length, Paused = !source.isPlaying, UpdatedUtcTicks = DateTime.UtcNow.Ticks };
                 sessionKey = info.UUID;
                 sessionHasPlayed = true;
-                if (force)
-                { lock (sessionWriteGate) { PlaybackSessionStore.Write(sessionPath, record); } }
-                else sessionWriting = Task.Factory.StartNew(delegate { try { lock (sessionWriteGate) { PlaybackSessionStore.Write(sessionPath, record); } } catch (Exception) { } });
+                var snapshot=list.ToArray();
+                sessionWrites.Enqueue(delegate {
+                    record.QueueJson=JsonConvert.SerializeObject(snapshot);
+                    lock(sessionWriteGate) PlaybackSessionStore.Write(sessionPath,record);
+                });
             }
             catch (Exception) { Logger.LogWarning("播放会话暂时无法保存；音乐播放不受影响。"); }
         }
-        void ClosePlaybackSession() { if (!sessionClosed) { ReleaseSessionMute(); SavePlaybackSession(true); sessionClosed = true; } }
+        void ClosePlaybackSession() { if (!sessionClosed) { ReleaseSessionMute(); SavePlaybackSession(true); sessionClosed = true; sessionWrites.Flush(3000); } }
         void OnApplicationFocus(bool focus) { if (!focus) SavePlaybackSession(true); }
     }
 }

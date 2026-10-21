@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-or-later
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,6 +22,7 @@ namespace ChillKuGouPlaylist
         readonly object nativeGate = new object();
         readonly Dictionary<string, Song> nativeSongs = new Dictionary<string, Song>();
         readonly List<GameAudioInfo> nativeClips = new List<GameAudioInfo>();
+        readonly Dictionary<AudioClip, DecodedAudio> streamingClips = new Dictionary<AudioClip, DecodedAudio>();
         readonly List<GameObject> nativeButtons = new List<GameObject>();
         MusicTagListUI nativeTagUI;
         int nativeMenuVersion = -1, nativeLoadVersion;
@@ -48,6 +49,15 @@ namespace ChillKuGouPlaylist
             harmony.Patch(AccessTools.Method(typeof(MusicSettingV2), "SaveReady"), postfix: new HarmonyMethod(typeof(Plugin), "NativeSaveReady"));
             // These three lists belong to the game save. Cloud IDs remain runtime-only.
             harmony.Patch(AccessTools.Method(typeof(SaveDataManager), "SaveMusicSetting"), prefix: new HarmonyMethod(typeof(Plugin), "NativeSavePrefix"), finalizer: new HarmonyMethod(typeof(Plugin), "NativeSaveFinalizer"));
+            harmony.Patch(AccessTools.Method(typeof(MusicService), "SetShuffle"), transpiler: new HarmonyMethod(typeof(Plugin), "NativeShuffleBounds"));
+            harmony.Patch(AccessTools.Method(typeof(MusicService), "SetShuffle"), transpiler: new HarmonyMethod(typeof(Plugin), "NativeShuffleDisplaySource"));
+            harmony.Patch(AccessTools.Method(typeof(MusicService), "<Setup>b__62_0"), transpiler: new HarmonyMethod(typeof(Plugin), "NativeShuffleDisplaySource"));
+            var nextState=(System.Runtime.CompilerServices.AsyncStateMachineAttribute)System.Attribute.GetCustomAttribute(AccessTools.Method(typeof(MusicService), "GetNextGameAudio"),typeof(System.Runtime.CompilerServices.AsyncStateMachineAttribute));
+            harmony.Patch(AccessTools.Method(nextState.StateMachineType,"MoveNext"),transpiler:new HarmonyMethod(typeof(Plugin),"NativeShufflePlayback"));
+            harmony.Patch(AccessTools.Method(typeof(MusicPlayListView), "ScrollToPlayingMusic"), prefix: new HarmonyMethod(typeof(Plugin), "NativeFocusPlaying"));
+            harmony.Patch(AccessTools.Method(typeof(MusicPlayListView), "ViewPlayList"), postfix: new HarmonyMethod(typeof(Plugin), "NativeFocusRebuilt"));
+            foreach(string name in new[] { "OnChangeMusic", "ActivatePlayList" })
+                harmony.Patch(AccessTools.Method(typeof(MusicUI), name), postfix: new HarmonyMethod(typeof(Plugin), "NativeFocusChanged"));
             Logger.LogInfo("原生酷狗音乐播放器接口已接入。");
         }
         static void NativeTagSetup(MusicTagListUI __instance) { if (Instance != null) { Instance.nativeTagUI = __instance; Instance.nativeMenuVersion = -1; } }
@@ -109,8 +119,9 @@ namespace ChillKuGouPlaylist
             AudioClip clip = null;
             try { clip = loading.GetAwaiter().GetResult(); }
             catch (OperationCanceledException) { completion.TrySetCanceled(); yield break; }
-            catch (Exception)
+            catch (Exception error)
             {
+                Logger.LogWarning(PlaybackFailure.Diagnostic(info.UUID, error));
                 if (version == nativeLoadVersion)
                     NativeNotice("已跳过「" + info.Title + "」：音源不可用，请检查账号权限或网络。", 8);
                 Logger.LogWarning("原生切歌跳过不可用歌曲：" + info.Title);
@@ -151,6 +162,7 @@ namespace ChillKuGouPlaylist
             catch (OperationCanceledException) { yield break; }
             catch (Exception ex)
             {
+                Logger.LogWarning(PlaybackFailure.Diagnostic(info.UUID, ex));
                 if (version == nativeLoadVersion && !destroying)
                 {
                     NativeNotice("已跳过「" + info.Title + "」：加载失败，正在尝试下一首。", 8);
@@ -159,8 +171,7 @@ namespace ChillKuGouPlaylist
                     int selected = list.IndexOf(info);
                     if (selected >= 0 && list.Count > 1)
                     {
-                        int offset = (selected-list.IndexOf(service.PlayingMusic)+1)%list.Count;
-                        if (offset < 0) offset += list.Count;
+                        int offset = NativeFailureOffset(service,info);
                         service.PlayNextMusic(offset,kind).Forget();
                     }
                 }
@@ -182,41 +193,111 @@ namespace ChillKuGouPlaylist
         }
         IEnumerator NativeLoadClip(GameAudioInfo info, CancellationToken cancellation, int version, UniTaskCompletionSource<AudioClip> completion)
         {
-            Song song;
-            if (!nativeSongs.TryGetValue(info.UUID, out song)) { completion.TrySetException(new InvalidOperationException("歌单条目已过期。")); yield break; }
-            NativeNotice("正在加载「" + song.name + "」…", 60);
-            Task<SongUrl> urlTask = Task.Factory.StartNew(delegate { lock (nativeGate) { return JsonConvert.DeserializeObject<SongUrl>(Bridge.SongURL(song)); } });
-            while (!urlTask.IsCompleted)
+            // Unity otherwise stops an iterator on an unexpected exception and leaves
+            // its UniTask pending forever. Every exit must complete or cancel it.
+            IEnumerator worker = NativeLoadClipCore(info, cancellation, version, completion);
+            try
             {
-                if (destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion) { completion.TrySetCanceled(); yield break; }
-                yield return null;
-            }
-            if (destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion) { completion.TrySetCanceled(); yield break; }
-            if (urlTask.IsFaulted) { completion.TrySetException(urlTask.Exception.GetBaseException()); yield break; }
-            SongUrl url = urlTask.Result;
-            string format = url == null ? "" : (url.type ?? "").ToLowerInvariant();
-            if (url == null || !Rules.IsMusicUrl(url.url) || (format != "mp3" && format != "m4a" && format != "aac" && format != "flac") || url.size > 64L * 1024 * 1024)
-            { completion.TrySetException(new InvalidOperationException("歌曲没有可用音源，请确认账号权限。")); yield break; }
-            byte[] encoded;
-            using (UnityEngine.Networking.UnityWebRequest download = UnityEngine.Networking.UnityWebRequest.Get(Rules.SecureMusicUrl(url.url)))
-            {
-                download.timeout = 45;
-                UnityEngine.Networking.UnityWebRequestAsyncOperation operation;
-                try { operation = download.SendWebRequest(); }
-                catch (Exception ex) { completion.TrySetException(ex); yield break; }
-                while (!operation.isDone)
+                while (true)
                 {
-                    if (destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion)
-                    { download.Abort(); completion.TrySetCanceled(); yield break; }
-                    if (download.downloadedBytes > 64UL * 1024 * 1024)
-                    { download.Abort(); completion.TrySetException(new InvalidOperationException("音频超过 64 MB。")); yield break; }
+                    bool more; object current;
+                    try { more = worker.MoveNext(); current = more ? worker.Current : null; }
+                    catch (OperationCanceledException) { completion.TrySetCanceled(); yield break; }
+                    catch (Exception error)
+                    {
+                        completion.TrySetException(new PlaybackFailure("加载", error.GetType().Name + "_" + error.HResult.ToString("X8"), "处理音频未完成，请重试。", false));
+                        yield break;
+                    }
+                    if (!more) yield break;
+                    yield return current;
+                }
+            }
+            finally
+            {
+                var disposable = worker as IDisposable;
+                if (disposable != null) disposable.Dispose();
+                if (completion.Task.Status == UniTaskStatus.Pending) completion.TrySetCanceled();
+            }
+        }
+        IEnumerator NativeLoadClipCore(GameAudioInfo info, CancellationToken cancellation, int version, UniTaskCompletionSource<AudioClip> completion)
+        {
+            Song song;
+            if (!nativeSongs.TryGetValue(info.UUID, out song)) { completion.TrySetException(new PlaybackFailure("取地址", "STALE_QUEUE", "歌单条目已过期，请重新打开歌单。", false)); yield break; }
+            Func<bool> canceled = delegate { return destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion; };
+            byte[] encoded = null;
+            SongUrl url = null;
+            string format = "";
+            // A retry always resolves a fresh signed URL, including after 403/404/410.
+            // Maximum three downloads; unavailable/unsupported tracks do not loop.
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                if (canceled()) { completion.TrySetCanceled(); yield break; }
+                status = "正在加载「" + song.name + "」…" + (attempt == 0 ? "" : "（重试 " + attempt + "/2）");
+                Task<SongUrl> urlTask = Task.Factory.StartNew(delegate { return SongRequestPolicy.Resolve(
+                    delegate
+                    {
+                        lock (nativeGate)
+                        {
+                            try { return JsonConvert.DeserializeObject<SongUrl>(Bridge.SongURL(song)); }
+                            catch (JsonException) { throw new PlaybackFailure("取地址", "RESPONSE", "酷狗返回的歌曲响应无效。", true); }
+                        }
+                    }, canceled, delegate { Thread.Sleep(500); }); });
+                while (!urlTask.IsCompleted)
+                {
+                    if (canceled()) { completion.TrySetCanceled(); yield break; }
                     yield return null;
                 }
-                if (destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion)
-                { completion.TrySetCanceled(); yield break; }
-                if (download.result != UnityEngine.Networking.UnityWebRequest.Result.Success)
-                { completion.TrySetException(new InvalidOperationException("音频下载失败。")); yield break; }
-                encoded = download.downloadHandler.data;
+                if (canceled() || urlTask.IsCanceled) { completion.TrySetCanceled(); yield break; }
+                if (urlTask.IsFaulted) { completion.TrySetException(new PlaybackFailure("取地址", urlTask.Exception.GetBaseException().GetType().Name, "平台没有返回可用音源，请检查网络、登录和音源权限。", false)); yield break; }
+                url = urlTask.Result;
+                if (url == null || !Rules.IsMusicUrl(url.url))
+                { completion.TrySetException(new PlaybackFailure("取地址", "INVALID_URL", "酷狗没有返回可接受的音频地址。", false)); yield break; }
+                format = (url.type ?? "").Trim().ToLowerInvariant();
+                if (format != "mp3" && format != "m4a" && format != "aac" && format != "flac")
+                { completion.TrySetException(new PlaybackFailure("取地址", "UNSUPPORTED_FORMAT", "音频格式不受支持。", false)); yield break; }
+                if (url.size > 64L * 1024 * 1024)
+                { completion.TrySetException(new PlaybackFailure("下载", "SIZE_LIMIT", "音频超过 64 MB，请选择较短曲目。", false)); yield break; }
+                PlaybackFailure failure = null;
+                using (var download = UnityEngine.Networking.UnityWebRequest.Get(Rules.SecureMusicUrl(url.url)))
+                {
+                    download.timeout = 45;
+                    UnityEngine.Networking.UnityWebRequestAsyncOperation operation = null;
+                    try { operation = download.SendWebRequest(); }
+                    catch (Exception error) { failure = new PlaybackFailure("下载", "SEND_" + error.HResult.ToString("X8"), "无法开始音频下载。", true); }
+                    if (operation != null)
+                    {
+                        while (!operation.isDone)
+                        {
+                            if (canceled()) { download.Abort(); completion.TrySetCanceled(); yield break; }
+                            if (download.downloadedBytes > 64UL * 1024 * 1024)
+                            { download.Abort(); completion.TrySetException(new PlaybackFailure("下载", "SIZE_LIMIT", "音频超过 64 MB。", false)); yield break; }
+                            yield return null;
+                        }
+                        if (canceled()) { completion.TrySetCanceled(); yield break; }
+                        if (download.result != UnityEngine.Networking.UnityWebRequest.Result.Success)
+                        {
+                            bool connection = download.result == UnityEngine.Networking.UnityWebRequest.Result.ConnectionError;
+                            failure = new PlaybackFailure("下载", download.result.ToString() + "_HTTP_" + download.responseCode,
+                                download.responseCode > 0 ? "音频服务器返回 HTTP " + download.responseCode + "。" : "音频连接中断或超时。",
+                                PlaybackFailure.RetryDownload(connection, download.responseCode));
+                        }
+                        else
+                        {
+                            encoded = download.downloadHandler.data;
+                            if (encoded == null || encoded.Length == 0)
+                                failure = new PlaybackFailure("下载", "EMPTY_BODY", "服务器返回了空音频。", true);
+                            else if (encoded.Length > 64 * 1024 * 1024)
+                                failure = new PlaybackFailure("下载", "SIZE_LIMIT", "音频超过 64 MB。", false);
+                        }
+                    }
+                }
+                if (failure == null) break;
+                Logger.LogWarning(PlaybackFailure.Diagnostic(info.UUID, failure) + " attempt=" + (attempt + 1) + "/3");
+                if (!failure.Retryable || attempt == 2) { completion.TrySetException(failure); yield break; }
+                encoded = null;
+                float retryAt = Time.realtimeSinceStartup + (attempt + 1) * 0.5f;
+                while (Time.realtimeSinceStartup < retryAt)
+                { if (canceled()) { completion.TrySetCanceled(); yield break; } yield return null; }
             }
             Task<DecodedAudio> decode = Task.Factory.StartNew(delegate { return AudioDecoder.Decode(encoded, format, delegate { return destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion; }); });
             // Observe completion even when the user selects another song; the worker deletes its temporary file.
@@ -225,28 +306,56 @@ namespace ChillKuGouPlaylist
             {
                 Exception error = decode.Exception.GetBaseException();
                 if (error is OperationCanceledException) completion.TrySetCanceled();
-                else completion.TrySetException(new InvalidOperationException("Windows 音频组件无法解码此曲目，请检查媒体功能是否已安装。"));
+                else completion.TrySetException(PlaybackFailure.Decode(error, format));
                 yield break;
             }
-            if (destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion)
-            { completion.TrySetCanceled(); yield break; }
             DecodedAudio pcm = decode.Result;
-            AudioClip clip = AudioClip.Create(CloudPrefix + song.id, pcm.Samples.Length / pcm.Channels, pcm.Channels, pcm.SampleRate, false);
-            if (!clip.SetData(pcm.Samples, 0)) { Destroy(clip); completion.TrySetException(new InvalidOperationException("游戏无法接收解码音频。")); yield break; }
+            if (destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion)
+            { pcm.Dispose(); completion.TrySetCanceled(); yield break; }
+            AudioClip clip = null;
+            try
+            {
+                if (pcm.IsStreaming)
+                {
+                    clip = AudioClip.Create(CloudPrefix + song.id, pcm.Frames, pcm.Channels, pcm.SampleRate, true, pcm.Read, pcm.Seek);
+                    if (clip == null) throw new InvalidOperationException("游戏无法创建流式音频。");
+                    streamingClips.Add(clip, pcm);
+                }
+                else
+                {
+                    clip = AudioClip.Create(CloudPrefix + song.id, pcm.Frames, pcm.Channels, pcm.SampleRate, false);
+                    if (clip == null || !clip.SetData(pcm.Samples, 0)) throw new InvalidOperationException("游戏无法接收解码音频。");
+                    pcm.Dispose();
+                }
+            }
+            catch (Exception)
+            {
+                if (clip != null) { streamingClips.Remove(clip); Destroy(clip); }
+                pcm.Dispose(); completion.TrySetException(new PlaybackFailure("创建音频", "AUDIO_CLIP", "游戏无法创建此音频，请重新点播。", false)); yield break;
+            }
             clip.name = CloudPrefix + song.id;
             info.AudioClip = clip;
             nativeClips.Remove(info); nativeClips.Add(info);
-            for (int i = 0; nativeClips.Count > 4 && i < nativeClips.Count; )
+            for (int i = 0; (nativeClips.Count > 4 || streamingClips.Count > 2) && i < nativeClips.Count; )
             {
                 GameAudioInfo old = nativeClips[i];
-                if (NativeService != null && NativeService.PlayingMusic == old) { i++; continue; }
-                if (old.AudioClip != null) Destroy(old.AudioClip);
-                old.AudioClip = null; nativeClips.RemoveAt(i);
+                if (old == info || (NativeService != null && NativeService.PlayingMusic == old)) { i++; continue; }
+                if (nativeClips.Count <= 4 && old.AudioClip != null && !streamingClips.ContainsKey(old.AudioClip)) { i++; continue; }
+                ReleaseNativeClip(old); nativeClips.RemoveAt(i);
             }
-            NativeNotice("正在播放 · " + song.name, 4);
-            if (destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion)
-            { completion.TrySetCanceled(); yield break; }
+            status = "已交给游戏原生播放器 · " + song.name;
             completion.TrySetResult(clip);
+        }
+        void ReleaseNativeClip(GameAudioInfo info)
+        {
+            AudioClip clip = info.AudioClip;
+            if (!object.ReferenceEquals(clip, null))
+            {
+                DecodedAudio source;
+                if (streamingClips.TryGetValue(clip, out source)) { streamingClips.Remove(clip); source.Dispose(); }
+                if (clip != null) Destroy(clip);
+            }
+            info.AudioClip = null;
         }
         void RegisterNativePlaylist()
         {
@@ -268,9 +377,11 @@ namespace ChillKuGouPlaylist
                 all.Add(info);
             }
             // A new tag rebuilds the native observable playlist and the existing native rows.
-            AccessTools.Field(typeof(MusicService), "shuffleList").SetValue(service, all.ToList());
-            SaveDataManager.Instance.MusicSetting.CurrentAudioTag.Value = (AudioTag)0;
-            SaveDataManager.Instance.MusicSetting.CurrentAudioTag.Value = CloudTag;
+            AccessTools.Field(typeof(MusicService), "shuffleList").SetValue(service, ShufflePolicy.Build(all, service.IsShuffle, service.PlayingMusic, delegate(int max) { return UnityEngine.Random.Range(0, max); }));
+            // Rebuild once even when reopening the same tag; avoid an intermediate full native list.
+            if(SaveDataManager.Instance.MusicSetting.CurrentAudioTag.Value==CloudTag)
+                AccessTools.Method(typeof(MusicService),"<Setup>b__62_0").Invoke(service,new object[]{CloudTag});
+            else SaveDataManager.Instance.MusicSetting.CurrentAudioTag.Value = CloudTag;
             if (nativeTagUI != null) AccessTools.Method(typeof(MusicTagListUI), "SetTitle").Invoke(nativeTagUI, new object[] { (AudioTag?)CloudTag });
             service.SetIsAllExcludedMusicFromPlaylist();
             Logger.LogInfo("原生酷狗音乐歌单已载入：" + selectedPlaylistTitle + "，" + songs.Count + " 首。");

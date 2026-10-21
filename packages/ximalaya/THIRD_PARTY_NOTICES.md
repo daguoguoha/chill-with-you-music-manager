@@ -21,3 +21,6 @@
 游戏、Unity、TextMeshPro、UniTask、R3、ObservableCollections 和 Newtonsoft.Json 仅从本地游戏引用，不随包分发。Windows Media Foundation 由操作系统提供。无 Go、Node 运行时或额外本地 API 服务依赖。
 
 真实播放记录兼容性实现的协议来源见 PLAYBACK_REPORTING.md；没有复制或分发平台网页播放器的整份代码或美术资源。
+
+
+MP3 解码同步采用 NLayer 3.0.0（MIT），对应来源与包哈希见 dependencies.json，许可见 licenses/NLayer-LICENSE.txt。MP3 不依赖 Windows Media Foundation；其他格式仍依赖系统媒体组件。

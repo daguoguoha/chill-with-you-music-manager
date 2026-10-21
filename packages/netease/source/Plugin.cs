@@ -16,7 +16,7 @@ using UnityEngine.Networking;
 
 namespace ChillNeteasePlaylist
 {
-    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.5.2")]
+    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.5.3")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -94,7 +94,7 @@ namespace ChillNeteasePlaylist
         void Run(Func<object> action, Action<object> done)
         {
             if (busy || destroying) return;
-            busy = true; onDone = done;
+            busy = true; onDone = done; qrPendingPoll = false;
             job = Task.Factory.StartNew(delegate { lock (nativeGate) { return action(); } });
         }
         internal void Tick()
@@ -139,28 +139,37 @@ namespace ChillNeteasePlaylist
             if (job != null && job.IsCompleted)
             {
                 Task<object> finished = job; Action<object> done = onDone;
+                bool wasQrPoll=qrPendingPoll;qrPendingPoll=false;
                 job = null; onDone = null; busy = false;
                 if (finished.IsFaulted)
                 {
                     Exception failure = finished.Exception.GetBaseException();
+                    if(!RecoverQrPoll(failure,wasQrPoll))
+                    {
                     QrRequestException qrFailure = failure as QrRequestException;
                     status = qrFailure == null ? "请求未完成，请检查网易云网络和登录状态后重试。" : qrFailure.Message;
                     qrPolling = false;
                     Logger.LogWarning("网易云请求失败：" + (qrFailure == null ? failure.GetType().Name : qrFailure.Message));
+                    }
                 }
-                else if (!finished.IsCanceled) { try { done(finished.Result); } catch (Exception ex) { status = "处理响应失败，请重试。"; Logger.LogWarning(ex.GetType().Name); } }
+                else if (!finished.IsCanceled) { try { done(finished.Result); } catch (Exception ex) { if(wasQrPoll){qrPolling=false;ClearQr();}status = "处理响应失败，请重试。"; Logger.LogWarning(ex.GetType().Name); } }
             }
+            ExpireQrPolling();
             if (ready && qrPolling && !busy && Time.realtimeSinceStartup >= nextPoll)
             {
                 nextPoll = Time.realtimeSinceStartup + 3;
                 Run(delegate { return JsonConvert.DeserializeObject<QrState>(Bridge.QrResponse(true)); }, delegate(object result)
                 {
                     QrState qr = (QrState)result;
+                    if(qr==null)throw new InvalidOperationException("扫码响应无效。");
+                    qrPollFailures=0;
                     if (qr.statusCode == 803)
                     { qrPolling = false; logged = true; listeningSwitchingAccount = false; ClearQr(); LoadAccount(); }
                     else if (qr.statusCode == 800) { qrPolling = false; status = "二维码已过期，请重新生成。"; ClearQr(); }
+                    else if(qr.statusCode!=801 && qr.statusCode!=802){qrPolling=false;ClearQr();status="网易云返回未知扫码状态，请重新生成。";}
                     else status = qr.statusCode == 802 ? "已扫码，请在手机网易云确认登录。" : "请使用手机网易云扫一扫。";
                 });
+                qrPendingPoll=busy;
             }
             if (playing && !paused && !audio.isPlaying && audio.clip != null && !busy && request == null)
             { playing = false; Next(1); }
@@ -173,21 +182,21 @@ namespace ChillNeteasePlaylist
             ResetFavorites();
             ResetPlaybackSessionAccount();
             ResetListeningAccount();
-            qrPolling = false; ClearQr();
+            qrPolling = false; qrPollFailures=0; ClearQr();
             Run(delegate { return JsonConvert.DeserializeObject<QrState>(Bridge.QrResponse(false)); }, delegate(object result)
             {
                 QrState qr = (QrState)result;
-                Uri loginUri;
-                if (!Uri.TryCreate(qr.qrcodeUrl, UriKind.Absolute, out loginUri) || loginUri.Host != "music.163.com")
-                    throw new InvalidOperationException("二维码地址无效。");
+                qr.qrcodeUrl=QrRequest.LoginUrl(qr.qrcodeUrl);
+                if(qr.qrcodeUrl==null)throw new InvalidOperationException("二维码地址无效。");
                 using (QRCodeGenerator generator = new QRCodeGenerator())
                 using (QRCodeData data = generator.CreateQrCode(qr.qrcodeUrl, QRCodeGenerator.ECCLevel.M))
                 using (PngByteQRCode code = new PngByteQRCode(data))
                 {
                     qrImage = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-                    qrImage.LoadImage(code.GetGraphic(7));
+                    if(!qrImage.LoadImage(code.GetGraphic(7))){ClearQr();throw new InvalidOperationException("二维码图片无效。");}
                     qrImage.filterMode = FilterMode.Point;
                 }
+                qrPollFailures=0;qrDeadline=Time.realtimeSinceStartup+180;
                 qrPolling = true; nextPoll = Time.realtimeSinceStartup + 3;
                 status = "请用手机网易云扫码，并由你确认登录。";
             });

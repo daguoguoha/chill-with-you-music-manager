@@ -85,7 +85,7 @@ func NeteaseInit(dataDirC *C.char) C.int {
 
 	// 加载 Cookie
 	cookiePath := filepath.Join(dataDir, "cookie")
-	jar, err := cookiejar.NewFileJar(cookiePath, nil)
+	jar, err := loadAccountCookies(cookiePath)
 	if err != nil {
 		lastError = "Failed to load cookie jar: " + err.Error()
 		return 0
@@ -95,13 +95,9 @@ func NeteaseInit(dataDirC *C.char) C.int {
 	// 修复上游库的假 NMTID cookie，替换为真实随机值
 	fixStrategyCookies(jar)
 
-	// 尝试加载用户信息
-	table := storage.NewTable()
-	if jsonStr, err := table.GetByKVModel(storage.User{}); err == nil {
-		if user, err := structs.NewUserFromLocalJson(jsonStr); err == nil {
-			currentUser = &user
-		}
-	}
+	// Only current-directory cookies verified by the server establish a login.
+	currentUser = nil
+	currentVipType = 0
 
 	initialized = true
 	return 1
@@ -139,7 +135,9 @@ func NeteaseGetUserInfo() *C.char {
 }
 
 //export NeteaseRefreshLogin
-func NeteaseRefreshLogin() C.int {
+func NeteaseRefreshLogin() C.int { return refreshLogin(true) }
+
+func refreshLogin(persist bool) C.int {
 	if !initialized {
 		lastError = "Not initialized"
 		return 0
@@ -169,6 +167,16 @@ func NeteaseRefreshLogin() C.int {
 		lastError = "Failed to parse user info: " + err.Error()
 		return 0
 	}
+	if user.UserId <= 0 {
+		lastError = "Account API returned no authenticated user"
+		return 0
+	}
+	if persist {
+		if err := saveAccountCookies(filepath.Join(dataDir, "cookie"), util.GetGlobalCookieJar()); err != nil {
+			lastError = "Account file could not be saved"
+			return 0
+		}
+	}
 	currentUser = &user
 
 	// 提取 VIP 类型
@@ -179,10 +187,6 @@ func NeteaseRefreshLogin() C.int {
 		currentVipType = 0
 		log.Printf("[NeteaseRefreshLogin] Could not extract vipType: %s", err.Error())
 	}
-
-	// 保存用户信息
-	table := storage.NewTable()
-	_ = table.SetByKVModel(storage.User{}, user)
 
 	log.Printf("[NeteaseRefreshLogin] Success, user: %s (ID: %d, VIP: %d)", user.Nickname, user.UserId, currentVipType)
 	return 1
@@ -249,11 +253,7 @@ func NeteaseGetSongURL(songId C.longlong, quality *C.char) *C.char {
 	result, err := resolveSongURL(int64(songId),
 		func() (float64, []byte, error) {
 			request := service.SongUrlV1Service{ID: id, Level: service.SongQualityLevel(qualityStr)}
-			// Standard quality is used by the portable MP3 player. The upstream
-			// service defaults EncodeType to FLAC even when standard is selected.
-			if qualityStr == "standard" {
-				request.EncodeType = "mp3"
-			}
+			request.EncodeType = portableSongEncoding(qualityStr)
 			return request.SongUrl()
 		},
 		func() (float64, []byte) {
@@ -317,11 +317,12 @@ func NeteaseSetCookie(cookieStr *C.char) C.int {
 	return 1
 }
 
-//export NeteaseLikeSong
 // NeteaseLikeSong 添加或取消收藏歌曲
 // songId: 歌曲 ID
 // like: 1 = 收藏, 0 = 取消收藏
 // 返回: 1 = 成功, 0 = 失败
+//
+//export NeteaseLikeSong
 func NeteaseLikeSong(songId C.longlong, like C.int) C.int {
 	if !initialized {
 		lastError = "Not initialized"
@@ -361,9 +362,10 @@ func NeteaseLikeSong(songId C.longlong, like C.int) C.int {
 	return 1
 }
 
-//export NeteaseGetLikeList
 // NeteaseGetLikeList 获取用户收藏的歌曲 ID 列表
 // 返回: JSON 数组字符串，包含收藏歌曲的 ID 列表
+//
+//export NeteaseGetLikeList
 func NeteaseGetLikeList() *C.char {
 	if currentUser == nil || currentUser.UserId == 0 {
 		lastError = "Not logged in"
@@ -404,9 +406,10 @@ func NeteaseGetLikeList() *C.char {
 	return C.CString(string(jsonBytes))
 }
 
-//export NeteaseGetPersonalFM
 // NeteaseGetPersonalFM 获取个人 FM 推荐歌曲
 // 返回: JSON 数组字符串，包含推荐歌曲信息
+//
+//export NeteaseGetPersonalFM
 func NeteaseGetPersonalFM() *C.char {
 	if !initialized {
 		lastError = "Not initialized"
@@ -483,10 +486,11 @@ func NeteaseGetPersonalFM() *C.char {
 	return C.CString(string(jsonBytes))
 }
 
-//export NeteaseFMTrash
 // NeteaseFMTrash 将歌曲标记为不喜欢（FM 垃圾桶）
 // songId: 歌曲 ID
 // 返回: 1 = 成功, 0 = 失败
+//
+//export NeteaseFMTrash
 func NeteaseFMTrash(songId C.longlong) C.int {
 	if !initialized {
 		lastError = "Not initialized"
@@ -520,10 +524,11 @@ func NeteaseFMTrash(songId C.longlong) C.int {
 	return 1
 }
 
-//export NeteaseGetSongLyric
 // NeteaseGetSongLyric 获取歌曲歌词
 // songId: 歌曲 ID
 // 返回: LRC 格式歌词文本（原始文本，非 base64），失败返回 nil
+//
+//export NeteaseGetSongLyric
 func NeteaseGetSongLyric(songId C.longlong) *C.char {
 	if !initialized {
 		lastError = "Not initialized"
@@ -586,11 +591,6 @@ func NeteaseLogout() C.int {
 	emptyJar, _ := cookiejar.NewEntriesJar(nil)
 	util.SetGlobalCookieJar(emptyJar)
 
-	// 清除本地 DB 中的用户信息（用零值覆盖）
-	table := storage.NewTable()
-	_ = table.SetByKVModel(storage.User{}, structs.User{})
-	log.Printf("[NeteaseLogout] User data cleared from local DB")
-
 	return 1
 }
 
@@ -612,11 +612,14 @@ type QRLoginState struct {
 var (
 	currentQRState *QRLoginState
 	qrMutex        sync.Mutex
+	qrCookieJar    http.CookieJar
+	qrAuthorized   bool
 )
 
-//export NeteaseQRGetKey
 // NeteaseQRGetKey 获取二维码登录的 key 和 URL
 // 返回: JSON 字符串 {"uniKey": "xxx", "qrcodeUrl": "xxx"}
+//
+//export NeteaseQRGetKey
 func NeteaseQRGetKey() *C.char {
 	if !initialized {
 		lastError = "Not initialized"
@@ -626,12 +629,18 @@ func NeteaseQRGetKey() *C.char {
 	qrMutex.Lock()
 	defer qrMutex.Unlock()
 
-	// 每次获取二维码前使用全新空 cookie jar，避免残留 cookie 导致 -462
-	emptyJar, _ := cookiejar.NewEntriesJar(nil)
-	util.SetGlobalCookieJar(emptyJar)
-
+	currentQRState = nil
+	qrAuthorized = false
+	qrCookieJar, _ = cookiejar.NewEntriesJar(nil)
 	qrService := service.LoginQRService{}
-	code, _, qrcodeUrl, err := qrService.GetKey()
+	var code float64
+	var qrcodeUrl string
+	err := withAccountJar(qrCookieJar, func() error {
+		var requestErr error
+		code, _, qrcodeUrl, requestErr = qrService.GetKey()
+		return requestErr
+	})
+
 	if err != nil {
 		lastError = "Failed to get QR key: " + err.Error()
 		return nil
@@ -657,10 +666,11 @@ func NeteaseQRGetKey() *C.char {
 	return C.CString(string(jsonBytes))
 }
 
-//export NeteaseQRCheckStatus
 // NeteaseQRCheckStatus 检查二维码扫码状态
 // 返回: JSON 字符串 {"statusCode": xxx, "statusMsg": "xxx"}
 // statusCode: 800=失效, 801=等待扫码, 802=待确认, 803=成功
+//
+//export NeteaseQRCheckStatus
 func NeteaseQRCheckStatus() *C.char {
 	if !initialized {
 		lastError = "Not initialized"
@@ -675,11 +685,14 @@ func NeteaseQRCheckStatus() *C.char {
 		return nil
 	}
 
-	qrService := service.LoginQRService{UniKey: currentQRState.UniKey}
-	code, _, err := qrService.CheckQR()
-	if err != nil {
-		lastError = "Failed to check QR status: " + err.Error()
-		return nil
+	var code float64 = 803
+	if !qrAuthorized {
+		qrService := service.LoginQRService{UniKey: currentQRState.UniKey}
+		err := withAccountJar(qrCookieJar, func() error { var requestErr error; code, _, requestErr = qrService.CheckQR(); return requestErr })
+		if err != nil {
+			lastError = "Failed to check QR status: " + err.Error()
+			return nil
+		}
 	}
 
 	statusCode := int(code)
@@ -687,31 +700,45 @@ func NeteaseQRCheckStatus() *C.char {
 	switch statusCode {
 	case 800:
 		statusMsg = "二维码已失效"
-		currentQRState = nil // 清除状态
+		currentQRState = nil
+		qrCookieJar = nil
+		qrAuthorized = false // Clear pending QR state only.
 	case 801:
 		statusMsg = "等待扫码"
 	case 802:
 		statusMsg = "已扫码，等待确认"
 	case 803:
-		statusMsg = "登录成功"
-		// 登录成功后恢复文件 cookie jar 并保存登录 cookie
-		cookiePath := filepath.Join(dataDir, "cookie")
-		if fileJar, jarErr := cookiejar.NewFileJar(cookiePath, nil); jarErr == nil {
-			// 将当前 jar 的 cookie 复制到文件 jar
-			u, _ := url.Parse("https://music.163.com")
-			currentJar := util.GetGlobalCookieJar()
-			if currentJar != nil {
-				fileJar.SetCookies(u, currentJar.Cookies(u))
+		qrAuthorized = true
+		previousUser, previousVip := currentUser, currentVipType
+		verified := C.int(0)
+		_ = withAccountJar(qrCookieJar, func() error { verified = refreshLogin(false); return nil })
+		if verified != 1 {
+			currentUser, currentVipType = previousUser, previousVip
+			if verified < 0 {
+				lastError = "QR account verification connection failed"
+			} else {
+				lastError = "QR account verification failed, code: 401"
 			}
-			util.SetGlobalCookieJar(fileJar)
+			return nil
 		}
-		// 获取用户信息
-		if NeteaseRefreshLogin() == 1 {
-			statusMsg = "登录成功"
-		} else {
-			statusMsg = "登录成功，但获取用户信息失败"
+		cookiePath := filepath.Join(dataDir, "cookie")
+		if err := saveAccountCookies(cookiePath, qrCookieJar); err != nil {
+			currentUser, currentVipType = previousUser, previousVip
+			lastError = "QR account file could not be saved"
+			return nil
 		}
-		currentQRState = nil // 清除状态
+		accountJar, jarErr := loadAccountCookies(cookiePath)
+		if jarErr != nil {
+			currentUser, currentVipType = previousUser, previousVip
+			lastError = "QR account file could not be loaded"
+			return nil
+		}
+		util.SetGlobalCookieJar(accountJar)
+		statusMsg = "登录成功"
+		currentQRState = nil
+		qrCookieJar = nil
+		qrAuthorized = false
+
 	default:
 		statusMsg = "未知状态: " + strconv.Itoa(statusCode)
 	}
@@ -730,12 +757,15 @@ func NeteaseQRCheckStatus() *C.char {
 	return C.CString(string(jsonBytes))
 }
 
-//export NeteaseQRCancelLogin
 // NeteaseQRCancelLogin 取消二维码登录
+//
+//export NeteaseQRCancelLogin
 func NeteaseQRCancelLogin() {
 	qrMutex.Lock()
 	defer qrMutex.Unlock()
 	currentQRState = nil
+	qrCookieJar = nil
+	qrAuthorized = false
 }
 
 // PlaylistInfo 歌单信息
@@ -747,11 +777,12 @@ type PlaylistInfo struct {
 	CreatorId int64  `json:"creatorId"`
 }
 
-//export NeteaseGetUserPlaylists
 // NeteaseGetUserPlaylists 获取用户歌单列表
 // limit: 每页数量 (0 使用默认值 30)
 // offset: 偏移量
 // 返回: JSON 数组字符串，包含歌单信息和是否有更多 {"playlists": [...], "hasMore": bool}
+//
+//export NeteaseGetUserPlaylists
 func NeteaseGetUserPlaylists(limit C.int, offset C.int) *C.char {
 	if currentUser == nil || currentUser.UserId == 0 {
 		lastError = "Not logged in"
@@ -818,10 +849,11 @@ func NeteaseGetUserPlaylists(limit C.int, offset C.int) *C.char {
 	return C.CString(string(jsonBytes))
 }
 
-//export NeteaseGetPlaylistDetail
 // NeteaseGetPlaylistDetail 获取歌单详情（包含歌单信息和歌曲）
 // playlistId: 歌单 ID
 // 返回: JSON 字符串，包含歌单信息 {"id", "name", "songCount", "coverUrl", "creatorId", "songs": [...]}
+//
+//export NeteaseGetPlaylistDetail
 func NeteaseGetPlaylistDetail(playlistId C.longlong) *C.char {
 	if !initialized {
 		lastError = "Not initialized"
@@ -907,11 +939,12 @@ func NeteaseGetPlaylistDetail(playlistId C.longlong) *C.char {
 	return C.CString(string(jsonBytes))
 }
 
-//export NeteaseGetPlaylistSongs
 // NeteaseGetPlaylistSongs 获取指定歌单的歌曲
 // playlistId: 歌单 ID
 // getAll: 1 = 获取全部歌曲, 0 = 只获取第一页
 // 返回: JSON 数组字符串，包含歌曲信息
+//
+//export NeteaseGetPlaylistSongs
 func NeteaseGetPlaylistSongs(playlistId C.longlong, getAll C.int) *C.char {
 	if !initialized {
 		lastError = "Not initialized"
@@ -957,10 +990,11 @@ func NeteaseGetPlaylistSongs(playlistId C.longlong, getAll C.int) *C.char {
 	return C.CString(string(jsonBytes))
 }
 
-//export NeteaseSearchPlaylistsByKeyword
 // NeteaseSearchPlaylistsByKeyword 根据关键词搜索用户歌单
 // keyword: 搜索关键词 (支持 | 分隔多个关键词)
 // 返回: JSON 数组字符串，包含匹配的歌单信息
+//
+//export NeteaseSearchPlaylistsByKeyword
 func NeteaseSearchPlaylistsByKeyword(keywordC *C.char) *C.char {
 	if currentUser == nil || currentUser.UserId == 0 {
 		lastError = "Not logged in"

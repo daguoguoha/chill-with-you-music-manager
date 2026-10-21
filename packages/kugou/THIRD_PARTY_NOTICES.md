@@ -16,3 +16,6 @@
 二次验证类型元数据流程参考 KuGouMusicApi 的 get_verify_info 实现和 [上游 issue 206](https://github.com/MakcRe/KuGouMusicApi/issues/206)；本版没有复制验证码 WASM、没有自动化解题，也没有实现实际验证提交。
 
 真实播放记录兼容性实现的协议来源见 PLAYBACK_REPORTING.md；没有复制或分发平台网页播放器的整份代码或美术资源。
+
+
+MP3 解码同步采用 NLayer 3.0.0（MIT），对应来源与包哈希见 dependencies.json，许可见 licenses/NLayer-LICENSE.txt。MP3 不依赖 Windows Media Foundation；其他格式仍依赖系统媒体组件。

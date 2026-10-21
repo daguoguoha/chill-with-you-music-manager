@@ -27,13 +27,13 @@ namespace ChillNeteasePlaylist
             {
                 Array.Clear(samples, 0, samples.Length);
                 if (stream == null) return;
-                int needed = checked(samples.Length * 2), received = 0;
+                int needed = checked(samples.Length * 4), received = 0;
                 if (buffer.Length < needed) buffer = new byte[needed];
                 try
                 {
                     while (received < needed)
                     { int count = stream.Read(buffer, received, needed - received); if (count == 0) break; received += count; }
-                    for (int i = 0; i < received / 2; i++) samples[i] = (short)(buffer[2*i] | (buffer[2*i+1] << 8)) / 32768f;
+                    Buffer.BlockCopy(buffer, 0, samples, 0, received - received % 4);
                 }
                 catch (IOException) { Array.Clear(samples, 0, samples.Length); }
                 catch (ObjectDisposedException) { Array.Clear(samples, 0, samples.Length); }
@@ -41,7 +41,7 @@ namespace ChillNeteasePlaylist
         }
         public void Seek(int frame)
         {
-            lock (gate) { if (stream != null) stream.Position = (long)Math.Max(0, Math.Min(Frames, frame)) * Channels * 2; }
+            lock (gate) { if (stream != null) stream.Position = (long)Math.Max(0, Math.Min(Frames, frame)) * Channels * 4; }
         }
         public void Dispose()
         {
@@ -56,7 +56,7 @@ namespace ChillNeteasePlaylist
     public static class AudioDecoder
     {
         const long InMemoryLimit = 32L * 1024 * 1024;
-        const long PcmLimit = 1024L * 1024 * 1024;
+        const long PcmLimit = 2L * 1024 * 1024 * 1024;
         sealed class StandardProvider : IWaveProvider
         {
             readonly IWaveProvider source;
@@ -65,9 +65,9 @@ namespace ChillNeteasePlaylist
             public int Read(byte[] buffer, int offset, int count) { return source.Read(buffer, offset, count); }
         }
         // Lossless tracks can decode to 24/32-bit PCM. Normalize on the same worker
-        // before using the common bounded 16-bit PCM storage and Unity callbacks.
-        internal static IWaveProvider Pcm16(IWaveProvider source)
-        { return new StandardProvider(source).ToSampleProvider().ToWaveProvider16(); }
+        // to float without quantizing to 16-bit, then retain native rate and channels.
+        internal static ISampleProvider FloatSamples(IWaveProvider source)
+        { return new StandardProvider(source).ToSampleProvider(); }
         sealed class ManagedMp3 : ISampleProvider, IDisposable
         {
             readonly NLayer.MpegFile reader;
@@ -95,7 +95,7 @@ namespace ChillNeteasePlaylist
                 var managed = new ManagedMp3(path);
                 return new Input(managed.ToWaveProvider(), managed);
             }
-            var windows = new MediaFoundationReader(path);
+            var windows = new MediaFoundationReader(path, new MediaFoundationReader.MediaFoundationReaderSettings { RequestFloatOutput = true });
             return new Input(windows, windows);
         }
         public static DecodedAudio Decode(byte[] bytes, string format, Func<bool> canceled)
@@ -115,33 +115,31 @@ namespace ChillNeteasePlaylist
                 using (var reader = Open(inputPath, format))
                 using (var output = new FileStream(pcmPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 65536))
                 {
-                    IWaveProvider normalized = Pcm16(reader.Provider);
+                    ISampleProvider normalized = FloatSamples(reader.Provider);
                     channels = normalized.WaveFormat.Channels; rate = normalized.WaveFormat.SampleRate;
                     if (channels < 1 || channels > 2 || rate < 8000 || rate > 192000)
                         throw new InvalidOperationException("Windows 未返回可用的 PCM 音频格式。");
-                    byte[] block = new byte[65536]; int count;
+                    float[] block = new float[16384]; byte[] outputBytes = new byte[65536]; int count;
                     while ((count = normalized.Read(block, 0, block.Length)) > 0)
                     {
                         if (canceled()) throw new OperationCanceledException();
-                        if (total + count > PcmLimit) throw new InvalidOperationException("此音频过长，请选较短曲目（48 kHz 立体声约 90 分钟以内）。");
-                        output.Write(block, 0, count); total += count;
+                        if (total + count * 4L > PcmLimit) throw new InvalidOperationException("此音频过长，请选较短曲目（48 kHz 立体声约 90 分钟以内）。");
+                        Buffer.BlockCopy(block, 0, outputBytes, 0, count * 4);
+                        output.Write(outputBytes, 0, count * 4); total += count * 4L;
                     }
                 }
                 if (canceled()) throw new OperationCanceledException();
-                if (total == 0 || total % (channels * 2) != 0) throw new InvalidOperationException("解码结果无效。");
-                var result = new DecodedAudio { Channels = channels, SampleRate = rate, Frames = checked((int)(total / (channels * 2))) };
+                if (total == 0 || total % (channels * 4) != 0) throw new InvalidOperationException("解码结果无效。");
+                var result = new DecodedAudio { Channels = channels, SampleRate = rate, Frames = checked((int)(total / (channels * 4))) };
                 if (total > InMemoryLimit)
                 {
                     result.OpenPcm(pcmPath); retained = true;
                     return result;
                 }
                 byte[] pcm = File.ReadAllBytes(pcmPath);
-                float[] samples = new float[pcm.Length / 2];
-                for (int i = 0; i < samples.Length; i++)
-                {
-                    if ((i & 0xfffff) == 0 && canceled()) throw new OperationCanceledException();
-                    samples[i] = (short)(pcm[2*i] | (pcm[2*i+1] << 8)) / 32768f;
-                }
+                float[] samples = new float[pcm.Length / 4];
+                if (canceled()) throw new OperationCanceledException();
+                Buffer.BlockCopy(pcm, 0, samples, 0, pcm.Length);
                 result.Samples = samples;
                 return result;
             }

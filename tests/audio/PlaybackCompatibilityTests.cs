@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using ChillNeteasePlaylist;
+using NAudio.Wave;
 
 public static class PlaybackCompatibilityTests
 {
@@ -21,6 +22,13 @@ public static class PlaybackCompatibilityTests
     {
         try
         {
+            using (var input = new RawSourceWaveStream(new MemoryStream(new byte[] {1,0,0,255,255,127}), new WaveFormat(48000,24,1)))
+            {
+                var provider = AudioDecoder.FloatSamples(input); float[] precise = new float[2];
+                Check(provider.Read(precise,0,2)==2, "24-bit source conversion");
+                Check(precise[0]>0 && Math.Abs(precise[0]-1f/8388608)<1e-12, "24-bit low-level precision preserved");
+                Check(provider.WaveFormat.SampleRate==48000 && provider.WaveFormat.Channels==1, "native sample rate and channel count preserved");
+            }
             using (var pcm = AudioDecoder.Decode(Silence(40), "mp3", delegate { return false; }))
                 Check(pcm.Channels == 2 && pcm.SampleRate == 44100 && pcm.Frames > 0 && pcm.Samples != null, "managed MP3 decode");
             bool mediaLoaded = false;
@@ -45,7 +53,7 @@ public static class PlaybackCompatibilityTests
                 float[] block = new float[1024]; pcm.Read(block); pcm.Seek(pcm.Frames / 2); pcm.Read(block);
                 Check(!float.IsNaN(block[0]), "streaming read and seek");
             }
-            if (args.Length > 0)
+            if (args.Length > 0 && !string.IsNullOrEmpty(args[0]))
                 foreach (string file in Directory.GetFiles(args[0], "audio-*.mp3"))
                     using (var pcm = AudioDecoder.Decode(File.ReadAllBytes(file), "mp3", delegate { return false; }))
                     {
