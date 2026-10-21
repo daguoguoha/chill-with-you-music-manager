@@ -33,6 +33,7 @@ namespace Bulbul
 }
 namespace ChillNeteasePlaylist
 {
+    class PlaybackFailure : Exception { internal string Code; }
     static class RuntimeHost { internal static bool VDown, Modifier; internal static bool IsVDownInGame() { return VDown; } internal static bool HasLyricShortcutModifier() { return Modifier; } }
     class Song { internal long id; internal string name; internal double duration = 120; }
     class TestConfig
@@ -40,7 +41,7 @@ namespace ChillNeteasePlaylist
         internal BepInEx.Configuration.ConfigEntry<T> Bind<T>(string a, string b, T value, object description) { return new BepInEx.Configuration.ConfigEntry<T>(value); }
         internal void Save() { }
     }
-    class TestLog { internal void LogInfo(string s) { } }
+    class TestLog { internal void LogInfo(string s) { } internal void LogWarning(string s) { } }
     sealed class LyricTrack { internal string Key, Title, Id, Hash, LocalPath; internal double Duration; }
     sealed class LyricResult { internal LyricDocument Document; internal LyricDocument Translation = new LyricDocument(); internal string Message; }
     static class LyricSource

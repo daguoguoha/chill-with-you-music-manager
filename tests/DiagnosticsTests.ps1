@@ -76,6 +76,10 @@ try {
         }
     }
     foreach($e in $data.Events[$expected..($expected+3)]){Assert ($e.Code -eq '' -and $e.HttpStatus -eq $null -and $e.CodeHResult -eq '') '未知错误码应被丢弃'}
+    [IO.File]::WriteAllText($log,'[Warning: Netease] 网易云播放失败 songId=0 stage=歌词 code=NETWORK_TIMEOUT hresult=0x80131509 Cookie='+$secret)
+    $r=Export 'lyric.zip';Assert $r.Ok $r.Message
+    $text=ReadReport 'lyric.zip';$data=$text | ConvertFrom-Json
+    Assert ($data.Events.Count -eq 1 -and $data.Events[0].Stage -eq '歌词' -and $data.Events[0].Code -eq 'NETWORK_TIMEOUT' -and -not $text.Contains($secret)) '歌词错误分类或隐私过滤失败'
     $content=(1..5100 | ForEach-Object {'[Error: Netease] 网络失败 HTTP 502'}) -join "`n"
     [IO.File]::WriteAllText($log,$content)
     $r=Export 'bounded.zip';Assert $r.Ok $r.Message

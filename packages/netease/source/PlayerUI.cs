@@ -330,7 +330,9 @@ namespace ChillNeteasePlaylist
             GUI.Box(new Rect(20, 583, 960, 87), "", cardStyle);
             DrawCurrentHeart();
             if (GUI.Button(new Rect(654, 598, 76, 28), "歌词设置", quietButton)) lyricsSettingsOpen = true;
-            GUI.Label(new Rect(40, 598, 550, 29), "网易云歌曲已接入游戏原生播放器", bodyText);
+            GUI.Label(new Rect(40, 598, 258, 29), "游戏原生播放器", bodyText);
+            if (GUI.Button(new Rect(310, 598, 280, 29), new GUIContent("播放方式：" + (progressivePlayback.Value ? "边下边播" : "经典"), "点击切换，下次点播生效。经典连接未完成时会自动尝试兼容方式。"), quietButton))
+            { progressivePlayback.Value = !progressivePlayback.Value; Config.Save(); status = "已切换为" + (progressivePlayback.Value ? "边下边播" : "经典播放") + "，下次点播生效。"; }
             if (GUI.Button(new Rect(40, 631, 230, 30), showLauncher.Value ? "隐藏游戏内入口（F8）" : "显示游戏内入口（F8）", quietButton))
             {
                 showLauncher.Value = !showLauncher.Value;

@@ -1,11 +1,11 @@
 {
   "Schema": 1,
-  "ManagerVersion": "2.0.2",
+  "ManagerVersion": "2.0.3",
   "Plugins": [
     {
       "Id": "netease",
       "Name": "网易云音乐",
-      "Version": "1.5.6",
+      "Version": "1.5.7",
       "Folder": "packages\\netease",
       "Primary": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
       "Manifest": "ChillNeteaseNative-install.json",
@@ -14,11 +14,11 @@
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "FA35E8BCDF501335212B150D3D8840017437276C9E4C8C26144900E94EEC849F"
+          "Hash": "27B35311942E331882DD03C983976C783624CE44EE604DE592B49676FC98AE39"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNetease.dll",
-          "Hash": "D3488D6E0D2B4A4F437FD6EA04AEE6FB03B0C82D30238A3BC17AD11002976319"
+          "Hash": "02176959574C826AB8D72B567E9B359A5CAC2DFC7F5087265F5569F44AED321D"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\QRCoder.dll",
@@ -40,11 +40,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "AFD479D0D2B0229F2FCF2723424C9B8A7C0A80A2B6F7051FD70DBEB06720605D"
+          "Hash": "9A1A4BE595377C2D4643A66443B618F218D4D96D42783A3BB5AA14942AAE79BC"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "FA35E8BCDF501335212B150D3D8840017437276C9E4C8C26144900E94EEC849F"
+          "Hash": "27B35311942E331882DD03C983976C783624CE44EE604DE592B49676FC98AE39"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -52,11 +52,11 @@
         },
         {
           "Path": "offline-dependencies\\ChillNetease.dll",
-          "Hash": "D3488D6E0D2B4A4F437FD6EA04AEE6FB03B0C82D30238A3BC17AD11002976319"
+          "Hash": "02176959574C826AB8D72B567E9B359A5CAC2DFC7F5087265F5569F44AED321D"
         },
         {
           "Path": "offline-dependencies\\ChillNetease.h",
-          "Hash": "FEE5F0970BBF052FA7FFA33B3547C87C19A43C1B84306B1ED51A8BBA523A0E7E"
+          "Hash": "5EB734E61A9A1246246DC085CA3A95050569394F3CEC0CA310B06E11D2F13A22"
         },
         {
           "Path": "offline-dependencies\\QRCoder.nupkg",

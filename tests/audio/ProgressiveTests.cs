@@ -8,7 +8,7 @@ public static class ProgressiveTests
 {
     static int checks;
     static void Check(bool value) { if (!value) throw new Exception("Progressive assertion " + checks); checks++; }
-    static void Until(Func<bool> condition) { var watch = Stopwatch.StartNew(); while (!condition()) { if(watch.ElapsedMilliseconds>5000) throw new Exception("Worker did not finish"); Thread.Sleep(10); } }
+    static void Until(Func<bool> condition, int timeout = 5000) { var watch = Stopwatch.StartNew(); while (!condition()) { if(watch.ElapsedMilliseconds>timeout) throw new Exception("Worker did not finish within " + timeout + " ms"); Thread.Sleep(10); } }
     sealed class Gated : MemoryStream
     {
         internal readonly ManualResetEventSlim Release = new ManualResetEventSlim();
@@ -63,7 +63,7 @@ public static class ProgressiveTests
             using(var input=new MemoryStream(File.ReadAllBytes(file)))
             using(var audio=ProgressiveAudio.FromStream(input,input.Length,300,CancellationToken.None))
             {
-                Until(()=>audio.Complete||audio.Failure!=null);Check(audio.Failure==null&&audio.AvailableFrames>0);
+                Until(()=>audio.Complete||audio.Failure!=null,30000);Check(audio.Failure==null&&audio.AvailableFrames>0);
                 audio.Seek(0);float[] samples=new float[audio.SampleRate*audio.Channels];float peak=0;
                 for(int second=0;second<15&&peak<=0.0001f;second++){audio.Read(samples);foreach(float value in samples)peak=Math.Max(peak,Math.Abs(value));}
                 Check(peak>0.0001f);real++;

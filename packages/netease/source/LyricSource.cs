@@ -22,10 +22,17 @@ namespace ChillNeteasePlaylist
         internal LyricDocument Translation = new LyricDocument();
         internal string Message;
         internal bool FromLocal;
+        internal JObject PlatformLyrics;
     }
     internal static class LyricSource
     {
         internal const int MaxBytes = 2 * 1024 * 1024;
+        internal static Func<long, CancellationToken, JObject> NeteaseRequest;
+        static JObject NeteaseLyrics(long id, CancellationToken cancel)
+        {
+            if (NeteaseRequest != null) return NeteaseRequest(id, cancel);
+            return Get("https://music.163.com/api/song/lyric?id=" + id.ToString(CultureInfo.InvariantCulture) + "&lv=-1&kv=-1&tv=-1", "https://music.163.com/", cancel);
+        }
         internal static string CacheName(string key)
         {
             using (var hash = SHA256.Create()) return BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(key))).Replace("-", "").ToLowerInvariant() + ".lrc";
@@ -96,12 +103,17 @@ namespace ChillNeteasePlaylist
                 string sidecar = Path.ChangeExtension(track.LocalPath, ".lrc");
                 if (File.Exists(sidecar)) return Import(cacheDirectory, track, sidecar, null, cancel);
             }
-            string raw = Fetch(provider, track, cancel);
+            JObject platformLyrics = null;
+            string raw;
+            long neteaseId;
+            if (provider == "netease" && long.TryParse(track.Id, out neteaseId) && neteaseId > 0)
+            { platformLyrics = NeteaseLyrics(neteaseId, cancel); raw = (string)platformLyrics.SelectToken("lrc.lyric"); }
+            else raw = Fetch(provider, track, cancel);
             cancel.ThrowIfCancellationRequested();
             LyricDocument parsed = LyricDocument.Parse(raw);
             if (parsed.Lines.Count == 0) return new LyricResult { Message = "暂无歌词 · 可在歌词设置中导入 LRC" };
             try { Save(cache, raw); } catch (IOException) { } catch (UnauthorizedAccessException) { }
-            return new LyricResult { Document = parsed, Message = parsed.Timed ? "自动同步歌词" : "纯文本歌词 · 无时间轴" };
+            return new LyricResult { Document = parsed, PlatformLyrics = platformLyrics, Message = parsed.Timed ? "自动同步歌词" : "纯文本歌词 · 无时间轴" };
         }
         internal static string TranslationCacheName(string key)
         { return Path.ChangeExtension(CacheName(key),"translation.lrc"); }
@@ -122,7 +134,7 @@ namespace ChillNeteasePlaylist
                     long id;
                     if(long.TryParse(track.Id,out id) && id>0)
                     {
-                        var json=Get("https://music.163.com/api/song/lyric?id="+id.ToString(CultureInfo.InvariantCulture)+"&lv=-1&kv=-1&tv=-1","https://music.163.com/",cancel);
+                        var json=original.PlatformLyrics ?? NeteaseLyrics(id,cancel);
                         string raw=(string)json.SelectToken("tlyric.lyric");
                         original.Translation=LyricDocument.Parse(raw);
                         cancel.ThrowIfCancellationRequested();
@@ -157,7 +169,7 @@ namespace ChillNeteasePlaylist
             if (provider == "netease")
             {
                 long id; if (!long.TryParse(track.Id, out id) || id <= 0) return null;
-                var json = Get("https://music.163.com/api/song/lyric?id=" + id.ToString(CultureInfo.InvariantCulture) + "&lv=-1&kv=-1&tv=-1", "https://music.163.com/", cancel);
+                var json = NeteaseLyrics(id,cancel);
                 return (string)json.SelectToken("lrc.lyric");
             }
             if (provider == "qq")

@@ -52,7 +52,7 @@ function Export-ErrorReport([string]$Root,[string]$Destination) {
                 $exceptionTypes='UnauthorizedAccessException|IOException|DirectoryNotFoundException|DllNotFoundException|FileNotFoundException|FileLoadException|BadImageFormatException|TimeoutException|WebException|HttpRequestException|InvalidDataException|OutOfMemoryException|NullReferenceException|IndexOutOfRangeException|InvalidOperationException|OperationCanceledException|TaskCanceledException|NotSupportedException|ArgumentException|JsonReaderException|JsonSerializationException'
                 $exception='';if($line -match ('\b('+ $exceptionTypes +')\b')){$exception=$Matches[1]}
                 $http=$null;if($line -match '(?i)\bHTTP(?:\s+status)?\s*[:=]?\s*([45]\d\d)\b'){$http=[int]$Matches[1]}
-                $stage='';if($line -match 'stage=(取地址|下载|解码|加载|创建音频)(?:\s|$)'){$stage=$Matches[1]}
+                $stage='';if($line -match 'stage=(取地址|下载|解码|加载|创建音频|歌词)(?:\s|$)'){$stage=$Matches[1]}
                 $knownCodes='NETWORK(?:_(?:PROXY|TLS|DNS|TIMEOUT|REFUSED|RESET|IO))?|RESPONSE|AUTH_[0-9]{3}|API_[0-9]{3}|HTTP_[1-5][0-9]{2}|SIZE|FORMAT|CANCELLED|STALE_QUEUE|INVALID_URL|UNSUPPORTED_FORMAT|SIZE_LIMIT|EMPTY_BODY|AUDIO_CLIP|SEND_[0-9A-Fa-f]{8}|(?:ConnectionError|ProtocolError|DataProcessingError)_HTTP_(?:0|[1-5][0-9]{2})|(?:'+$exceptionTypes+')(?:_[0-9A-Fa-f]{8})?'
                 $code='';if($line -cmatch ('\bcode=('+ $knownCodes +')(?:\s|$)')){$code=$Matches[1]}
                 $codeHResult=''

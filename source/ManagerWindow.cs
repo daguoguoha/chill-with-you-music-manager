@@ -17,8 +17,8 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 
 [assembly: AssemblyTitle("Chill Music Manager")]
-[assembly: AssemblyVersion("2.0.2.0")]
-[assembly: AssemblyFileVersion("2.0.2.0")]
+[assembly: AssemblyVersion("2.0.3.0")]
+[assembly: AssemblyFileVersion("2.0.3.0")]
 
 internal sealed class ManagerWindow : Form
 {
@@ -49,7 +49,7 @@ internal sealed class ManagerWindow : Form
         Panel header=new NightHeader {Dock=DockStyle.Top,Height=112,BackColor=paper}; Controls.Add(header);
         header.Controls.Add(new Label {Text="CHILL WITH YOU  /  MUSIC",Location=new Point(108,20),Size=new Size(600,22),Font=new Font(Font.FontFamily,9F),ForeColor=muted,BackColor=Color.Transparent});
         header.Controls.Add(new Label {Text="放松时光 · 音乐插件",Location=new Point(104,42),Size=new Size(680,42),Font=new Font(Font.FontFamily,24F),ForeColor=ink,BackColor=Color.Transparent});
-        Label badge=new Label {Text="v2.0.2 / 网络恢复",Location=new Point(865,42),Size=new Size(220,32),TextAlign=ContentAlignment.MiddleRight,ForeColor=muted,BackColor=Color.Transparent,Anchor=AnchorStyles.Top|AnchorStyles.Right}; header.Controls.Add(badge);
+        Label badge=new Label {Text="v2.0.3 / 下一首预载",Location=new Point(865,42),Size=new Size(220,32),TextAlign=ContentAlignment.MiddleRight,ForeColor=muted,BackColor=Color.Transparent,Anchor=AnchorStyles.Top|AnchorStyles.Right}; header.Controls.Add(badge);
         Panel content=new Panel {Dock=DockStyle.Fill,Padding=new Padding(26,16,26,14),BackColor=paper}; Controls.Add(content); content.BringToFront();
         TableLayoutPanel layout=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=1,RowCount=7};
         foreach(int height in new[]{68,34,324,48,112,80}) layout.RowStyles.Add(new RowStyle(SizeType.Absolute,height));

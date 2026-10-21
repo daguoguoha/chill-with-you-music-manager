@@ -16,7 +16,7 @@ using UnityEngine.Networking;
 
 namespace ChillNeteasePlaylist
 {
-    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.5.6")]
+    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.5.7")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -27,6 +27,7 @@ namespace ChillNeteasePlaylist
         UnityWebRequest request;
         ConfigEntry<float> volume;
         ConfigEntry<bool> showLauncher;
+        ConfigEntry<bool> progressivePlayback;
         ConfigEntry<KeyboardShortcut> shortcut;
         Rect panel = new Rect(170, 70, 1000, 730);
         bool visible = false, busy, ready, logged, qrPolling, paused, playing, destroying, legacyInput = true;
@@ -59,6 +60,7 @@ namespace ChillNeteasePlaylist
             volume = Config.Bind("Player", "Volume", 0.65f, "网易云音量，0 到 1。");
             shortcut = Config.Bind("Panel", "Shortcut", new KeyboardShortcut(KeyCode.F8), "显示或隐藏歌单面板。");
             showLauncher = Config.Bind("Panel", "ShowLauncher", true, "是否显示游戏内入口按钮。隐藏后仍可按 F8 打开面板。");
+            progressivePlayback = Config.Bind("Player", "ProgressivePlayback", false, "启用边下边播；关闭时优先使用经典播放，连接失败时自动尝试兼容方式。切换后下次点播生效，退出游戏仍自动清理音频缓存。");
             audio = runtime.AddComponent<AudioSource>();
             audio.playOnAwake = false;
             audio.volume = Mathf.Clamp01(volume.Value);

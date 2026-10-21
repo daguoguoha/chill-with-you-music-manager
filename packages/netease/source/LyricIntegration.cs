@@ -104,7 +104,17 @@ namespace ChillNeteasePlaylist
                 {
                     // Observe every task exception, including stale/cancelled track requests.
                     Exception error = completed.Exception.GetBaseException();
-                    if (epoch == lyricEpoch) lyricsMessage = error is OperationCanceledException ? "歌词读取已取消" : "歌词读取未完成 · 可导入 LRC 或重试";
+                    if (epoch == lyricEpoch)
+                    {
+                        if (error is OperationCanceledException) lyricsMessage = "歌词读取已取消";
+                        else
+                        {
+                            var failure = error as PlaybackFailure;
+                            string code = failure == null ? error.GetType().Name : failure.Code;
+                            lyricsMessage = "歌词读取未完成（" + code + "）· 可重新获取";
+                            Logger.LogWarning("网易云播放失败 songId=0 stage=歌词 code=" + code + " hresult=0x" + error.HResult.ToString("X8"));
+                        }
+                    }
                 }
                 else if (!completed.IsCanceled && epoch == lyricEpoch && lyricTrack != null)
                 { lyricDocument = completed.Result.Document; lyricTranslation=completed.Result.Translation; lyricTranslationLoaded=lyricTaskWithTranslation; lyricsMessage = completed.Result.Message; }

@@ -1,6 +1,6 @@
 {
-  "Version": "2.0.2",
-  "Base": "v2.0.1",
+  "Version": "2.0.3",
+  "Base": "v2.0.2",
   "IncludedProviders": [
     "netease",
     "kugou",
@@ -11,7 +11,7 @@
     "speed"
   ],
   "ProviderVersions": {
-    "netease": "1.5.6",
+    "netease": "1.5.7",
     "kugou": "1.3.3",
     "bilibili": "1.3.3",
     "ximalaya": "1.3.3",
@@ -42,7 +42,7 @@
   },
   "OfflineCoreGroups": 14,
   "HighQualityNeteaseProbe": 3,
-  "LocalPreservedFiles": 118,
+  "LocalPreservedFiles": 121,
   "TestDetails": "TESTING.md",
   "PlaylistFocusChecksPerProvider": 13,
   "QrPolicyChecks": 29,
@@ -110,5 +110,39 @@
     "RuntimeSeekRecovery": true,
     "RuntimeManualPause": true
   },
-  "SessionIntegrationChecks": 23
+  "SessionIntegrationChecks": 23,
+  "Prefetch": {
+    "Provider": "netease",
+    "Checks": 44,
+    "Concurrent": 1,
+    "RecentCount": 3,
+    "RecentBytes": 268435456,
+    "Default": "classic",
+    "CompatibleFallback": true,
+    "ClassicGraceSeconds": 3,
+    "PreloadedBufferSeconds": 8,
+    "RecentBudgetExcludes": [
+      "playing",
+      "pending",
+      "preloaded next"
+    ],
+    "GameplayVerified": true,
+    "ReadySampleMilliseconds": 4386,
+    "CacheHitSampleMilliseconds": 0,
+    "ColdSampleMilliseconds": [
+      13546,
+      10207
+    ]
+  },
+  "NativeLyrics": {
+    "AnonymousOfficialHTTPS": true,
+    "OfficialWEAPIFallback": true,
+    "TimeoutPerRequestSeconds": 8,
+    "NativeTestGroups": 2,
+    "ManagedRoutingChecks": 7,
+    "ReadOnlyLiveTracks": 2,
+    "OriginalAndTranslationShareResponse": true,
+    "GameplayOriginalAndTranslationDisplayed": true
+  },
+  "ValidationBaseline": "Existing platform-wide fields include v2.0.2 baseline; see the v2.0.3 section in TESTING.md for checks rerun for this release"
 }

@@ -26,7 +26,7 @@ namespace ChillNeteasePlaylist
         readonly List<GameObject> nativeButtons = new List<GameObject>();
         MusicTagListUI nativeTagUI;
         int nativeMenuVersion = -1, nativeLoadVersion;
-        bool nativeDelivering;
+        bool nativeDelivering, classicUnavailable;
         float nativeNextCheck, nativeNoticeUntil;
         string nativeNoticeMessage;
         void NativeNotice(string message, float seconds)
@@ -36,6 +36,7 @@ namespace ChillNeteasePlaylist
 
         void SetupNative()
         {
+            SetupNativeLyrics();
             harmony.Patch(AccessTools.Method(typeof(GameAudioInfo), "GetAudioClip"), prefix: new HarmonyMethod(typeof(Plugin), "NativeGetClip"));
             harmony.Patch(AccessTools.Method(typeof(MusicService), "PlayArugumentMusic"), prefix: new HarmonyMethod(typeof(Plugin), "NativePlayArgument"));
             harmony.Patch(AccessTools.Method(typeof(MusicService), "PlayMusicInPlaylist"), prefix: new HarmonyMethod(typeof(Plugin), "NativePlayIndex"));
@@ -140,8 +141,8 @@ namespace ChillNeteasePlaylist
         static bool NativePlayArgument(MusicService __instance, GameAudioInfo __0, MusicChangeKind __1)
         {
             if (Instance == null || Instance.nativeDelivering) return true;
-            if (!IsCloud(__0)) { Instance.nativeLoadVersion++; return true; }
-            if (__0.AudioClip != null) { Instance.nativeLoadVersion++; return true; }
+            if (!IsCloud(__0)) { Instance.nativeLoadVersion++; Instance.pendingAudio = null; Instance.CancelNativePrefetch(); return true; }
+            if (__0.AudioClip != null) { Instance.nativeLoadVersion++; Instance.pendingAudio = null; Instance.CancelNativePrefetch(); return true; }
             Instance.StartCoroutine(Instance.NativeSelect(__0, __1));
             return false;
         }
@@ -154,9 +155,16 @@ namespace ChillNeteasePlaylist
             __result = true;
             return false;
         }
-        static void NativeCancelSelection() { if (Instance != null && !Instance.nativeDelivering) Instance.nativeLoadVersion++; }
+        static void NativeCancelSelection()
+        {
+            if (Instance == null || Instance.nativeDelivering) return;
+            Instance.nativeLoadVersion++; Instance.pendingAudio = null;
+            if (Instance.prefetchPromoted) Instance.CancelNativePrefetch();
+        }
         IEnumerator NativeSelect(GameAudioInfo info, MusicChangeKind kind)
         {
+            float selectedAt = Time.realtimeSinceStartup;
+            bool cached = info.AudioClip != null;
             MusicService service = NativeService;
             if (service == null) yield break;
             CancellationTokenSource previous = AccessTools.Field(typeof(MusicService), "audioLoadCancellation").GetValue(service) as CancellationTokenSource;
@@ -187,23 +195,33 @@ namespace ChillNeteasePlaylist
             try { service.PlayArugumentMusic(info, kind); service.IsPause = false; }
             finally { nativeDelivering = false; }
             Logger.LogInfo("原生播放器开始播放网易云歌曲：" + info.Title);
+            Logger.LogInfo("网易云切歌完成 cache=" + (cached ? "hit" : "miss") + " elapsedMs=" + ((Time.realtimeSinceStartup - selectedAt) * 1000).ToString("F0"));
         }
         UniTask<AudioClip> BeginNativeLoad(GameAudioInfo info, CancellationToken cancellation)
         {
+            ProgressiveAudio cachedStream;
+            if (info.AudioClip != null && progressiveClips.TryGetValue(info.AudioClip, out cachedStream) && cachedStream.Failure != null)
+            { ReleaseNativeClip(info); nativeClips.Remove(info); }
             pendingAudio = info;
             int version = ++nativeLoadVersion;
-            if (info.AudioClip != null) return UniTask.FromResult(info.AudioClip);
+            if (prefetchInfo == info && prefetchCompletion != null && prefetchCompletion.Task.Status == UniTaskStatus.Pending)
+            {
+                prefetchPromoted = true; prefetchSelectionVersion = version; prefetchSelectionCancellation = cancellation;
+                Logger.LogInfo("网易云预载复用 inFlight=true"); return prefetchCompletion.Task;
+            }
+            CancelNativePrefetch();
+            if (info.AudioClip != null) { nativeClips.Remove(info); nativeClips.Add(info); return UniTask.FromResult(info.AudioClip); }
             UniTaskCompletionSource<AudioClip> completion = new UniTaskCompletionSource<AudioClip>();
             StartCoroutine(NativeLoadClip(info, cancellation, version, completion));
             return completion.Task;
         }
         static long CloudSongId(GameAudioInfo info)
         { long id; return info != null && info.UUID != null && long.TryParse(info.UUID.Substring(CloudPrefix.Length), out id) ? id : 0; }
-        IEnumerator NativeLoadClip(GameAudioInfo info, CancellationToken cancellation, int version, UniTaskCompletionSource<AudioClip> completion)
+        IEnumerator NativeLoadClip(GameAudioInfo info, CancellationToken cancellation, int version, UniTaskCompletionSource<AudioClip> completion, bool background = false)
         {
             // Unity otherwise stops an iterator on an unexpected exception and leaves
             // its UniTask pending forever. Every exit must complete or cancel it.
-            IEnumerator worker = NativeLoadClipCore(info, cancellation, version, completion);
+            IEnumerator worker = NativeLoadClipCore(info, cancellation, version, completion, background);
             try
             {
                 while (true)
@@ -225,13 +243,17 @@ namespace ChillNeteasePlaylist
                 var disposable = worker as IDisposable;
                 if (disposable != null) disposable.Dispose();
                 if (completion.Task.Status == UniTaskStatus.Pending) completion.TrySetCanceled();
+                if (completion.Task.Status != UniTaskStatus.Succeeded && pendingAudio == info &&
+                    (background ? prefetchInfo == info && prefetchPromoted : version == nativeLoadVersion)) pendingAudio = null;
             }
         }
-        IEnumerator NativeLoadClipCore(GameAudioInfo info, CancellationToken cancellation, int version, UniTaskCompletionSource<AudioClip> completion)
+        IEnumerator NativeLoadClipCore(GameAudioInfo info, CancellationToken cancellation, int version, UniTaskCompletionSource<AudioClip> completion, bool background = false)
         {
             Song song;
             if (!nativeSongs.TryGetValue(info.UUID, out song)) { completion.TrySetException(new PlaybackFailure("取地址", "STALE_QUEUE", "歌单条目已过期，请重新打开歌单。", false)); yield break; }
-            Func<bool> canceled = delegate { return destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion; };
+            Func<bool> canceled = delegate { return destroying || cancellation.IsCancellationRequested ||
+                (background ? PrefetchSelectionCanceled(info) : version != nativeLoadVersion); };
+            Func<bool> quiet = delegate { return background && !prefetchPromoted; };
             byte[] encoded = null;
             SongUrl url = null;
             string format = "";
@@ -240,7 +262,7 @@ namespace ChillNeteasePlaylist
             for (int attempt = 0; attempt < 3; attempt++)
             {
                 if (canceled()) { completion.TrySetCanceled(); yield break; }
-                status = "正在获取音源「" + song.name + "」…" + (attempt == 0 ? "" : "（重试 " + attempt + "/2）");
+                if (!quiet()) status = "正在获取音源「" + song.name + "」…" + (attempt == 0 ? "" : "（重试 " + attempt + "/2）");
                 Task<SongUrl> urlTask = Task.Factory.StartNew(delegate { return SongRequestPolicy.Resolve(
                     delegate
                     {
@@ -265,16 +287,42 @@ namespace ChillNeteasePlaylist
                 { completion.TrySetException(new PlaybackFailure("取地址", "UNSUPPORTED_FORMAT", "音频格式不受支持。", false)); yield break; }
                 if (url.size > 64L * 1024 * 1024)
                 { completion.TrySetException(new PlaybackFailure("下载", "SIZE_LIMIT", "音频超过 64 MB，请选择较短曲目。", false)); yield break; }
-                if (format == "mp3" && !url.isTrial && song.duration > 0 && song.duration <= 5400)
+                if ((background || progressivePlayback.Value || classicUnavailable) && ClassicPlaybackPolicy.CanStream(format, url.isTrial, song.duration))
                 {
-                    IEnumerator progressive = NativeProgressiveClip(info, song, url, canceled, completion);
+                    IEnumerator progressive = NativeProgressiveClip(info, song, url, canceled, completion, quiet);
                     try { while (progressive.MoveNext()) yield return progressive.Current; }
                     finally { var disposable = progressive as IDisposable; if (disposable != null) disposable.Dispose(); }
                     yield break;
                 }
                 PlaybackFailure failure = null;
-                using (var downloadCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
+                bool systemDownload = background || progressivePlayback.Value || classicUnavailable;
+                if (!systemDownload)
                 {
+                    var classic = new TaskCompletionSource<byte[]>();
+                    IEnumerator transfer = ClassicDownload(song, url, canceled, classic, quiet);
+                    try { while (transfer.MoveNext()) yield return transfer.Current; }
+                    finally { var disposable = transfer as IDisposable; if (disposable != null) disposable.Dispose(); }
+                    if (classic.Task.IsCanceled || canceled()) { completion.TrySetCanceled(); yield break; }
+                    if (classic.Task.IsFaulted) failure = classic.Task.Exception.GetBaseException() as PlaybackFailure ?? new PlaybackFailure("下载", "NETWORK_IO", "音频连接未完成。", true);
+                    else encoded = classic.Task.Result;
+                    systemDownload = ClassicPlaybackPolicy.Compatibility(failure);
+                    if (systemDownload)
+                    {
+                        classicUnavailable = true;
+                        if (failure.Code == "BUFFER_FALLBACK") Logger.LogInfo("网易云播放通道 switchedTo=buffered reason=CLASSIC_BUDGET");
+                        else Logger.LogWarning(PlaybackFailure.Diagnostic(song.id, failure) + " compatibility=true");
+                    }
+                    if (systemDownload && ClassicPlaybackPolicy.CanStream(format, url.isTrial, song.duration))
+                    {
+                        IEnumerator compatible = NativeProgressiveClip(info, song, url, canceled, completion, quiet);
+                        try { while (compatible.MoveNext()) yield return compatible.Current; }
+                        finally { var disposable = compatible as IDisposable; if (disposable != null) disposable.Dispose(); }
+                        yield break;
+                    }
+                }
+                if (systemDownload) using (var downloadCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellation))
+                {
+                    failure = null;
                     CancellationToken downloadToken = downloadCancellation.Token;
                     long downloaded = 0;
                     Task<byte[]> download = Task.Factory.StartNew(delegate { return AudioDownload.Read(url.url, downloadToken, url.size, delegate(long bytes) { Interlocked.Exchange(ref downloaded, bytes); }); });
@@ -285,7 +333,7 @@ namespace ChillNeteasePlaylist
                         while (!download.IsCompleted)
                         {
                             if (canceled()) { downloadCancellation.Cancel(); completion.TrySetCanceled(); yield break; }
-                            if (Time.realtimeSinceStartup >= nextProgress)
+                            if (!quiet() && Time.realtimeSinceStartup >= nextProgress)
                             {
                                 nextProgress = Time.realtimeSinceStartup + 0.25f;
                                 long bytes = Interlocked.Read(ref downloaded);
@@ -309,14 +357,14 @@ namespace ChillNeteasePlaylist
                 }
                 if (failure == null) break;
                 Logger.LogWarning(PlaybackFailure.Diagnostic(song.id, failure) + " attempt=" + (attempt + 1) + "/3");
-                if (!failure.Retryable || attempt == 2) { completion.TrySetException(failure); yield break; }
+                if (!failure.Retryable || attempt == 2 || quiet()) { completion.TrySetException(failure); yield break; }
                 encoded = null;
                 float retryAt = Time.realtimeSinceStartup + (attempt + 1) * 0.5f;
                 while (Time.realtimeSinceStartup < retryAt)
                 { if (canceled()) { completion.TrySetCanceled(); yield break; } yield return null; }
             }
-            status = "正在解码「" + song.name + "」…";
-            Task<DecodedAudio> decode = Task.Factory.StartNew(delegate { return AudioDecoder.Decode(encoded, format, delegate { return destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion; }); });
+            if (!quiet()) status = "正在解码「" + song.name + "」…";
+            Task<DecodedAudio> decode = Task.Factory.StartNew(delegate { return AudioDecoder.Decode(encoded, format, canceled); });
             // Observe completion even when the user selects another song; the worker deletes its temporary file.
             while (!decode.IsCompleted) yield return null;
             if (decode.IsFaulted)
@@ -327,7 +375,7 @@ namespace ChillNeteasePlaylist
                 yield break;
             }
             DecodedAudio pcm = decode.Result;
-            if (destroying || cancellation.IsCancellationRequested || version != nativeLoadVersion)
+            if (canceled())
             { pcm.Dispose(); completion.TrySetCanceled(); yield break; }
             AudioClip clip = null;
             try
@@ -353,21 +401,15 @@ namespace ChillNeteasePlaylist
             clip.name = CloudPrefix + song.id;
             info.AudioClip = clip;
             nativeClips.Remove(info); nativeClips.Add(info);
-            for (int i = 0; (nativeClips.Count > 4 || streamingClips.Count > 2) && i < nativeClips.Count; )
-            {
-                GameAudioInfo old = nativeClips[i];
-                if (old == info || (NativeService != null && NativeService.PlayingMusic == old)) { i++; continue; }
-                if (nativeClips.Count <= 4 && old.AudioClip != null && !streamingClips.ContainsKey(old.AudioClip)) { i++; continue; }
-                ReleaseNativeClip(old); nativeClips.RemoveAt(i);
-            }
-            status = "已交给游戏原生播放器 · " + song.name + (url.isTrial ? "（网易云试听片段）" : "");
+            TrimNativeAudioCache(info);
+            if (!quiet()) status = "已交给游戏原生播放器 · " + song.name + (url.isTrial ? "（网易云试听片段）" : "");
             completion.TrySetResult(clip);
         }
         bool audioCacheClosed;
         void CloseAudioCache()
         {
             if (audioCacheClosed) return;
-            audioCacheClosed = true; destroying = true; nativeLoadVersion++;
+            audioCacheClosed = true; destroying = true; nativeLoadVersion++; CancelNativePrefetch();
             foreach (var item in nativeClips) ReleaseNativeClip(item);
             nativeClips.Clear();
             CloseProgressiveAudio();
