@@ -16,7 +16,7 @@ using UnityEngine.Networking;
 
 namespace ChillNeteasePlaylist
 {
-    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.5.7")]
+    [BepInPlugin("local.chill.neteaseplaylist", "网易云歌单", "1.5.8")]
     [BepInProcess("Chill With You.exe")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
@@ -88,7 +88,7 @@ namespace ChillNeteasePlaylist
                     Run(delegate { return Bridge.NeteaseRefreshLogin() == 1; }, delegate(object session)
                     { logged = (bool)session; if (logged) LoadAccount(); });
                 });
-                Logger.LogInfo("网易云歌单 Mod 已初始化；F8 显示面板。");
+                Logger.LogInfo("网易云歌单 Mod 已初始化；网络：全部直连；F8 显示面板。");
             }
             catch (Exception ex) { status = "当前游戏版本初始化失败：" + ex.GetType().Name; Logger.LogError(status); }
         }

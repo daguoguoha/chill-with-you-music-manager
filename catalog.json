@@ -1,24 +1,24 @@
 {
   "Schema": 1,
-  "ManagerVersion": "2.0.3",
+  "ManagerVersion": "2.0.4",
   "Plugins": [
     {
       "Id": "netease",
       "Name": "网易云音乐",
-      "Version": "1.5.7",
+      "Version": "1.5.8",
       "Folder": "packages\\netease",
       "Primary": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
       "Manifest": "ChillNeteaseNative-install.json",
       "Hotkey": "F8",
-      "Hint": "MP3 使用随包纯托管解码，不依赖系统媒体组件；新接口异常会回退；下载失败有界重试并刷新地址。失败日志包含阶段与状态码。其他格式仍依赖 Windows 媒体组件。F8 打开面板。 扫码错误会显示具体分类，临时连接错误重试一次。 接入底部原生随机播放，切换歌单保留随机模式；MP3 使用随包解码，长音轨使用流式 PCM。 音频下载失败最多尝试三次，每次刷新地址。 歌词设置新增可选翻译，默认关闭；网易云平台译文或导入翻译LRC，原文与译文独立保存。 游戏退出自动清理音频临时缓存，下次启动补清异常残留；保留账号、歌词和本地源音乐。 完整 MP3 缓冲后边下边播，未缓冲进度会等待；其他格式及试听仍完整下载后播放。",
+      "Hint": "MP3 使用随包纯托管解码，不依赖系统媒体组件；新接口异常会回退；下载失败有界重试并刷新地址。失败日志包含阶段与状态码。其他格式仍依赖 Windows 媒体组件。F8 打开面板。 扫码错误会显示具体分类，临时连接错误重试一次。 接入底部原生随机播放，切换歌单保留随机模式；MP3 使用随包解码，长音轨使用流式 PCM。 音频下载失败最多尝试三次，每次刷新地址。 歌词设置新增可选翻译，默认关闭；网易云平台译文或导入翻译LRC，原文与译文独立保存。 游戏退出自动清理音频临时缓存，下次启动补清异常残留；保留账号、歌词和本地源音乐。 完整 MP3 缓冲后边下边播，未缓冲进度会等待；其他格式及试听仍完整下载后播放。 网易云全部请求直连，忽略系统和环境代理；包括扫码、歌单、歌词、音频及预载。",
       "Targets": [
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "27B35311942E331882DD03C983976C783624CE44EE604DE592B49676FC98AE39"
+          "Hash": "BE0B9A8556E37FB9823FCF9665E0DAB1234C44403BA0B765BBE63AE23EC4B265"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNetease.dll",
-          "Hash": "02176959574C826AB8D72B567E9B359A5CAC2DFC7F5087265F5569F44AED321D"
+          "Hash": "86347C8D77E94EE07883AC74253572D45D644CFF4267AD2A8E45C99CD0E1F65A"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\QRCoder.dll",
@@ -40,11 +40,11 @@
       "Files": [
         {
           "Path": "Install.ps1",
-          "Hash": "9A1A4BE595377C2D4643A66443B618F218D4D96D42783A3BB5AA14942AAE79BC"
+          "Hash": "9BBE4DE3067FA0B8F3D1F58B01E837F868F8C8FD698D73DA694D58D4B1857BFA"
         },
         {
           "Path": "BepInEx\\plugins\\ChillNeteasePlaylist\\ChillNeteasePlaylist.dll",
-          "Hash": "27B35311942E331882DD03C983976C783624CE44EE604DE592B49676FC98AE39"
+          "Hash": "BE0B9A8556E37FB9823FCF9665E0DAB1234C44403BA0B765BBE63AE23EC4B265"
         },
         {
           "Path": "offline-dependencies\\BepInEx.zip",
@@ -52,7 +52,7 @@
         },
         {
           "Path": "offline-dependencies\\ChillNetease.dll",
-          "Hash": "02176959574C826AB8D72B567E9B359A5CAC2DFC7F5087265F5569F44AED321D"
+          "Hash": "86347C8D77E94EE07883AC74253572D45D644CFF4267AD2A8E45C99CD0E1F65A"
         },
         {
           "Path": "offline-dependencies\\ChillNetease.h",

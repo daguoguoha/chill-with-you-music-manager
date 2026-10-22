@@ -57,6 +57,12 @@ namespace ChillNeteasePlaylist
         }
         internal static byte[] Read(string value, CancellationToken canceled, long expected, Action<long> progress)
         { return Consume(value, canceled, expected, delegate(Stream input, long length, CancellationToken token) { return ReadBounded(input, length, token, Limit, progress); }); }
+        internal static HttpWebRequest CreateRequest(Uri target)
+        {
+            var request = (HttpWebRequest)WebRequest.Create(target);
+            request.Proxy = null;
+            return request;
+        }
         internal static T Consume<T>(string value, CancellationToken canceled, long expected, Func<Stream, long, CancellationToken, T> consume)
         {
             Uri target = Target(value);
@@ -66,12 +72,12 @@ namespace ChillNeteasePlaylist
                 for (int redirects = 0; ; redirects++)
                 {
                     canceled.ThrowIfCancellationRequested();
-                    var request = (HttpWebRequest)WebRequest.Create(target);
+                    var request = CreateRequest(target);
                     request.AllowAutoRedirect = false;
                     request.Timeout = 15000; request.ReadWriteTimeout = 20000;
                     request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36";
                     request.Referer = "https://music.163.com/";
-                    // Use the runtime's normal system proxy and certificate validation.
+                    // Connect directly, preserving normal certificate validation.
                     // Never attach account cookies or disable TLS verification for CDN downloads.
                     using (deadline.Token.Register(delegate { request.Abort(); }))
                     {

@@ -199,6 +199,7 @@ namespace ChillNeteasePlaylist
             if (uri.Scheme != "https" || !uri.IsDefaultPort || !string.IsNullOrEmpty(uri.UserInfo) || (uri.Host != "music.163.com" && uri.Host != "c.y.qq.com" && uri.Host != "lyrics.kugou.com")) throw new InvalidOperationException("歌词地址不受支持。");
             cancel.ThrowIfCancellationRequested();
             var request = (HttpWebRequest)WebRequest.Create(uri);
+            request.Proxy = null;
             request.Method = "GET"; request.Timeout = 8000; request.ReadWriteTimeout = 8000;
             request.AllowAutoRedirect = false; request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
             request.UserAgent = "Mozilla/5.0"; request.Referer = referer;

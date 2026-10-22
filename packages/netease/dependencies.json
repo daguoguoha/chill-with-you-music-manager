@@ -1,15 +1,15 @@
 {
   "ChillNetease": {
     "bundled": true,
-    "release": "local-1.5.7-lyrics",
+    "release": "local-1.5.8-direct",
     "source_commit": "4800dd2ac005c3c70e1bf1bc732e00f00556ec48",
     "download": null,
-    "sha256": "02176959574c826ab8d72b567e9b359a5cac2dfc7f5087265f5569f44aed321d",
+    "sha256": "86347c8d77e94ee07883ac74253572d45d644cff4267ad2a8e45c99cd0e1f65a",
     "downloaded_by_installer": false,
     "bundled_archive": "offline-dependencies/ChillNetease.dll",
     "url": "local-source-build:ChillNetease.dll",
     "corresponding_source": "native-source/ChillNetease-source.zip",
-    "source_sha256": "11e59fdd0d2573c1d7b1d36f2339e802dd4fec18400ca04329d8060aa589f3e3",
+    "source_sha256": "4d8556cff6cf96d3ebaf0f8a83778b21679cf5eaabe97a77f336e9c8d8c5c109",
     "original_binary_url": "https://github.com/BeyondtheApex/ChillPatcher/releases/download/3.0.3/ChillNetease.dll",
     "modified": true
   },
